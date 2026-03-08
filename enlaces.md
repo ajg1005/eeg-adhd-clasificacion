@@ -7,10 +7,21 @@
 - [Neural decoding EEG-BCI: ML to deep learning — ScienceDirect 2025](https://www.sciencedirect.com/science/article/pii/S2589238X26000021)
 - [BCI estado del arte 2023-2024 — Wiley Brain-X](https://onlinelibrary.wiley.com/doi/full/10.1002/brx2.70024)
 - [BCI closed-loop + IA para neurorehabilitación — JMIR 2025](https://biomedeng.jmir.org/2025/1/e72218)
-- [BCI + ML en rehabilitación de ictus — MDPI 2024](https://www.mdpi.com/2076-3417/14/14/6347)
+
 
 ### TDAH + EEG + ML
 - [Systematic review ML/DL para TDAH con EEG y MRI — ScienceDirect 2025](https://www.sciencedirect.com/science/article/abs/pii/S0306452225001277) 
 - [EEG-based ADHD prediction con XGBoost + SHAP — PMC 2025](https://pmc.ncbi.nlm.nih.gov/articles/PMC11831911/)
 - [Framework ML para TDAH con EEG — Frontiers Psychiatry 2025](https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2025.1475936/full)
 
+## Datasets
+
+### BCI
+- [BCI Competition IV](http://www.bbci.de/competition/iv/)
+- [PhysioNet EEG Motor Movement](https://physionet.org/content/eegmmidb/1.0.0/)
+- [OpenBCI Sample Data](https://openbci.com/community/)
+
+### TDAH
+- [ADHD-200 — fMRI niños TDAH vs control](http://fcon_1000.projects.nitrc.org/indi/adhd200/)
+- [TDBRAIN — EEG + TDAH, dataset europeo](https://brainclinics.com/resources/)
+- [IEEE DataPort — ADHD EEG](https://ieee-dataport.org/) 
