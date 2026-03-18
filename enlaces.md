@@ -11,7 +11,10 @@
 
 ### TDAH + EEG + ML
 - [Systematic review ML/DL para TDAH con EEG y MRI — ScienceDirect 2025](https://www.sciencedirect.com/science/article/abs/pii/S0306452225001277) 
-- [EEG-based ADHD prediction con XGBoost + SHAP — PMC 2025](https://pmc.ncbi.nlm.nih.gov/articles/PMC11831911/)
+- [Electroencephalogram (EEG) Based Prediction of Attention Deficit Hyperactivity Disorder (ADHD) Using Machine Learning — PMC 2025](https://pmc.ncbi.nlm.nih.gov/articles/PMC11831911/)
+- [Machine learning models effectively distinguish attention-deficit/hyperactivity disorder using event-related potentials — PMC 2022](https://pmc.ncbi.nlm.nih.gov/articles/PMC9666608/)
+- [Classification of ADHD and Healthy Children Using Multi-Band and Spatial Features of EEG — arXiv 2025](https://arxiv.org/pdf/2504.04664)
+- [An ADHD Diagnostic Interface Based on EEG Spectrograms and Deep Learning Techniques — arXiv 2024](https://arxiv.org/pdf/2412.02695)
 - [Framework ML para TDAH con EEG — Frontiers Psychiatry 2025](https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2025.1475936/full)
 
 ## Datasets
@@ -22,6 +25,8 @@
 - [OpenBCI Sample Data](https://openbci.com/community/)
 
 ### TDAH
+- [EEG Dataset for ADHD — dataset usado](https://www.kaggle.com/datasets/danizo/eeg-dataset-for-adhd)
 - [ADHD-200 — fMRI niños TDAH vs control](http://fcon_1000.projects.nitrc.org/indi/adhd200/)
 - [TDBRAIN — EEG + TDAH, dataset europeo](https://brainclinics.com/resources/)
 - [IEEE DataPort — ADHD EEG](https://ieee-dataport.org/) 
+-
