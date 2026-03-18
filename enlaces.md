@@ -5,7 +5,6 @@
 - [BCI + ML — ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2665917423001599)
 - [BCI + ML — MDPI Computation 2023](https://www.mdpi.com/2079-3197/11/9/180)
 - [Neural decoding EEG-BCI: ML to deep learning — ScienceDirect 2025](https://www.sciencedirect.com/science/article/pii/S2589238X26000021)
-- [BCI estado del arte 2023-2024 — Wiley Brain-X](https://onlinelibrary.wiley.com/doi/full/10.1002/brx2.70024)
 - [BCI closed-loop + IA para neurorehabilitación — JMIR 2025](https://biomedeng.jmir.org/2025/1/e72218)
 
 
@@ -21,8 +20,8 @@
 
 ### BCI
 - [BCI Competition IV](http://www.bbci.de/competition/iv/)
+- [An Open, Diverse and Machine Learning Ready P300-based Brain-Computer Interface Dataset](https://physionet.org/content/bigp3bci/1.0.0/)
 - [PhysioNet EEG Motor Movement](https://physionet.org/content/eegmmidb/1.0.0/)
-- [OpenBCI Sample Data](https://openbci.com/community/)
 
 ### TDAH
 - [EEG Dataset for ADHD — dataset usado](https://www.kaggle.com/datasets/danizo/eeg-dataset-for-adhd)
