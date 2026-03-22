@@ -1,8 +1,8 @@
-from __future__ import annotations
-
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
-#Mirar informacion basica del dataset
+
+# Mirar informacion basica del dataset
 def inspect_dataset(df: pd.DataFrame):
     print("Shape:", df.shape)
     print("\nColumnas:")
@@ -31,10 +31,10 @@ def preprocess_dataset(
     subject_col: str = "ID",
     label_col: str = "Class"
 ) -> tuple[pd.DataFrame, list[str]]:
-    # Copia 
+    # Copia
     df = df.copy()
 
-    # Comprobar columans 
+    # Comprobar columnas
     required_cols = [subject_col, label_col]
     missing = [col for col in required_cols if col not in df.columns]
     if missing:
@@ -46,7 +46,11 @@ def preprocess_dataset(
     # Eliminar filas sin identificador de sujeto o sin etiqueta
     df = df.dropna(subset=[subject_col, label_col])
 
-    #Variables EEG, todas menos class e id  
+    # Codificar las clases
+    label_encoder = LabelEncoder()
+    df[label_col] = label_encoder.fit_transform(df[label_col])
+
+    # Variables EEG, todas menos class e id
     eeg_cols = [col for col in df.columns if col not in [subject_col, label_col]]
     if not eeg_cols:
         raise ValueError("No se encontraron columnas EEG.")

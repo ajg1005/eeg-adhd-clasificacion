@@ -1,9 +1,8 @@
 # EEG-ADHD-Clasificacion
 
-Proyecto de TFG orientado al apoyo al diagnóstico de TDAH mediante análisis de señales EEG y modelos de Machine Learning/Deep Learning.
+Proyecto para la asistencia en el diagnostico de ADHD con metodos de ML/DL.
 
 ## Dataset
-
 
 Dataset utilizado: [EEG Dataset for ADHD](https://www.kaggle.com/datasets/danizo/eeg-dataset-for-adhd).
 

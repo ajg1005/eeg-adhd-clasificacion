@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-
+# Cargar el dataset 
 def load_dataset(csv_path: str) -> pd.DataFrame:
     path = Path(csv_path)
 
@@ -11,6 +11,6 @@ def load_dataset(csv_path: str) -> pd.DataFrame:
 
     if df.empty:
         raise ValueError("El dataset está vacío")
-
+    
     return df
 
