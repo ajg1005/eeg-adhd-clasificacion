@@ -38,7 +38,7 @@ def get_models(random_state=42):
         ]),
         "random_forest": Pipeline([
             ("model", RandomForestClassifier(
-                n_estimators=200,
+                n_estimators=300,
                 random_state=random_state,
                 class_weight="balanced"
             )),

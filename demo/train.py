@@ -15,6 +15,7 @@ from visual import (
     plot_precision_recall_curve,
 )
 from sklearn.base import clone
+from spectral_features import extract_spectral_features
 
 # Rutas para el dataset y las figuras
 CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "adhdata.csv"
@@ -40,8 +41,23 @@ def main():
     print("Shape y_epochs:", y_epochs.shape)
     print("Shape groups_epochs:", groups_epochs.shape)
 
-    # Extraer caracteristicas
-    X_features = extract_epoch_features(X_epochs, eeg_cols)
+   # Features temporales
+    X_time = extract_epoch_features(X_epochs, eeg_cols)
+
+    # Features espectrales
+    X_spectral = extract_spectral_features(
+        X_epochs=X_epochs,
+        channel_names=eeg_cols,
+        sfreq=128,
+    )
+
+    # Features combinadas
+    X_combined = pd.concat(
+        [X_time.reset_index(drop=True), X_spectral.reset_index(drop=True)],
+        axis=1,
+    )
+    
+    X_features = X_combined
 
     print("Shape X_features:", X_features.shape)
 
