@@ -25,10 +25,7 @@ def get_models(random_state=42):
             max_iter=5000
             )),
         ]),
-        "gaussian_nb": Pipeline([
-            ("scaler", StandardScaler()),
-            ("model", GaussianNB()),
-        ]),
+        
         "knn": Pipeline([
             ("scaler", StandardScaler()),
             ("model", KNeighborsClassifier(

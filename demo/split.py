@@ -1,4 +1,4 @@
-from sklearn.model_selection import GroupShuffleSplit
+from sklearn.model_selection import GroupShuffleSplit,StratifiedGroupKFold
 
 
 def make_group_shuffle_split(
@@ -46,14 +46,14 @@ def make_group_shuffle_split(
 
 from sklearn.model_selection import GroupKFold
 
-
+#stratified probar
 def make_group_kfold_splits(
     X,
     y,
     groups,
     n_splits=5,
 ):
-    splitter = GroupKFold(n_splits=n_splits)
+    splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=42)
     splits = []
 
     for fold, (train_idx, test_idx) in enumerate(
@@ -95,3 +95,4 @@ def make_group_kfold_splits(
         })
 
     return splits
+#LOSO Leave one out

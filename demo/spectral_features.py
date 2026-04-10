@@ -6,15 +6,15 @@ from scipy.signal import welch
 EEG_BANDS = {
     "delta": (0.5, 4),
     "theta": (4, 8),
-    "alpha": (8, 12),
-    "beta": (12, 30),
+    "alpha": (8, 13),
+    "beta": (13, 30),
     "gamma": (30, 45),
 }
 
 
-def bandpower_from_psd(freqs, psd, fmin, fmax):
+def bandpower(freqs, psd, fmin, fmax):
     """
-    Calcula la potencia de una banda integrando la PSD entre fmin y fmax.
+    Potencia de una banda integrando la PSD entre fmin y fmax.
     """
     idx = (freqs >= fmin) & (freqs <= fmax)
 
@@ -24,24 +24,56 @@ def bandpower_from_psd(freqs, psd, fmin, fmax):
     return np.trapezoid(psd[idx], freqs[idx])
 
 
+def spectral_entropy(psd):
+    """
+    Entropía espectral a partir de la PSD normalizada.
+    """
+    psd = np.asarray(psd, dtype=float)
+
+    psd_sum = np.sum(psd)
+    
+    psd_norm = psd / psd_sum
+    psd_norm = psd_norm[psd_norm > 0]
+    spectral_ent=-np.sum(psd_norm * np.log2(psd_norm))
+
+    return spectral_ent
+
+
+def mean_frequency(freqs, psd, fmin=None, fmax=None):
+    """
+    Calcula la frecuencia media ponderada por la PSD en un rango dado.
+    """
+    freqs = np.asarray(freqs, dtype=float)
+    psd = np.asarray(psd, dtype=float)
+
+    if fmin is not None and fmax is not None:
+        idx = (freqs >= fmin) & (freqs <= fmax)
+        freqs = freqs[idx]
+        psd = psd[idx]
+
+    if len(freqs) == 0 or np.sum(psd) <= 0:
+        return 0.0
+    
+    mean_freq=np.sum(freqs * psd) / np.sum(psd)
+
+    return mean_freq
+
+
 def extract_spectral_features(
     X_epochs,
     channel_names,
     sfreq=128,
     bands=EEG_BANDS,
-    nperseg=None,
+    nperseg=128,
 ):
-
-    if X_epochs.ndim != 3:
-        raise ValueError("X_epochs debe tener forma (n_epochs, epoch_size, n_channels)")
-
-    n_epochs, epoch_size, n_channels = X_epochs.shape
-
-    if len(channel_names) != n_channels:
-        raise ValueError("El número de canales no coincide con channel_names")
-
-    if nperseg is None:
-        nperseg = min(epoch_size, sfreq)
+    """
+    Extraer features espectrales por epoch y canal:
+    - Potencia absoluta por banda
+    - Potencia relativa por banda
+    - Entropía espectral global
+    - Frecuencia beta media en O1 y O2
+    - Ratio theta/beta
+    """
 
     rows = []
 
@@ -51,44 +83,45 @@ def extract_spectral_features(
         for ch_idx, ch_name in enumerate(channel_names):
             signal = epoch[:, ch_idx]
 
-            freqs, psd = welch(
-                signal,
-                fs=sfreq,
-                nperseg=nperseg,
-            )
+            freqs, psd = welch(signal, fs=sfreq, nperseg=nperseg)
 
-            total_power = bandpower_from_psd(freqs, psd, 0.5, 45)
+            # Rango útil total
+            total_idx = (freqs >= 0.5) & (freqs <= 45)
+            total_psd = psd[total_idx]
+
+            total_power = bandpower(freqs, psd, 0.5, 45)
+
+            # Entropía espectral global del canal
+            row[f"{ch_name}_spectral_entropy"] = spectral_entropy(total_psd)
+
+            band_powers = {}
 
             for band_name, (fmin, fmax) in bands.items():
-                abs_power = bandpower_from_psd(freqs, psd, fmin, fmax)
-                rel_power = abs_power / total_power if total_power > 0 else 0.0
+                power = bandpower(freqs, psd, fmin, fmax)
+                band_powers[band_name] = power
 
-                row[f"{ch_name}_{band_name}_abs_power"] = abs_power
-                row[f"{ch_name}_{band_name}_rel_power"] = rel_power
+                # Potencia absoluta
+                row[f"{ch_name}_{band_name}_abs_power"] = power
 
-            theta_power = row[f"{ch_name}_theta_abs_power"]
-            beta_power = row[f"{ch_name}_beta_abs_power"]
+                # Potencia relativa
+                if total_power > 0:
+                    row[f"{ch_name}_{band_name}_rel_power"] = power / total_power
+                else:
+                    row[f"{ch_name}_{band_name}_rel_power"] = 0.0
 
-            row[f"{ch_name}_theta_beta_ratio"] = (
-                theta_power / beta_power if beta_power > 0 else 0.0
-            )
+            # Ratios
+            theta = band_powers["theta"]
+            beta = band_powers["beta"]
 
-            # Opcional: frecuencia media
-            if np.sum(psd) > 0:
-                mean_freq = np.sum(freqs * psd) / np.sum(psd)
-            else:
-                mean_freq = 0.0
+            row[f"{ch_name}_theta_beta_ratio"] = theta / beta if beta > 0 else 0.0
+            
 
-            row[f"{ch_name}_mean_frequency"] = mean_freq
-
-            # Opcional: frecuencia mediana
-            cumulative_power = np.cumsum(psd)
-            if cumulative_power[-1] > 0:
-                median_freq = freqs[np.searchsorted(cumulative_power, cumulative_power[-1] / 2)]
-            else:
-                median_freq = 0.0
-
-            row[f"{ch_name}_median_frequency"] = median_freq
+            # Frecuencia beta media O1 y O2
+            if ch_name in {"O1", "O2"}:
+                beta_fmin, beta_fmax = bands["beta"]
+                row[f"{ch_name}_beta_mean_freq"] = mean_frequency(
+                    freqs, psd, beta_fmin, beta_fmax
+                )
 
         rows.append(row)
 

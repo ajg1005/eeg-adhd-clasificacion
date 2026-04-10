@@ -130,7 +130,7 @@ def main():
             print(classification_report(y_test, y_pred, zero_division=0))
 
     # Construir dataframa con los resultados obtenidos en los modelos
-    results_df = pd.DataFrame(results).sort_values(by="Accuracy", ascending=False)
+    results_df = pd.DataFrame(results).sort_values(by="Accuracy", ascending=True)
 
     print("\nResultados finales:")
     print(results_df)

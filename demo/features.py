@@ -64,3 +64,5 @@ def extract_epoch_features(X_epochs, channel_names):
 
     # Convertir en dataframe
     return pd.DataFrame(rows)
+
+#LSTM-->Trabajar con la epoch entera
