@@ -31,6 +31,9 @@ def spectral_entropy(psd):
     psd = np.asarray(psd, dtype=float)
 
     psd_sum = np.sum(psd)
+
+    if not np.isfinite(psd_sum) or psd_sum <= 0:
+        return 0.0
     
     psd_norm = psd / psd_sum
     psd_norm = psd_norm[psd_norm > 0]
