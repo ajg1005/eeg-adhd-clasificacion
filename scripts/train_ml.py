@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import json
 import pandas as pd
 from sklearn.base import clone
 from sklearn.metrics import (
@@ -24,10 +24,14 @@ from visual import (
     plot_roc_curve,
 )
 
+
 # Rutas para el dataset
 CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "adhdata.csv"
 OUTPUT_DIR = Path(__file__).resolve().parent.parent
 
+#Guardar mejor modelo
+RESULTS_DIR = OUTPUT_DIR / "results"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 def main():
     # Cargar el dataset, limpiar y preprocesar
@@ -57,7 +61,7 @@ def main():
         X_epochs=X_epochs,
         channel_names=eeg_cols,
         sfreq=128,
-        nperseg=512,
+        nperseg=960,
     )
 
     # Features combinadas
@@ -110,6 +114,10 @@ def main():
         overlap_fold = set(groups_train) & set(groups_test)
         print("Solapamiento train/test en fold:", len(overlap_fold))
 
+        best_model = None
+        best_model_name = None
+        best_metrics = None
+        best_score = -1
         # Entrenamiento y evaluación de cada modelo
         for model_name, model in models.items():
             fitted_model = clone(model)
@@ -159,7 +167,8 @@ def main():
                 f"Balanced Acc: {bal_acc_epoch:.4f} | "
                 f"F1 epoch: {f1_epoch:.4f}"
             )
-
+            
+    
     # Construir dataframe con los resultados
     results_df = pd.DataFrame(results)
 
@@ -177,6 +186,58 @@ def main():
     # Elegir mejor modelo usando la media de CV
     best_model_name = summary_df[("F1_epoch", "mean")].idxmax()
     print(f"\nMejor modelo según media de F1 por epoch en CV: {best_model_name}")
+
+        # Guardar configuración del mejor modelo para export_model.py
+    best_model_config = {
+        "best_model": best_model_name,
+        "feature_mode": "combined",
+
+        "sfreq": 128,
+        "epoch_size": 1920,
+        "step_size": 960,
+        "nperseg": 960,
+
+        "apply_zscore": False,
+        "lowcut": 0.5,
+        "highcut": 50.0,
+
+        "channels": list(eeg_cols),
+
+        "selection_metric": "F1_epoch_mean_cv",
+
+        "cv_metrics": {
+            "accuracy_epoch_mean": float(summary_df.loc[best_model_name, ("Accuracy_epoch", "mean")]),
+            "accuracy_epoch_std": float(summary_df.loc[best_model_name, ("Accuracy_epoch", "std")]),
+
+            "balanced_accuracy_epoch_mean": float(summary_df.loc[best_model_name, ("BalancedAccuracy_epoch", "mean")]),
+            "balanced_accuracy_epoch_std": float(summary_df.loc[best_model_name, ("BalancedAccuracy_epoch", "std")]),
+
+            "precision_epoch_mean": float(summary_df.loc[best_model_name, ("Precision_epoch", "mean")]),
+            "precision_epoch_std": float(summary_df.loc[best_model_name, ("Precision_epoch", "std")]),
+
+            "recall_epoch_mean": float(summary_df.loc[best_model_name, ("Recall_epoch", "mean")]),
+            "recall_epoch_std": float(summary_df.loc[best_model_name, ("Recall_epoch", "std")]),
+
+            "f1_epoch_mean": float(summary_df.loc[best_model_name, ("F1_epoch", "mean")]),
+            "f1_epoch_std": float(summary_df.loc[best_model_name, ("F1_epoch", "std")]),
+        },
+
+        "dataset_summary": {
+            "n_epochs_total": int(len(X_features)),
+            "n_features": int(X_features.shape[1]),
+            "n_subjects": int(len(set(groups_epochs))),
+        },
+
+        "training_strategy": "5-fold GroupKFold cross-subject CV",
+        "note": "This file is used by export_model.py to train and export the final model."
+    }
+
+    config_path = RESULTS_DIR / "best_model_config.json"
+
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(best_model_config, f, indent=4)
+
+    print(f"\nConfiguración del mejor modelo guardada en: {config_path}")
 
     # Figura 1: comparación de modelos por Balanced Accuracy
     plot_model_metric_bar(
@@ -214,11 +275,9 @@ def main():
     else:
         print(f"\nEl modelo {best_model_name} no dispone de scores continuos para ROC.")
 
-    # Entrenar mejor modelo con todos los datos para despliegue/demo
-    best_model = clone(models[best_model_name])
-    best_model.fit(X_features, y_epochs)
-    print("\nModelo final entrenado con todos los datos para despliegue/demo.")
+    
 
+    
 
 if __name__ == "__main__":
     main()

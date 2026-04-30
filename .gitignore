@@ -1,7 +1,33 @@
+# Entornos
+.venv/
+.venv-*/
+env/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Datos grandes
 data/*.csv
+data/*.mat
+
+# Modelos pesados
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.keras
+
+# Mantener carpetas
+!models/.gitkeep
+!data/.gitkeep
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# VS Code
 .vscode/
-.pytest_cache
-.ipynb_checkpoints
-__pycache__
-.env
 

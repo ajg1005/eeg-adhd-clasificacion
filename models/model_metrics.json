@@ -1,0 +1,18 @@
+{
+    "model_name": "random_forest",
+    "feature_mode": "combined",
+    "selection_metric": "F1_epoch_mean_cv",
+    "accuracy_epoch_mean": 0.7886,
+    "accuracy_epoch_std": 0.0582,
+    "balanced_accuracy_epoch_mean": 0.7825,
+    "balanced_accuracy_epoch_std": 0.0558,
+    "precision_epoch_mean": 0.7927,
+    "precision_epoch_std": 0.0572,
+    "recall_epoch_mean": 0.7886,
+    "recall_epoch_std": 0.0582,
+    "f1_epoch_mean": 0.7872,
+    "f1_epoch_std": 0.0578,
+    "n_epochs_total": 2079,
+    "n_features": 458,
+    "n_subjects": 121
+}

@@ -1,0 +1,59 @@
+{
+    "model_name": "random_forest",
+    "feature_mode": "combined",
+    "sfreq": 128,
+    "epoch_size": 1920,
+    "step_size": 960,
+    "nperseg": 960,
+    "apply_zscore": false,
+    "lowcut": 0.5,
+    "highcut": 50.0,
+    "channels": [
+        "Fp1",
+        "Fp2",
+        "F3",
+        "F4",
+        "C3",
+        "C4",
+        "P3",
+        "P4",
+        "O1",
+        "O2",
+        "F7",
+        "F8",
+        "T7",
+        "T8",
+        "P7",
+        "P8",
+        "Fz",
+        "Cz",
+        "Pz"
+    ],
+    "label_column": "Class",
+    "group_column": "ID",
+    "class_mapping": {
+        "0": "Control",
+        "1": "ADHD"
+    },
+    "n_epochs_training": 2079,
+    "n_features": 458,
+    "n_subjects_training": 121,
+    "cv_metrics": {
+        "accuracy_epoch_mean": 0.7886,
+        "accuracy_epoch_std": 0.0582,
+        "balanced_accuracy_epoch_mean": 0.7825,
+        "balanced_accuracy_epoch_std": 0.0558,
+        "precision_epoch_mean": 0.7927,
+        "precision_epoch_std": 0.0572,
+        "recall_epoch_mean": 0.7886,
+        "recall_epoch_std": 0.0582,
+        "f1_epoch_mean": 0.7872,
+        "f1_epoch_std": 0.0578
+    },
+    "dataset_summary": {
+        "n_epochs_total": 2079,
+        "n_features": 458,
+        "n_subjects": 121
+    },
+    "training_strategy": "Final model trained using the model selected by cross-subject cross-validation in train_ml.py."
+}
