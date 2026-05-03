@@ -1,9 +1,9 @@
-from sklearn.model_selection import GroupShuffleSplit,StratifiedGroupKFold
+from sklearn.model_selection import StratifiedGroupKFold
 
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedGroupKFold, train_test_split
+from sklearn.model_selection import train_test_split
 
 
 def make_group_shuffle_split(
@@ -70,7 +70,6 @@ def make_group_shuffle_split(
     return X_train, X_test, y_train, y_test, groups_train, groups_test
 
 
-from sklearn.model_selection import GroupKFold
 
 #stratified probar
 def make_group_kfold_splits(

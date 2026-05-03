@@ -5,3 +5,6 @@ scipy
 matplotlib
 streamlit
 joblib
+pytest
+ruff
+radon

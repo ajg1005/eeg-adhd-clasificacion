@@ -17,7 +17,6 @@ from inference import predict_eeg_dataframe, load_model_artifacts
 
 
 # Page config
-
 st.set_page_config(
     page_title="EEG ADHD Classifier",
     page_icon="🧠",
@@ -62,9 +61,10 @@ def show_model_info():
 def plot_channel(df, channels):
     st.subheader("Visualización de señal EEG")
 
-    selected_channel = st.selectbox(
-        "Selecciona un canal EEG",
+    selected_channels = st.multiselect(
+        "Selecciona uno o varios canales EEG",
         channels,
+        default=[channels[0]] if channels else [],
     )
 
     max_points = st.slider(
@@ -75,7 +75,10 @@ def plot_channel(df, channels):
         step=500,
     )
 
-    st.line_chart(df[selected_channel].iloc[:max_points])
+    if selected_channels:
+        st.line_chart(df[selected_channels].iloc[:max_points])
+    else:
+        st.info("Selecciona al menos un canal para visualizar la señal.")
 
 
 def show_prediction_result(result):
@@ -120,22 +123,6 @@ def show_prediction_result(result):
         chart_df = df_epochs.set_index("Clase")["Número de epochs"]
         st.bar_chart(chart_df)
 
-    with st.expander("Detalles técnicos"):
-        st.json({
-            "prediction": result.get("prediction"),
-            "prediction_label": result.get("prediction_label"),
-            "confidence": result.get("confidence"),
-            "n_epochs": result.get("n_epochs"),
-            "metadata": result.get("metadata"),
-        })
-
-    metrics = result.get("metrics")
-
-    if metrics:
-        with st.expander("Métricas guardadas del modelo"):
-            st.json(metrics)
-
-
 
 # Main app
 
@@ -144,6 +131,7 @@ st.title("Sistema de apoyo al diagnóstico de TDAH mediante EEG")
 st.caption("Clasificación ADHD / Control usando señales EEG y Machine Learning")
 
 metadata, metrics = show_model_info()
+tab_dataset, tab_canales, tab_modelo, tab_prediccion = st.tabs(["Datos", "Canales","Modelo","Prediccion"])
 
 st.markdown(
     """
@@ -173,18 +161,43 @@ if metadata is not None:
 else:
     expected_channels = []
 
-uploaded_file = st.file_uploader(
-    "Sube un archivo CSV EEG",
-    type=["csv"],
-)
+if "df" not in st.session_state:
+    st.session_state["df"] = None
 
-if uploaded_file is not None:
-    try:
-        df = pd.read_csv(uploaded_file)
+if "uploaded_file_name" not in st.session_state:
+    st.session_state["uploaded_file_name"] = None
 
+
+with tab_dataset:
+    st.subheader("Carga de archivo EEG")
+
+    uploaded_file = st.file_uploader(
+        "Sube un archivo CSV EEG",
+        type=["csv"],
+    )
+
+    if uploaded_file is not None:
+        try:
+            df = pd.read_csv(uploaded_file)
+
+            st.session_state["df"] = df
+            st.session_state["uploaded_file_name"] = uploaded_file.name
+            st.session_state["uploaded_file_size"] = uploaded_file.size
+
+            st.success(f"Archivo cargado correctamente: {uploaded_file.name}")
+
+        except Exception as e:
+            st.error("Error al leer el archivo CSV.")
+            st.exception(e)
+
+    df = st.session_state.get("df")
+
+    if df is None:
+        st.info("Sube un archivo CSV para comenzar.")
+    else:
         st.subheader("Información del archivo")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
 
         with col1:
             st.metric("Filas", df.shape[0])
@@ -193,38 +206,141 @@ if uploaded_file is not None:
             st.metric("Columnas", df.shape[1])
 
         with col3:
-            st.metric("Tamaño aproximado", f"{uploaded_file.size / (1024 * 1024):.2f} MB")
+            file_size = st.session_state.get("uploaded_file_size", 0)
+            st.metric("Tamaño", f"{file_size / (1024 * 1024):.2f} MB")
+
+        with col4:
+            if "ID" in df.columns:
+                st.metric("Sujetos", df["ID"].nunique())
+            else:
+                st.metric("Sujetos", "1")
+
+        if "ID" in df.columns:
+            if df["ID"].nunique() == 1:
+                st.success(
+                    "El archivo contiene un único sujeto. Formato adecuado para inferencia."
+                )
+            else:
+                st.warning(
+                    f"El archivo contiene {df['ID'].nunique()} sujetos. "
+                    "La predicción global agregará epochs de varios sujetos. "
+                    "Se recomienda subir un CSV con un único sujeto para inferencia individual."
+                )
+        else:
+            st.info(
+                "El archivo no contiene columna ID. Se tratará como una única señal/sujeto."
+            )
+
+        if "Class" in df.columns:
+            st.info("El archivo contiene columna Class.")
+        else:
+            st.info(
+                "El archivo no contiene columna Class. No es necesaria para inferencia."
+            )
 
         st.subheader("Vista previa")
         st.dataframe(df.head(20), use_container_width=True)
 
-        if metadata is not None:
-            missing_channels = [
-                ch for ch in expected_channels
-                if ch not in df.columns
-            ]
+with tab_canales:
+    
+    st.subheader("Validación de canales EEG")
 
-            if missing_channels:
-                st.error(f"Faltan canales EEG obligatorios: {missing_channels}")
-                st.stop()
+    if metadata is None:
+        st.error("No se puede validar porque no se ha cargado la metadata del modelo.")
+        st.stop()
 
-            st.success("El CSV contiene todos los canales EEG necesarios.")
+    st.success("El CSV contiene todos los canales EEG necesarios.")
 
-            plot_channel(df, expected_channels)
+    st.write("Canales esperados:")
+    st.code(", ".join(expected_channels))
 
-            st.subheader("Predicción")
+    df = st.session_state.get("df")
+    if df is None:
+        st.info("Primero carga un CSV en la pestaña Datos.")
+        st.stop()
+    plot_channel(df, expected_channels)
 
-            if st.button("Run prediction", type="primary"):
-                with st.spinner("Procesando señal EEG y ejecutando el modelo..."):
-                    result = predict_eeg_dataframe(df)
 
-                show_prediction_result(result)
+with tab_modelo:
+    st.subheader("Información del modelo entrenado")
 
-        else:
-            st.error("No se puede ejecutar la predicción porque no se ha cargado la metadata del modelo.")
+    if metadata is None:
+        st.error("No se ha podido cargar la metadata del modelo.")
+    else:
+        col1, col2, col3 = st.columns(3)
 
-    except Exception as e:
-        st.error("Error al procesar el archivo.")
-        st.exception(e)
-else:
-    st.info("Sube un archivo CSV para comenzar.")
+        with col1:
+            st.metric("Modelo", metadata.get("model_name", "N/A"))
+
+        with col2:
+            st.metric("Features", metadata.get("feature_mode", "N/A"))
+
+        with col3:
+            st.metric("Frecuencia", f"{metadata.get('sfreq', 'N/A')} Hz")
+
+        col4, col5, col6 = st.columns(3)
+
+        with col4:
+            st.metric("Epoch size", metadata.get("epoch_size", "N/A"))
+
+        with col5:
+            st.metric("Step size", metadata.get("step_size", "N/A"))
+
+        with col6:
+            st.metric("Nº canales", len(metadata.get("channels", [])))
+
+    st.subheader("Resultados de entrenamiento y validación del modelo")
+
+    st.info(
+        "Metricas correspondientes al modelo final seleccionado."
+    )
+
+    if metrics:
+        col1, col2, col3, col4, col5 = st.columns(5)
+
+        with col1:
+            value = metrics.get("accuracy_epoch_mean")
+            st.metric("Accuracy CV", f"{value:.3f}" if value is not None else "N/A")
+
+        with col2:
+            value = metrics.get("balanced_accuracy_epoch_mean")
+            st.metric("Balanced Acc. CV", f"{value:.3f}" if value is not None else "N/A")
+
+        with col3:
+            value = metrics.get("precision_epoch_mean")
+            st.metric("Precision CV", f"{value:.3f}" if value is not None else "N/A")
+
+        with col4:
+            value = metrics.get("recall_epoch_mean")
+            st.metric("Recall CV", f"{value:.3f}" if value is not None else "N/A")
+
+        with col5:
+            value = metrics.get("f1_epoch_mean")
+            st.metric("F1 CV", f"{value:.3f}" if value is not None else "N/A")
+
+        with st.expander("Ver métricas completas"):
+            st.json(metrics)
+
+    else:
+        st.warning("No hay métricas guardadas disponibles.")
+
+    with st.expander("Ver metadata completa"):
+        st.json(metadata)
+
+
+with tab_prediccion:
+    st.subheader("Predicción ADHD / Control")
+    if metadata is None:
+        st.error("No se puede ejecutar la predicción porque no se ha cargado la metadata del modelo.")
+        st.stop()
+
+    if st.button("Run prediction", type="primary"):
+        with st.spinner("Procesando señal EEG y ejecutando el modelo..."):
+            result = predict_eeg_dataframe(df)
+
+        st.session_state["prediction_result"] = result
+
+    if "prediction_result" in st.session_state:
+        show_prediction_result(st.session_state["prediction_result"])
+    else:
+        st.info("Pulsa el botón para ejecutar la predicción.")
