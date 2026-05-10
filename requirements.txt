@@ -8,3 +8,7 @@ joblib
 pytest
 ruff
 radon
+fastapi
+uvicorn
+python-multipart
+xgboost
