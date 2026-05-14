@@ -27,23 +27,23 @@ def extract_epoch_features(X_epochs, channel_names):
             signal = epoch[:, i]
 
             # Caracteristicas basicas
-            mean_val = np.mean(signal)                
-            std_val = np.std(signal)                  
-            min_val = np.min(signal)                  
-            max_val = np.max(signal)                  
-            median_val = np.median(signal)            
-            var_val = np.var(signal)                  
+            mean_val = np.mean(signal)
+            std_val = np.std(signal)
+            min_val = np.min(signal)
+            max_val = np.max(signal)
+            median_val = np.median(signal)
+            var_val = np.var(signal)
 
             # Percentiles
-            q25_val = np.percentile(signal, 25)       
-            q75_val = np.percentile(signal, 75)       
-            iqr_val = q75_val - q25_val               
+            q25_val = np.percentile(signal, 25)
+            q75_val = np.percentile(signal, 75)
+            iqr_val = q75_val - q25_val
 
             # Rango
-            range_val = max_val - min_val             
+            range_val = max_val - min_val
 
-            energy_val = np.sum(signal ** 2)          
-            rms_val = np.sqrt(np.mean(signal ** 2))   
+            energy_val = np.sum(signal ** 2)
+            rms_val = np.sqrt(np.mean(signal ** 2))
 
             # Guardar features en diccionario con nombres
             row[f"{ch}_mean"] = mean_val

@@ -1,4 +1,4 @@
-import numpy as np
+﻿import numpy as np
 import pandas as pd
 from scipy.signal import welch
 
@@ -26,7 +26,7 @@ def bandpower(freqs, psd, fmin, fmax):
 
 def spectral_entropy(psd):
     """
-    Entropía espectral a partir de la PSD normalizada.
+    Entropia espectral a partir de la PSD normalizada.
     """
     psd = np.asarray(psd, dtype=float)
 
@@ -34,10 +34,10 @@ def spectral_entropy(psd):
 
     if not np.isfinite(psd_sum) or psd_sum <= 0:
         return 0.0
-    
+
     psd_norm = psd / psd_sum
     psd_norm = psd_norm[psd_norm > 0]
-    spectral_ent=-np.sum(psd_norm * np.log2(psd_norm))
+    spectral_ent = -np.sum(psd_norm * np.log2(psd_norm))
 
     return spectral_ent
 
@@ -56,8 +56,8 @@ def mean_frequency(freqs, psd, fmin=None, fmax=None):
 
     if len(freqs) == 0 or np.sum(psd) <= 0:
         return 0.0
-    
-    mean_freq=np.sum(freqs * psd) / np.sum(psd)
+
+    mean_freq = np.sum(freqs * psd) / np.sum(psd)
 
     return mean_freq
 
@@ -73,7 +73,7 @@ def extract_spectral_features(
     Extraer features espectrales por epoch y canal:
     - Potencia absoluta por banda
     - Potencia relativa por banda
-    - Entropía espectral global
+    - Entropia espectral global
     - Frecuencia beta media en O1 y O2
     - Ratio theta/beta
     """
@@ -88,13 +88,13 @@ def extract_spectral_features(
 
             freqs, psd = welch(signal, fs=sfreq, nperseg=nperseg)
 
-            # Rango útil total
+            # Rango util total
             total_idx = (freqs >= 0.5) & (freqs <= 45)
             total_psd = psd[total_idx]
 
             total_power = bandpower(freqs, psd, 0.5, 45)
 
-            # Entropía espectral global del canal
+            # Entropia espectral global del canal
             row[f"{ch_name}_spectral_entropy"] = spectral_entropy(total_psd)
 
             band_powers = {}
@@ -117,7 +117,6 @@ def extract_spectral_features(
             beta = band_powers["beta"]
 
             row[f"{ch_name}_theta_beta_ratio"] = theta / beta if beta > 0 else 0.0
-            
 
             # Frecuencia beta media O1 y O2
             if ch_name in {"O1", "O2"}:

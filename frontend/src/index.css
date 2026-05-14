@@ -1,15 +1,14 @@
 html {
-  background: #eef2f5;
+  background: #090812;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #eef2f5;
+  background: #090812;
 }
 
 #root {
   min-height: 100vh;
 }
-

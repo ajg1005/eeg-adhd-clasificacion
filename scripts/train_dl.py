@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,9 +27,11 @@ CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "adhdata.csv"
 OUTPUT_DIR = Path(__file__).resolve().parent.parent
 FIGURES_DIR = OUTPUT_DIR / "Figuras"
 TRAINING_CURVES_DIR = FIGURES_DIR / "training_curves_tf"
+RESULTS_DIR = OUTPUT_DIR / "results"
 
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 TRAINING_CURVES_DIR.mkdir(parents=True, exist_ok=True)
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 MODELS_TO_RUN = ["eegnet", "cnn_1d", "cnn_lstm"]
@@ -160,6 +163,7 @@ def build_summary_df(results):
         "Recall_epoch": ["mean", "std"],
         "F1_epoch": ["mean", "std"],
         "TestLoss": ["mean", "std"],
+        "BestThreshold": ["mean", "std"],
     }).round(4)
 
 
@@ -280,6 +284,63 @@ def save_best_tf_outputs(summary_df, oof_predictions):
     else:
         print(f"\nEl modelo {best_model_name} no dispone de scores continuos para ROC.")
 
+    return best_model_name
+
+
+def save_best_tf_config(summary_df, best_model_name, X_epochs, groups_epochs, eeg_cols):
+    def metric_value(metric, stat):
+        return float(summary_df.loc[best_model_name, (metric, stat)])
+
+    best_config = {
+        "best_model": best_model_name,
+        "model_id": "dl_best",
+        "model_family": "deep_learning",
+        "sfreq": 128,
+        "epoch_size": EPOCH_SIZE,
+        "step_size": STEP_SIZE,
+        "apply_filtering": True,
+        "apply_zscore": True,
+        "dropout": DROPOUT,
+        "learning_rate": LEARNING_RATE,
+        "batch_size": BATCH_SIZE,
+        "n_epochs": N_EPOCHS,
+        "patience": PATIENCE,
+        "threshold_cv_mean": metric_value("BestThreshold", "mean"),
+        "channels": list(eeg_cols),
+        "selection_metric": "F1_epoch_mean_cv",
+        "cv_metrics": {
+            "accuracy_epoch_mean": metric_value("Accuracy_epoch", "mean"),
+            "accuracy_epoch_std": metric_value("Accuracy_epoch", "std"),
+            "balanced_accuracy_epoch_mean": metric_value("BalancedAccuracy_epoch", "mean"),
+            "balanced_accuracy_epoch_std": metric_value("BalancedAccuracy_epoch", "std"),
+            "precision_epoch_mean": metric_value("Precision_epoch", "mean"),
+            "precision_epoch_std": metric_value("Precision_epoch", "std"),
+            "recall_epoch_mean": metric_value("Recall_epoch", "mean"),
+            "recall_epoch_std": metric_value("Recall_epoch", "std"),
+            "f1_epoch_mean": metric_value("F1_epoch", "mean"),
+            "f1_epoch_std": metric_value("F1_epoch", "std"),
+            "test_loss_mean": metric_value("TestLoss", "mean"),
+            "test_loss_std": metric_value("TestLoss", "std"),
+        },
+        "dataset_summary": {
+            "n_epochs_total": int(len(X_epochs)),
+            "n_subjects": int(len(set(groups_epochs))),
+            "input_shape": list(X_epochs.shape[1:]),
+        },
+        "training_strategy": (
+            "5-fold StratifiedGroupKFold cross-subject CV with inner "
+            "subject-level validation"
+        ),
+        "note": "This file is used by export_model_dl.py to train and export the final DL model.",
+    }
+
+    config_path = RESULTS_DIR / "dl_best_model_config.json"
+
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(best_config, f, indent=4)
+
+    print(f"\nConfiguracion del mejor modelo DL guardada en: {config_path}")
+
 
 def main():
     print("TensorFlow version:", tf.__version__)
@@ -384,7 +445,11 @@ def main():
     print("\nRESUMEN TF CROSS-SUBJECT")
     print(summary_df)
 
-    save_best_tf_outputs(summary_df, oof_predictions)
+    pd.DataFrame(results).to_csv(RESULTS_DIR / "dl_cv_fold_results.csv", index=False)
+    summary_df.to_csv(RESULTS_DIR / "dl_cv_summary.csv")
+
+    best_model_name = save_best_tf_outputs(summary_df, oof_predictions)
+    save_best_tf_config(summary_df, best_model_name, X_epochs, groups_epochs, eeg_cols)
 
 
 if __name__ == "__main__":

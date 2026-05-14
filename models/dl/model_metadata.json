@@ -1,0 +1,43 @@
+{
+    "model_id": "dl_best",
+    "model_name": "cnn_1d",
+    "model_family": "deep_learning",
+    "sfreq": 128,
+    "epoch_size": 512,
+    "step_size": 256,
+    "apply_filtering": true,
+    "apply_zscore": true,
+    "threshold": 0.358,
+    "channels": [
+        "Fp1",
+        "Fp2",
+        "F3",
+        "F4",
+        "C3",
+        "C4",
+        "P3",
+        "P4",
+        "O1",
+        "O2",
+        "F7",
+        "F8",
+        "T7",
+        "T8",
+        "P7",
+        "P8",
+        "Fz",
+        "Cz",
+        "Pz"
+    ],
+    "label_column": "Class",
+    "group_column": "ID",
+    "class_mapping": {
+        "0": "Control",
+        "1": "ADHD"
+    },
+    "input_shape": [
+        512,
+        19
+    ],
+    "training_strategy": "Final DL model trained using the model selected by cross-subject cross-validation in train_dl.py."
+}

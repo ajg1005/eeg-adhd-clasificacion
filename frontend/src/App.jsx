@@ -13,6 +13,7 @@ import {
 import {
   getHealth,
   getModelInfo,
+  getModels,
   getSignalPreview,
   predictCsv,
   validateCsv,
@@ -20,7 +21,7 @@ import {
 } from "./api";
 import "./App.css";
 
-const TABS = ["Datos", "Modelo", "Senal EEG", "Prediccion"];
+const TABS = ["Datos", "Modelo", "Señal EEG", "Predicción"];
 
 function formatPercent(value) {
   if (value === null || value === undefined) {
@@ -41,6 +42,8 @@ function formatMetric(value) {
 function App() {
   const [activeTab, setActiveTab] = useState("Datos");
   const [apiStatus, setApiStatus] = useState("checking");
+  const [models, setModels] = useState([]);
+  const [selectedModelId, setSelectedModelId] = useState("ml_best");
   const [modelInfo, setModelInfo] = useState(null);
   const [file, setFile] = useState(null);
   const [validation, setValidation] = useState(null);
@@ -61,10 +64,13 @@ function App() {
         await getHealth();
         setApiStatus("ok");
 
-        const info = await getModelInfo();
+        const availableModels = await getModels();
+        setModels(availableModels);
+
+        const info = await getModelInfo(selectedModelId);
         setModelInfo(info);
         
-        const figures = await getModelFigures();
+        const figures = await getModelFigures(selectedModelId);
         setModelFigures(figures);
 
         if (info.channels?.length > 0) {
@@ -77,7 +83,15 @@ function App() {
     }
 
     loadInitialData();
-  }, []);
+  }, [selectedModelId]);
+
+  function handleModelChange(event) {
+    setSelectedModelId(event.target.value);
+    setModelInfo(null);
+    setPrediction(null);
+    setModelFigures([]);
+    setError("");
+  }
 
   async function handleFileChange(event) {
     const selectedFile = event.target.files[0];
@@ -133,7 +147,7 @@ function App() {
     setError("");
 
     try {
-      const result = await predictCsv(file);
+      const result = await predictCsv(file, selectedModelId);
       setPrediction(result);
     } catch (err) {
       setError(err.message);
@@ -142,7 +156,7 @@ function App() {
     }
   }
 
-  const metrics = modelInfo?.metrics;
+  const metrics = modelInfo?.metrics?.cv_metrics || modelInfo?.metrics;
 
   const predictionChartData = useMemo(() => {
     if (!prediction) {
@@ -157,6 +171,22 @@ function App() {
       })
     );
   }, [prediction]);
+
+  const decisionScore = prediction
+    ? prediction.decision_score ?? prediction.confidence
+    : null;
+
+  const finalClassEpochPercentage = prediction
+    ? prediction.final_class_epoch_percentage ??
+      prediction.epoch_percentage_by_class[prediction.prediction_label]
+    : null;
+
+  const adhdEpochs = prediction?.epoch_count_by_class?.ADHD ?? 0;
+  const controlEpochs = prediction?.epoch_count_by_class?.Control ?? 0;
+  const thresholdUsed =
+    prediction?.threshold !== undefined && prediction?.threshold !== null
+      ? Number(prediction.threshold).toFixed(3)
+      : "N/A";
 
   const metricsChartData = useMemo(() => {
     if (!metrics) {
@@ -180,10 +210,10 @@ function App() {
       <header className="app-header">
         <div>
           <p className="eyebrow">EEG ADHD Classifier</p>
-          <h1>Sistema de apoyo al diagnostico de TDAH mediante EEG</h1>
+          <h1>Herramienta experimental de apoyo al análisis de TDAH mediante EEG</h1>
           <p className="subtitle">
-            Aplicacion React + FastAPI para validar senales EEG, visualizar
-            canales y ejecutar inferencia con el modelo entrenado.
+            Aplicación para validar señales EEG, visualizar
+            canales y ejecutar inferencia con el mejor modelo de deep learning o machine learning.
           </p>
         </div>
 
@@ -204,6 +234,26 @@ function App() {
           </button>
         ))}
       </nav>
+
+      <section className="model-selector panel">
+        <label>
+          Modelo de inferencia
+          <select value={selectedModelId} onChange={handleModelChange}>
+            {models.map((model) => (
+              <option key={model.model_id} value={model.model_id}>
+                {model.display_name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {modelInfo && (
+          <p className="muted">
+            {modelInfo.display_name} · {modelInfo.model_name} ·{" "}
+            {modelInfo.model_family}
+          </p>
+        )}
+      </section>
 
       {error && <div className="alert alert-error">{error}</div>}
 
@@ -252,7 +302,7 @@ function App() {
           </div>
 
           <div className="panel">
-            <h2>Validacion de canales</h2>
+            <h2>Validación de canales</h2>
 
             {modelInfo ? (
               <>
@@ -309,18 +359,18 @@ function App() {
               <span>Step size</span>
               <strong>{modelInfo.step_size}</strong>
             </div>
-            <div>
-              <span>N features</span>
-              <strong>{modelInfo.n_features}</strong>
-            </div>
+                <div>
+                  <span>N features</span>
+                  <strong>{modelInfo.n_features ?? "N/A"}</strong>
+                </div>
           </div>
         ) : (
-          <p>Cargando informacion del modelo...</p>
+          <p>Cargando información del modelo...</p>
         )}
       </div>
 
       <div className="panel">
-        <h2>Metricas CV</h2>
+        <h2>Métricas CV</h2>
 
         {metrics ? (
           <>
@@ -383,9 +433,9 @@ function App() {
 )}
 
 
-      {activeTab === "Senal EEG" && (
+      {activeTab === "Señal EEG" && (
         <section className="panel">
-          <h2>Visualizacion de senal EEG</h2>
+          <h2>Visualización de señal EEG</h2>
 
           <div className="controls-row">
             <label>
@@ -420,11 +470,11 @@ function App() {
               onClick={handleLoadPreview}
               type="button"
             >
-              {loadingPreview ? "Cargando..." : "Ver senal"}
+              {loadingPreview ? "Cargando..." : "Ver señal"}
             </button>
           </div>
 
-          {!file && <p className="muted">Primero sube un CSV en la pestana Datos.</p>}
+          {!file && <p className="muted">Primero sube un CSV en la pestaña Datos.</p>}
 
           {signalPreview && (
             <div className="chart-box tall-chart">
@@ -449,10 +499,10 @@ function App() {
         </section>
       )}
 
-      {activeTab === "Prediccion" && (
+      {activeTab === "Predicción" && (
         <section className="grid-layout">
           <div className="panel">
-            <h2>Ejecutar prediccion</h2>
+            <h2>Ejecutar predicción</h2>
 
             {file ? (
               <div className="file-info">
@@ -460,7 +510,7 @@ function App() {
                 <span>{validation ? `${validation.rows} filas` : "CSV cargado"}</span>
               </div>
             ) : (
-              <p className="muted">Primero sube un CSV en la pestana Datos.</p>
+              <p className="muted">Primero sube un CSV en la pestaña Datos.</p>
             )}
 
             <button
@@ -469,7 +519,7 @@ function App() {
               onClick={handlePrediction}
               type="button"
             >
-              {loadingPrediction ? "Procesando..." : "Ejecutar prediccion"}
+              {loadingPrediction ? "Procesando..." : "Ejecutar predicción"}
             </button>
           </div>
 
@@ -480,16 +530,32 @@ function App() {
               <>
                 <div className="result-main">
                   <div>
-                    <span>Prediccion final</span>
+                    <span>Resultado global</span>
                     <strong>{prediction.prediction_label}</strong>
                   </div>
                   <div>
-                    <span>Confianza</span>
-                    <strong>{formatPercent(prediction.confidence)}</strong>
+                    <span>Score global</span>
+                    <strong>{formatPercent(decisionScore)}</strong>
                   </div>
                   <div>
-                    <span>Epochs</span>
+                    <span>Epochs analizadas</span>
                     <strong>{prediction.n_epochs}</strong>
+                  </div>
+                  <div>
+                    <span>Epochs ADHD</span>
+                    <strong>{adhdEpochs}</strong>
+                  </div>
+                  <div>
+                    <span>Epochs Control</span>
+                    <strong>{controlEpochs}</strong>
+                  </div>
+                  <div>
+                    <span>Porcentaje {prediction.prediction_label}</span>
+                    <strong>{formatPercent(finalClassEpochPercentage)}</strong>
+                  </div>
+                  <div>
+                    <span>Threshold usado</span>
+                    <strong>{thresholdUsed}</strong>
                   </div>
                 </div>
 
@@ -511,7 +577,7 @@ function App() {
                 </div>
               </>
             ) : (
-              <p className="muted">Todavia no hay prediccion ejecutada.</p>
+              <p className="muted">Todavía no hay predicción ejecutada.</p>
             )}
           </div>
         </section>
@@ -521,4 +587,3 @@ function App() {
 }
 
 export default App;
-

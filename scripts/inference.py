@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 import json
 
 import joblib
@@ -9,11 +9,10 @@ from preprocessing import preprocess_dataset
 from epochs import create_epochs
 from features import extract_epoch_features
 from spectral_features import extract_spectral_features
-from signal_preprocessing import apply_basic_filtering
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-MODELS_DIR = BASE_DIR / "models"
+MODELS_DIR = BASE_DIR / "models" / "ml"
 
 MODEL_PATH = MODELS_DIR / "final_model.joblib"
 FEATURE_COLUMNS_PATH = MODELS_DIR / "feature_columns.json"
@@ -60,7 +59,7 @@ def map_prediction_label(prediction):
 
 def validate_eeg_dataframe(df, expected_channels):
     if df is None or df.empty:
-        raise ValueError("El archivo está vacío.")
+        raise ValueError("El archivo estÃ¡ vacÃ­o.")
 
     missing_channels = [ch for ch in expected_channels if ch not in df.columns]
 
@@ -74,7 +73,7 @@ def validate_eeg_dataframe(df, expected_channels):
             non_numeric.append(col)
 
     if non_numeric:
-        raise ValueError(f"Estas columnas EEG no son numéricas: {non_numeric}")
+        raise ValueError(f"Estas columnas EEG no son numÃ©ricas: {non_numeric}")
 
     return True
 
@@ -93,7 +92,7 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
 
     # En inferencia, Class e ID son opcionales.
     # Class no se usa para predecir; solo permite reutilizar create_epochs().
-    # ID permite agrupar la señal por sujeto. Si no existe, se crea uno temporal.
+    # ID permite agrupar la seÃ±al por sujeto. Si no existe, se crea uno temporal.
     if "Class" not in df.columns:
         df["Class"] = 0
 
@@ -101,13 +100,6 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
         df["ID"] = "uploaded_file"
 
     df_clean, eeg_cols = preprocess_dataset(df)
-
-    if metadata.get("apply_filtering", False):
-        df_clean = apply_basic_filtering(
-            df_clean,
-            eeg_cols,
-            subject_col="ID",
-        )
 
     X_epochs, y_epochs, groups_epochs = create_epochs(
         df=df_clean,
@@ -151,7 +143,7 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
         )
 
     else:
-        raise ValueError(f"feature_mode no válido: {feature_mode}")
+        raise ValueError(f"feature_mode no vÃ¡lido: {feature_mode}")
 
     missing_features = [col for col in feature_columns if col not in X_features.columns]
 
@@ -205,10 +197,18 @@ def predict_eeg_dataframe(df):
         for label, count in zip(unique_preds, pred_counts)
     }
 
+    prediction_label = map_prediction_label(final_prediction)
+    final_class_epoch_percentage = epoch_percentage_by_class.get(
+        prediction_label,
+        0.0,
+    )
+
     result = {
         "prediction": str(final_prediction),
-        "prediction_label": map_prediction_label(final_prediction),
+        "prediction_label": prediction_label,
         "confidence": confidence,
+        "decision_score": confidence,
+        "final_class_epoch_percentage": final_class_epoch_percentage,
         "n_epochs": int(len(epoch_predictions)),
         "epoch_count_by_class": epoch_count_by_class,
         "epoch_percentage_by_class": epoch_percentage_by_class,
@@ -231,3 +231,4 @@ def predict_eeg_file(file_path):
     df = pd.read_csv(file_path)
 
     return predict_eeg_dataframe(df)
+

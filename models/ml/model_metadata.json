@@ -6,8 +6,7 @@
     "step_size": 960,
     "nperseg": 960,
     "apply_zscore": false,
-    "lowcut": 0.5,
-    "highcut": 50.0,
+    "apply_filtering": false,
     "channels": [
         "Fp1",
         "Fp2",

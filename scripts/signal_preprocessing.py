@@ -18,7 +18,7 @@ def apply_basic_filtering(
     highcut: float = 50.0,
 ) -> pd.DataFrame:
     """
-    Aplica filtrado pasabanda sobre la señal continua de cada sujeto.
+    Aplica filtrado pasabanda sobre la seÃ±al continua de cada sujeto.
     """
     df_filtered = df.copy()
 

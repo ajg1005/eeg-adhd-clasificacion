@@ -1,0 +1,6 @@
+,Accuracy_epoch,Accuracy_epoch,BalancedAccuracy_epoch,BalancedAccuracy_epoch,Precision_epoch,Precision_epoch,Recall_epoch,Recall_epoch,F1_epoch,F1_epoch,TestLoss,TestLoss,BestThreshold,BestThreshold
+,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std,mean,std
+Modelo,,,,,,,,,,,,,,
+cnn_1d,0.8025,0.0727,0.8027,0.0737,0.8147,0.0681,0.8025,0.0727,0.801,0.0732,0.5373,0.1317,0.358,0.2385
+cnn_lstm,0.7949,0.0259,0.7938,0.0231,0.8116,0.0155,0.7949,0.0259,0.7924,0.0266,0.6201,0.0881,0.546,0.1624
+eegnet,0.7079,0.0894,0.7253,0.0815,0.7573,0.071,0.7079,0.0894,0.7004,0.0948,0.6907,0.3962,0.63,0.1356

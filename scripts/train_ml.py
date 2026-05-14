@@ -15,7 +15,6 @@ from epochs import create_epochs
 from features import extract_epoch_features
 from pipeline import get_models
 from preprocessing import preprocess_dataset
-from signal_preprocessing import apply_basic_filtering
 from spectral_features import extract_spectral_features
 from split import make_group_kfold_splits
 from visual import (
@@ -37,7 +36,6 @@ def main():
     # Cargar el dataset, limpiar y preprocesar
     df = load_dataset(CSV_PATH)
     df_clean, eeg_cols = preprocess_dataset(df)
-    df_filtered = apply_basic_filtering(df_clean, eeg_cols, subject_col="ID")
 
     # Segmentar en epochs
     X_epochs, y_epochs, groups_epochs = create_epochs(
@@ -114,10 +112,6 @@ def main():
         overlap_fold = set(groups_train) & set(groups_test)
         print("Solapamiento train/test en fold:", len(overlap_fold))
 
-        best_model = None
-        best_model_name = None
-        best_metrics = None
-        best_score = -1
         # Entrenamiento y evaluación de cada modelo
         for model_name, model in models.items():
             fitted_model = clone(model)
@@ -183,6 +177,9 @@ def main():
     print("\nRESUMEN CV CROSS-SUBJECT")
     print(summary_df)
 
+    results_df.to_csv(RESULTS_DIR / "ml_cv_fold_results.csv", index=False)
+    summary_df.to_csv(RESULTS_DIR / "ml_cv_summary.csv")
+
     # Elegir mejor modelo usando la media de CV
     best_model_name = summary_df[("F1_epoch", "mean")].idxmax()
     print(f"\nMejor modelo según media de F1 por epoch en CV: {best_model_name}")
@@ -198,8 +195,7 @@ def main():
         "nperseg": 960,
 
         "apply_zscore": False,
-        "lowcut": 0.5,
-        "highcut": 50.0,
+        "apply_filtering": False,
 
         "channels": list(eeg_cols),
 
