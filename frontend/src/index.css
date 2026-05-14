@@ -1,12 +1,12 @@
 html {
-  background: #090812;
+   background: #201e22;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #090812;
+  background: #201e22;
 }
 
 #root {

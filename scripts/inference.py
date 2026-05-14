@@ -59,7 +59,7 @@ def map_prediction_label(prediction):
 
 def validate_eeg_dataframe(df, expected_channels):
     if df is None or df.empty:
-        raise ValueError("El archivo estÃ¡ vacÃ­o.")
+        raise ValueError("El archivo está vacío.")
 
     missing_channels = [ch for ch in expected_channels if ch not in df.columns]
 
@@ -73,7 +73,7 @@ def validate_eeg_dataframe(df, expected_channels):
             non_numeric.append(col)
 
     if non_numeric:
-        raise ValueError(f"Estas columnas EEG no son numÃ©ricas: {non_numeric}")
+        raise ValueError(f"Estas columnas EEG no son numéricas: {non_numeric}")
 
     return True
 
@@ -92,7 +92,7 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
 
     # En inferencia, Class e ID son opcionales.
     # Class no se usa para predecir; solo permite reutilizar create_epochs().
-    # ID permite agrupar la seÃ±al por sujeto. Si no existe, se crea uno temporal.
+    # ID permite agrupar la señal por sujeto. Si no existe, se crea uno temporal.
     if "Class" not in df.columns:
         df["Class"] = 0
 
@@ -143,7 +143,7 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
         )
 
     else:
-        raise ValueError(f"feature_mode no vÃ¡lido: {feature_mode}")
+        raise ValueError(f"feature_mode no válido: {feature_mode}")
 
     missing_features = [col for col in feature_columns if col not in X_features.columns]
 

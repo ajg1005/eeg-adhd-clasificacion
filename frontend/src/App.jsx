@@ -381,7 +381,7 @@ function App() {
                   <XAxis dataKey="name" />
                   <YAxis domain={[0, 1]} />
                   <Tooltip />
-                  <Bar dataKey="value" fill="#116a7b" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="value" fill="#be7c4d" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -488,7 +488,7 @@ function App() {
                     dataKey="value"
                     dot={false}
                     isAnimationActive={false}
-                    stroke="#116a7b"
+                    stroke="#be5a38"
                     strokeWidth={2}
                     type="monotone"
                   />
@@ -569,7 +569,7 @@ function App() {
                       <Tooltip />
                       <Bar
                         dataKey="porcentaje"
-                        fill="#116a7b"
+                        fill="#be7c4d"
                         radius={[6, 6, 0, 0]}
                       />
                     </BarChart>
