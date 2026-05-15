@@ -1,10 +1,13 @@
-﻿from pathlib import Path
+from pathlib import Path
+import os
 import sys
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = BASE_DIR / "scripts"
-FIGURES_DIR = BASE_DIR / "Figuras"
+MODELS_DIR = Path(os.getenv("MODELS_DIR", BASE_DIR / "models"))
+FIGURES_DIR = Path(os.getenv("FIGURES_DIR", BASE_DIR / "Figuras"))
+
 
 CORS_ORIGINS = [
     "http://localhost:5173",

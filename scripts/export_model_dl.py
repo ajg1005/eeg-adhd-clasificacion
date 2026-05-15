@@ -1,9 +1,9 @@
 from pathlib import Path
 import json
 
+import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
 
 from data_load import load_dataset

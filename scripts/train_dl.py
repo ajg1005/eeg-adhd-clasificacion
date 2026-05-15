@@ -1,6 +1,7 @@
 from pathlib import Path
 import json
 
+import keras
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -12,7 +13,6 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
-from tensorflow import keras
 
 from data_load import load_dataset
 from epochs import create_epochs

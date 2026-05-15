@@ -1,5 +1,5 @@
-from tensorflow import keras
-from tensorflow.keras import layers, regularizers
+import keras
+from keras import layers, regularizers
 
 
 def build_eegnet(input_shape, dropout=0.5):

@@ -5,10 +5,8 @@ scipy
 matplotlib
 streamlit
 joblib
-pytest
-ruff
-radon
 fastapi
 uvicorn
 python-multipart
 xgboost
+tensorflow==2.21.0

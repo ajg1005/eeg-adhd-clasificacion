@@ -1,0 +1,8 @@
+,Accuracy_epoch,Accuracy_epoch,BalancedAccuracy_epoch,BalancedAccuracy_epoch,Precision_epoch,Precision_epoch,Recall_epoch,Recall_epoch,F1_epoch,F1_epoch
+,mean,std,mean,std,mean,std,mean,std,mean,std
+Modelo,,,,,,,,,,
+knn,0.7373,0.0578,0.7275,0.0611,0.7404,0.058,0.7373,0.0578,0.7338,0.0589
+logistic_regression,0.6885,0.0756,0.6866,0.0839,0.6926,0.0827,0.6885,0.0756,0.6878,0.0779
+random_forest,0.7886,0.0582,0.7825,0.0558,0.7927,0.0572,0.7886,0.0582,0.7872,0.0578
+rbf_svc,0.7537,0.0423,0.7489,0.0467,0.7573,0.0425,0.7537,0.0423,0.752,0.0448
+xgboost,0.7784,0.0638,0.7735,0.0594,0.7818,0.0601,0.7784,0.0638,0.7775,0.0632

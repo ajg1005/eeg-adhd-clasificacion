@@ -89,7 +89,7 @@ def build_features(X_epochs, eeg_cols, config):
 
 
 def main():
-    print("Cargando configuraciÃ³n del mejor modelo...")
+    print("Cargando configuracion del mejor modelo...")
     config = load_config()
 
     best_model_name = config["best_model"]
