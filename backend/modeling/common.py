@@ -7,6 +7,7 @@ from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subje
 from scripts.spectral_features import extract_spectral_features
 
 
+# Convertir la clase del modelo a un texto facil de leer
 def map_prediction_label(prediction):
     mapping = {
         "0": "Control",
@@ -18,6 +19,7 @@ def map_prediction_label(prediction):
     return mapping.get(prediction, str(prediction))
 
 
+# Validacion rapida del CSV antes de construir epochs/features
 def validate_eeg_dataframe(df, expected_channels):
     if df is None or df.empty:
         raise ValueError("El archivo está vacío.")
@@ -39,6 +41,7 @@ def validate_eeg_dataframe(df, expected_channels):
     return True
 
 
+# Preparar un CSV subido para que tenga las mismas features que en entrenamiento ML
 def prepare_features_from_dataframe(df, metadata, feature_columns):
     df = df.copy()
 
@@ -50,6 +53,7 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
     feature_mode = metadata["feature_mode"]
 
     validate_eeg_dataframe(df, expected_channels=channels)
+    # En inferencia Class e ID son opcionales
 
     if "Class" not in df.columns:
         df["Class"] = 0
@@ -112,6 +116,7 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
     return X_features, X_epochs, y_epochs, groups_epochs
 
 
+# Preparar epochs crudas con el mismo preprocesado usado en entrenamiento DL
 def prepare_dl_epochs_from_dataframe(df, metadata):
     df = df.copy()
 
@@ -120,6 +125,7 @@ def prepare_dl_epochs_from_dataframe(df, metadata):
     step_size = metadata["step_size"]
 
     validate_eeg_dataframe(df, expected_channels=channels)
+    # En inferencia Class e ID son opcionales
 
     if "Class" not in df.columns:
         df["Class"] = 0

@@ -3,7 +3,6 @@ pandas
 scikit-learn
 scipy
 matplotlib
-streamlit
 joblib
 fastapi
 uvicorn

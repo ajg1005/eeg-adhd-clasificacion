@@ -62,6 +62,51 @@ def mean_frequency(freqs, psd, fmin=None, fmax=None):
     return mean_freq
 
 
+def _relative_power(power, total_power):
+    if total_power <= 0:
+        return 0.0
+    return power / total_power
+
+
+def _add_band_features(row, ch_name, freqs, psd, bands, total_power):
+    band_powers = {}
+
+    for band_name, (fmin, fmax) in bands.items():
+        power = bandpower(freqs, psd, fmin, fmax)
+        band_powers[band_name] = power
+        row[f"{ch_name}_{band_name}_abs_power"] = power
+        row[f"{ch_name}_{band_name}_rel_power"] = _relative_power(power, total_power)
+
+    return band_powers
+
+
+def _add_beta_mean_frequency(row, ch_name, freqs, psd, bands):
+    if ch_name not in {"O1", "O2"}:
+        return
+
+    beta_fmin, beta_fmax = bands["beta"]
+    row[f"{ch_name}_beta_mean_freq"] = mean_frequency(freqs, psd, beta_fmin, beta_fmax)
+
+
+def _extract_channel_spectral_features(signal, ch_name, sfreq, bands, nperseg):
+    freqs, psd = welch(signal, fs=sfreq, nperseg=nperseg)
+    total_idx = (freqs >= 0.5) & (freqs <= 45)
+    total_psd = psd[total_idx]
+    total_power = bandpower(freqs, psd, 0.5, 45)
+
+    row = {
+        f"{ch_name}_spectral_entropy": spectral_entropy(total_psd),
+    }
+    band_powers = _add_band_features(row, ch_name, freqs, psd, bands, total_power)
+
+    theta = band_powers["theta"]
+    beta = band_powers["beta"]
+    row[f"{ch_name}_theta_beta_ratio"] = theta / beta if beta > 0 else 0.0
+    _add_beta_mean_frequency(row, ch_name, freqs, psd, bands)
+
+    return row
+
+
 def extract_spectral_features(
     X_epochs,
     channel_names,
@@ -85,45 +130,15 @@ def extract_spectral_features(
 
         for ch_idx, ch_name in enumerate(channel_names):
             signal = epoch[:, ch_idx]
-
-            freqs, psd = welch(signal, fs=sfreq, nperseg=nperseg)
-
-            # Rango util total
-            total_idx = (freqs >= 0.5) & (freqs <= 45)
-            total_psd = psd[total_idx]
-
-            total_power = bandpower(freqs, psd, 0.5, 45)
-
-            # Entropia espectral global del canal
-            row[f"{ch_name}_spectral_entropy"] = spectral_entropy(total_psd)
-
-            band_powers = {}
-
-            for band_name, (fmin, fmax) in bands.items():
-                power = bandpower(freqs, psd, fmin, fmax)
-                band_powers[band_name] = power
-
-                # Potencia absoluta
-                row[f"{ch_name}_{band_name}_abs_power"] = power
-
-                # Potencia relativa
-                if total_power > 0:
-                    row[f"{ch_name}_{band_name}_rel_power"] = power / total_power
-                else:
-                    row[f"{ch_name}_{band_name}_rel_power"] = 0.0
-
-            # Ratios
-            theta = band_powers["theta"]
-            beta = band_powers["beta"]
-
-            row[f"{ch_name}_theta_beta_ratio"] = theta / beta if beta > 0 else 0.0
-
-            # Frecuencia beta media O1 y O2
-            if ch_name in {"O1", "O2"}:
-                beta_fmin, beta_fmax = bands["beta"]
-                row[f"{ch_name}_beta_mean_freq"] = mean_frequency(
-                    freqs, psd, beta_fmin, beta_fmax
+            row.update(
+                _extract_channel_spectral_features(
+                    signal,
+                    ch_name,
+                    sfreq,
+                    bands,
+                    nperseg,
                 )
+            )
 
         rows.append(row)
 

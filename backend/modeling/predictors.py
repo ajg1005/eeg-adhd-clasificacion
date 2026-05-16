@@ -15,6 +15,7 @@ from backend.modeling.common import (
 )
 
 
+# Modelos que puede seleccionar el frontend
 MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     "ml_best": {
         "model_id": "ml_best",
@@ -63,11 +64,13 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
 }
 
 
+# Leer metadatos y metricas guardadas al exportar modelos
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
+# Buscar la configuracion del modelo seleccionado
 def get_model_config(model_id: str) -> dict[str, Any]:
     try:
         model_config = MODEL_REGISTRY[model_id]
@@ -113,6 +116,7 @@ class MLPredictor:
         self.metrics_path = self.model_dir / "model_metrics.json"
 
     def load_artifacts(self):
+        # Cargar modelo ML, columnas esperadas, metadatos y metricas
         if not self.model_path.exists():
             raise FileNotFoundError(f"No existe el modelo: {self.model_path}")
 
@@ -152,6 +156,7 @@ class MLPredictor:
         return validate_dataframe(df, metadata.get("channels", []))
 
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
+        # Prediccion final agregando todas las epochs del archivo
         model, feature_columns, metadata, metrics = self.load_artifacts()
         X_features, _, _, _ = prepare_features_from_dataframe(
             df=df,
@@ -213,6 +218,7 @@ class DLPredictor:
         self.metrics_path = self.model_dir / "model_metrics.json"
 
     def load_artifacts(self):
+        # Cargar modelo DL, metadatos y metricas
         import keras
 
         if not self.model_path.exists():
@@ -250,6 +256,7 @@ class DLPredictor:
         return validate_dataframe(df, metadata.get("channels", []))
 
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
+        # Prediccion DL agregando la probabilidad media de las epochs
         model, metadata, metrics = self.load_artifacts()
         X_epochs, _, _ = prepare_dl_epochs_from_dataframe(df=df, metadata=metadata)
 

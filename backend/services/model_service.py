@@ -1,5 +1,6 @@
-import pandas as pd
+﻿import pandas as pd
 
+from backend.modeling.model_catalog import get_model_catalog
 from backend.modeling.predictors import (
     get_model_config,
     get_predictor,
@@ -7,10 +8,17 @@ from backend.modeling.predictors import (
 )
 
 
+# Listar modelos disponibles para el selector
 def list_models() -> list[dict]:
     return list_enabled_models()
 
 
+# Devolver modelos candidatos y parametros comunes para entrenamiento
+def get_training_model_catalog() -> dict:
+    return get_model_catalog()
+
+
+# Devolver informacion y metricas del modelo seleccionado
 def get_model_info(model_id: str) -> dict:
     return get_predictor(model_id).info()
 
@@ -27,6 +35,7 @@ def validate_dataframe_for_model(df: pd.DataFrame, model_id: str) -> dict:
     return get_predictor(model_id).validate(df)
 
 
+# Ejecutar inferencia con el predictor elegido
 def predict_dataframe(df: pd.DataFrame, model_id: str) -> dict:
     return get_predictor(model_id).predict(df)
 

@@ -1,21 +1,21 @@
 # EEG ADHD Classifier
 
-Aplicación web para clasificar señales EEG como `ADHD` o `Control` mediante modelos de Machine Learning y Deep Learning.
+Aplicacion web para clasificar senales EEG como `ADHD` o `Control` mediante modelos de Machine Learning y Deep Learning.
 
-## Introducción
+## Introduccion
 
-Este proyecto desarrolla un sistema de apoyo académico para la clasificación de TDAH a partir de señales EEG. La aplicación permite subir un archivo CSV, validar su estructura, visualizar señales EEG y obtener una predicción usando modelos previamente entrenados.
+Este proyecto desarrolla un sistema de apoyo academico para la clasificacion de TDAH a partir de senales EEG. La aplicacion permite subir un archivo CSV, validar su estructura, visualizar senales EEG y obtener una prediccion usando modelos previamente entrenados.
 
 Se han implementado dos enfoques:
 
-- Un modelo clásico de Machine Learning basado en características temporales y espectrales.
-- Un modelo de Deep Learning entrenado directamente sobre ventanas de señal EEG.
+- Un modelo clasico de Machine Learning basado en caracteristicas temporales y espectrales.
+- Un modelo de Deep Learning entrenado directamente sobre ventanas de senal EEG.
 
-El backend está desarrollado con FastAPI y el frontend con React. Esta separación permite mantener la lógica de inferencia y la interfaz de usuario desacopladas.
+El backend esta desarrollado con FastAPI y el frontend con React. Esta separacion permite mantener la logica de inferencia y la interfaz de usuario desacopladas.
 
-El sistema tiene carácter académico y no debe utilizarse como herramienta de diagnóstico clínico.
+El sistema tiene caracter academico y no debe utilizarse como herramienta de diagnostico clinico.
 
-## Tecnologías utilizadas
+## Tecnologias utilizadas
 
 - Python
 - FastAPI
@@ -29,11 +29,12 @@ El sistema tiene carácter académico y no debe utilizarse como herramienta de d
 ## Estructura del proyecto
 
 ```text
-backend/      API y lógica de servicio
+backend/      API y logica de servicio
 frontend/     Interfaz web
-scripts/      Entrenamiento, inferencia y procesado de señales
+scripts/      Entrenamiento, inferencia y procesado de senales
 models/       Modelos entrenados y metadatos
-results/      Resultados de validación y configuración
+results/      Resultados de validacion y configuracion
 Figuras/      Figuras generadas durante los experimentos
-notebooks/    Notebooks de experimentación
+notebooks/    Notebooks de experimentacion
 tests/        Tests y archivos CSV de ejemplo
+```

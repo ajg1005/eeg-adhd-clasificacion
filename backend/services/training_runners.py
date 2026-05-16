@@ -1,0 +1,212 @@
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+import pandas as pd
+from sklearn.base import clone
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    f1_score,
+    precision_score,
+    recall_score,
+)
+
+from backend.modeling.dl_factory import create_dl_model, create_early_stopping
+from backend.modeling.model_factory import create_ml_model
+from backend.services.training_data import (
+    CLASS_TO_LABEL,
+    PreparedEpochs,
+    features_for_mode,
+    n_splits_for_groups,
+)
+from scripts.split import make_group_kfold_splits, make_group_shuffle_split
+
+
+def metrics_dict(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
+    return {
+        "accuracy": float(accuracy_score(y_true, y_pred)),
+        "precision": float(precision_score(y_true, y_pred, average="weighted", zero_division=0)),
+        "recall": float(recall_score(y_true, y_pred, average="weighted", zero_division=0)),
+        "f1_score": float(f1_score(y_true, y_pred, average="weighted", zero_division=0)),
+        "balanced_accuracy": float(balanced_accuracy_score(y_true, y_pred)),
+    }
+
+
+def patient_results(groups: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray) -> list[dict[str, Any]]:
+    rows = []
+    result_df = pd.DataFrame({"patient_id": groups, "true": y_true, "pred": y_pred})
+
+    for patient_id, patient_df in result_df.groupby("patient_id", sort=False):
+        pred_counts = patient_df["pred"].value_counts(normalize=True)
+        predicted_label = int(patient_df["pred"].mode().iloc[0])
+        true_label = int(patient_df["true"].mode().iloc[0])
+        rows.append(
+            {
+                "patient_id": str(patient_id),
+                "true_label": CLASS_TO_LABEL[true_label],
+                "predicted_label": CLASS_TO_LABEL[predicted_label],
+                "n_epochs": int(len(patient_df)),
+                "control_epoch_percentage": float(pred_counts.get(0, 0.0)),
+                "adhd_epoch_percentage": float(pred_counts.get(1, 0.0)),
+                "correct": bool(true_label == predicted_label),
+            }
+        )
+
+    return rows
+
+
+def run_ml_cross_subject_cv(
+    model_name: str,
+    model_params: dict[str, Any],
+    eeg_params: dict[str, Any],
+    prepared: PreparedEpochs,
+) -> dict[str, Any]:
+    features = features_for_mode(prepared.X_epochs, prepared.eeg_columns, eeg_params)
+    n_splits = n_splits_for_groups(prepared.y_epochs, prepared.groups_epochs)
+    cv_splits = make_group_kfold_splits(features, prepared.y_epochs, prepared.groups_epochs, n_splits=n_splits)
+    base_model = create_ml_model(model_name, model_params)
+
+    fold_results = []
+    y_true_all = []
+    y_pred_all = []
+    groups_all = []
+
+    for split_data in cv_splits:
+        fitted_model = clone(base_model)
+        fitted_model.fit(split_data["X_train"], split_data["y_train"])
+        y_pred = fitted_model.predict(split_data["X_test"]).astype(int)
+        y_true = np.asarray(split_data["y_test"]).astype(int)
+        groups_test = np.asarray(split_data["groups_test"]).astype(str)
+
+        fold_metrics = metrics_dict(y_true, y_pred)
+        fold_metrics["fold"] = int(split_data["fold"])
+        fold_metrics["n_train_subjects"] = int(len(set(split_data["groups_train"])))
+        fold_metrics["n_test_subjects"] = int(len(set(groups_test)))
+        fold_results.append(fold_metrics)
+
+        y_true_all.extend(y_true.tolist())
+        y_pred_all.extend(y_pred.tolist())
+        groups_all.extend(groups_test.tolist())
+
+    return {
+        "y_true": np.asarray(y_true_all, dtype=int),
+        "y_pred": np.asarray(y_pred_all, dtype=int),
+        "groups": np.asarray(groups_all, dtype=str),
+        "fold_results": fold_results,
+        "evaluation_mode": f"{n_splits}-fold StratifiedGroupKFold cross-subject CV",
+    }
+
+
+def run_dl_cross_subject_cv(
+    model_name: str,
+    model_params: dict[str, Any],
+    training_params: dict[str, Any],
+    prepared: PreparedEpochs,
+) -> dict[str, Any]:
+    n_splits = n_splits_for_groups(prepared.y_epochs, prepared.groups_epochs)
+    cv_splits = make_group_kfold_splits(
+        prepared.X_epochs,
+        prepared.y_epochs,
+        prepared.groups_epochs,
+        n_splits=n_splits,
+    )
+
+    fold_results = []
+    y_true_all = []
+    y_pred_all = []
+    groups_all = []
+
+    for split_data in cv_splits:
+        fold = int(split_data["fold"])
+        X_train, X_val, y_train, y_val, groups_train, groups_val = make_group_shuffle_split(
+            split_data["X_train"],
+            split_data["y_train"],
+            split_data["groups_train"],
+            test_size=0.2,
+            random_state=42 + fold,
+        )
+
+        X_train = np.asarray(X_train).astype(np.float32)
+        X_val = np.asarray(X_val).astype(np.float32)
+        X_test = np.asarray(split_data["X_test"]).astype(np.float32)
+        y_train = np.asarray(y_train).astype(np.float32)
+        y_val = np.asarray(y_val).astype(np.float32)
+        y_test = np.asarray(split_data["y_test"]).astype(int)
+        groups_test = np.asarray(split_data["groups_test"]).astype(str)
+
+        model = create_dl_model(
+            model_name=model_name,
+            input_shape=X_train.shape[1:],
+            model_params=model_params,
+            training_params=training_params,
+        )
+        model.fit(
+            X_train,
+            y_train,
+            validation_data=(X_val, y_val),
+            epochs=int(training_params.get("epochs", 25)),
+            batch_size=int(training_params.get("batch_size", 32)),
+            callbacks=_dl_callbacks(training_params),
+            verbose=0,
+        )
+
+        batch_size = int(training_params.get("batch_size", 32))
+        y_val_score = model.predict(X_val, batch_size=batch_size, verbose=0).reshape(-1)
+        threshold = _find_best_threshold(y_val.astype(int), y_val_score)
+        y_score = model.predict(X_test, batch_size=batch_size, verbose=0).reshape(-1)
+        y_pred = (y_score >= threshold).astype(int)
+
+        fold_metrics = metrics_dict(y_test, y_pred)
+        fold_metrics["fold"] = fold
+        fold_metrics["best_threshold"] = float(threshold)
+        fold_metrics["n_train_subjects"] = int(len(set(groups_train)))
+        fold_metrics["n_val_subjects"] = int(len(set(groups_val)))
+        fold_metrics["n_test_subjects"] = int(len(set(groups_test)))
+        fold_results.append(fold_metrics)
+
+        y_true_all.extend(y_test.tolist())
+        y_pred_all.extend(y_pred.tolist())
+        groups_all.extend(groups_test.tolist())
+
+    return {
+        "y_true": np.asarray(y_true_all, dtype=int),
+        "y_pred": np.asarray(y_pred_all, dtype=int),
+        "groups": np.asarray(groups_all, dtype=str),
+        "fold_results": fold_results,
+        "evaluation_mode": f"{n_splits}-fold StratifiedGroupKFold cross-subject CV with inner validation",
+    }
+
+
+def _find_best_threshold(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    best_threshold = 0.5
+    best_balanced_accuracy = -np.inf
+    best_f1 = -np.inf
+
+    for threshold in np.linspace(0.2, 0.8, 61):
+        y_pred = (y_score >= threshold).astype(int)
+        balanced = balanced_accuracy_score(y_true, y_pred)
+        f1 = f1_score(y_true, y_pred, average="weighted", zero_division=0)
+
+        if balanced > best_balanced_accuracy or (np.isclose(balanced, best_balanced_accuracy) and f1 > best_f1):
+            best_threshold = float(threshold)
+            best_balanced_accuracy = float(balanced)
+            best_f1 = float(f1)
+
+    return best_threshold
+
+
+def _dl_callbacks(training_params: dict[str, Any]):
+    keras = __import__("keras")
+    patience = int(training_params.get("early_stopping_patience", 5))
+    return [
+        create_early_stopping(patience),
+        keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss",
+            factor=0.5,
+            patience=1,
+            min_lr=1e-6,
+            verbose=0,
+        ),
+    ]

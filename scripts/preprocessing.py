@@ -43,9 +43,9 @@ def preprocess_dataset(
     # Eliminar filas sin identificador de sujeto o sin etiqueta
     df = df.dropna(subset=[subject_col, label_col])
 
-    # Codificar las clases
+    # Codificar las clases si vienen como texto
     label_map = {"Control": 0, "ADHD": 1}
-    df[label_col] = df[label_col].map(label_map)
+    df[label_col] = df[label_col].replace(label_map)
 
 
     # Variables EEG, todas menos class e id

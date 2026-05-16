@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay, PrecisionRecallDisplay, RocCurveDisplay
+from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay
 
 # Crear figuras y guardarlas
 def _save_fig(fig, save_path):
@@ -23,15 +23,6 @@ def plot_confusion_matrix(y_test, y_score, save_path=None):
 def plot_roc_curve(y_test, y_score, save_path=None):
     fig, ax = plt.subplots(figsize=(6, 5))
     RocCurveDisplay.from_predictions(y_test, y_score, ax=ax)
-    plt.tight_layout()
-    _save_fig(fig, save_path)
-    plt.show()
-    plt.close(fig)
-
-
-def plot_precision_recall_curve(y_test, y_score, save_path=None):
-    fig, ax = plt.subplots(figsize=(6, 5))
-    PrecisionRecallDisplay.from_predictions(y_test, y_score, ax=ax)
     plt.tight_layout()
     _save_fig(fig, save_path)
     plt.show()

@@ -85,7 +85,7 @@ def build_features(X_epochs, eeg_cols, config):
             axis=1,
         )
 
-    raise ValueError(f"feature_mode no vÃ¡lido: {feature_mode}")
+    raise ValueError(f"feature_mode no valido: {feature_mode}")
 
 
 def main():
@@ -182,7 +182,7 @@ def main():
     with open(METADATA_PATH, "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=4)
 
-    print("\nExportaciÃ³n completada:")
+    print("\nExportacion ML completada:")
     print(f"- {MODEL_PATH}")
     print(f"- {FEATURE_COLUMNS_PATH}")
     print(f"- {METADATA_PATH}")

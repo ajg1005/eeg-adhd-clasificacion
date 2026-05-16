@@ -1,5 +1,9 @@
-﻿from fastapi import APIRouter, File, HTTPException, UploadFile
+﻿from typing import Annotated
 
+from fastapi import APIRouter, File, HTTPException, UploadFile
+
+from backend.routers.responses import BAD_REQUEST_RESPONSES
+from backend.schemas import PreviewResponse
 from backend.services.csv_service import build_signal_preview, read_csv_upload
 from backend.services.model_service import get_model_metadata
 
@@ -7,9 +11,10 @@ from backend.services.model_service import get_model_metadata
 router = APIRouter()
 
 
-@router.post("/preview")
+# Devolver muestras de un canal para visualizar la senal
+@router.post("/preview", response_model=PreviewResponse, responses=BAD_REQUEST_RESPONSES)
 async def preview_signal(
-    file: UploadFile = File(...),
+    file: Annotated[UploadFile, File(...)],
     channel: str = "Fp1",
     max_points: int = 1000,
     model_id: str = "ml_best",
