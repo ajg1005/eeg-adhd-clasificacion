@@ -116,6 +116,7 @@ def run_training(
         "confusion_matrix": confusion_matrix(y_true, y_pred, labels=[0, 1]).tolist(),
         "patient_results": patient_results(evaluation["groups"], y_true, y_pred),
         "fold_results": evaluation["fold_results"],
+        "feature_importance": evaluation.get("feature_importance"),
         "configuration": {
             "model_type": model_type,
             "model_name": model_name,

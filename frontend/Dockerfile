@@ -1,13 +1,13 @@
 FROM node:22-alpine
 
+RUN mkdir -p /app && chown node:node /app
 WORKDIR /app
+USER node
 
 COPY --chown=node:node frontend/package*.json ./
 RUN npm ci
 
 COPY --chown=node:node frontend .
-
-USER node
 
 EXPOSE 5173
 

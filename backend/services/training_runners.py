@@ -5,6 +5,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import (
     accuracy_score,
     balanced_accuracy_score,
@@ -22,6 +23,13 @@ from backend.services.training_data import (
     n_splits_for_groups,
 )
 from scripts.split import make_group_kfold_splits, make_group_shuffle_split
+
+
+FEATURE_IMPORTANCE_MAX_EPOCHS = 80
+FEATURE_IMPORTANCE_N_REPEATS = 1
+FEATURE_IMPORTANCE_TOP_FEATURES = 15
+FEATURE_IMPORTANCE_TOP_CHANNELS = 10
+FEATURE_IMPORTANCE_SCORING = "f1_weighted"
 
 
 def metrics_dict(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
@@ -69,6 +77,7 @@ def run_ml_cross_subject_cv(
     base_model = create_ml_model(model_name, model_params)
 
     fold_results = []
+    feature_importance = None
     y_true_all = []
     y_pred_all = []
     groups_all = []
@@ -86,6 +95,15 @@ def run_ml_cross_subject_cv(
         fold_metrics["n_test_subjects"] = int(len(set(groups_test)))
         fold_results.append(fold_metrics)
 
+        if feature_importance is None:
+            feature_importance = _safe_feature_importance_for_fold(
+                model=fitted_model,
+                X_test=split_data["X_test"],
+                y_test=y_true,
+                eeg_columns=prepared.eeg_columns,
+                fold=int(split_data["fold"]),
+            )
+
         y_true_all.extend(y_true.tolist())
         y_pred_all.extend(y_pred.tolist())
         groups_all.extend(groups_test.tolist())
@@ -96,6 +114,7 @@ def run_ml_cross_subject_cv(
         "groups": np.asarray(groups_all, dtype=str),
         "fold_results": fold_results,
         "evaluation_mode": f"{n_splits}-fold StratifiedGroupKFold cross-subject CV",
+        "feature_importance": feature_importance,
     }
 
 
@@ -195,6 +214,131 @@ def _find_best_threshold(y_true: np.ndarray, y_score: np.ndarray) -> float:
             best_f1 = float(f1)
 
     return best_threshold
+
+
+def _safe_feature_importance_for_fold(
+    model,
+    X_test: pd.DataFrame,
+    y_test: np.ndarray,
+    eeg_columns: list[str],
+    fold: int,
+) -> dict[str, Any]:
+    try:
+        return _feature_importance_for_fold(model, X_test, y_test, eeg_columns, fold)
+    except Exception as exc:
+        return {
+            "method": "permutation_importance",
+            "scoring": FEATURE_IMPORTANCE_SCORING,
+            "n_repeats": FEATURE_IMPORTANCE_N_REPEATS,
+            "evaluated_epochs": 0,
+            "source": f"fold {fold} test set sin solape de pacientes",
+            "top_features": [],
+            "by_channel": [],
+            "error": str(exc),
+        }
+
+
+def _feature_importance_for_fold(
+    model,
+    X_test: pd.DataFrame,
+    y_test: np.ndarray,
+    eeg_columns: list[str],
+    fold: int,
+) -> dict[str, Any]:
+    X_eval, y_eval = _stratified_subsample(X_test, y_test, FEATURE_IMPORTANCE_MAX_EPOCHS)
+
+    result = permutation_importance(
+        model,
+        X_eval,
+        y_eval,
+        scoring=FEATURE_IMPORTANCE_SCORING,
+        n_repeats=FEATURE_IMPORTANCE_N_REPEATS,
+        random_state=42,
+        n_jobs=1,
+    )
+
+    importance_df = pd.DataFrame(
+        {
+            "feature": list(X_eval.columns),
+            "importance_mean": result.importances_mean,
+            "importance_std": result.importances_std,
+        }
+    ).sort_values("importance_mean", ascending=False)
+
+    return {
+        "method": "permutation_importance",
+        "scoring": FEATURE_IMPORTANCE_SCORING,
+        "n_repeats": FEATURE_IMPORTANCE_N_REPEATS,
+        "evaluated_epochs": int(len(X_eval)),
+        "source": f"fold {fold} test set sin solape de pacientes",
+        "top_features": _importance_rows(importance_df, FEATURE_IMPORTANCE_TOP_FEATURES),
+        "by_channel": _importance_rows(
+            _aggregate_importance_by_channel(importance_df, eeg_columns),
+            FEATURE_IMPORTANCE_TOP_CHANNELS,
+        ),
+    }
+
+
+def _stratified_subsample(X: pd.DataFrame, y: np.ndarray, max_rows: int) -> tuple[pd.DataFrame, np.ndarray]:
+    y = np.asarray(y).astype(int)
+    if max_rows <= 0 or len(X) <= max_rows:
+        return X.reset_index(drop=True), y
+
+    _, X_sample, _, y_sample = _groupless_stratified_split(X, y, max_rows)
+    return X_sample.reset_index(drop=True), np.asarray(y_sample).astype(int)
+
+
+def _groupless_stratified_split(
+    X: pd.DataFrame,
+    y: np.ndarray,
+    sample_size: int,
+) -> tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
+    from sklearn.model_selection import train_test_split
+
+    stratify = y if sample_size >= len(np.unique(y)) else None
+    try:
+        return train_test_split(
+            X,
+            y,
+            test_size=sample_size,
+            stratify=stratify,
+            random_state=42,
+        )
+    except ValueError:
+        return train_test_split(
+            X,
+            y,
+            test_size=sample_size,
+            stratify=None,
+            random_state=42,
+        )
+
+
+def _aggregate_importance_by_channel(importance_df: pd.DataFrame, channels: list[str]) -> pd.DataFrame:
+    rows = []
+    for channel in channels:
+        mask = importance_df["feature"].str.startswith(f"{channel}_")
+        rows.append(
+            {
+                "feature": channel,
+                "importance_mean": float(importance_df.loc[mask, "importance_mean"].sum()),
+                "importance_std": 0.0,
+            }
+        )
+    return pd.DataFrame(rows).sort_values("importance_mean", ascending=False)
+
+
+def _importance_rows(importance_df: pd.DataFrame, limit: int) -> list[dict[str, Any]]:
+    rows = []
+    for row in importance_df.head(limit).itertuples(index=False):
+        rows.append(
+            {
+                "feature": str(row.feature),
+                "importance_mean": float(row.importance_mean),
+                "importance_std": float(row.importance_std),
+            }
+        )
+    return rows
 
 
 def _dl_callbacks(training_params: dict[str, Any]):

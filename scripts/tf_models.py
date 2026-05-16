@@ -49,49 +49,55 @@ def build_eegnet(input_shape, dropout=0.5):
     return keras.Model(inputs=inputs, outputs=outputs, name="eegnet")
 
 
-def build_cnn_1d(input_shape, dropout=0.5):
+def build_cnn_1d(input_shape, filters=16, dropout=0.5, dense_units=32):
     inputs = keras.Input(shape=input_shape)
-    x = layers.Conv1D(16, kernel_size=7, padding="same", activation="relu")(inputs)
+    x = layers.Conv1D(filters, kernel_size=7, padding="same", activation="relu")(inputs)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling1D(pool_size=2)(x)
-    x = layers.Dropout(dropout * 0.5)(x)                          # <-- nuevo
-    x = layers.Conv1D(32, kernel_size=5, padding="same", activation="relu")(x)
+    x = layers.Dropout(dropout * 0.5)(x)
+    x = layers.Conv1D(filters * 2, kernel_size=5, padding="same", activation="relu")(x)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling1D(pool_size=2)(x)
-    x = layers.Dropout(dropout * 0.5)(x)                          # <-- nuevo
-    x = layers.Conv1D(64, kernel_size=3, padding="same", activation="relu")(x)
+    x = layers.Dropout(dropout * 0.5)(x)
+    x = layers.Conv1D(filters * 4, kernel_size=3, padding="same", activation="relu")(x)
     x = layers.BatchNormalization()(x)
     x = layers.GlobalAveragePooling1D()(x)
-    x = layers.Dense(32, activation="relu",
-        kernel_regularizer=keras.regularizers.l2(1e-4))(x)        
+    x = layers.Dense(
+        dense_units,
+        activation="relu",
+        kernel_regularizer=regularizers.l2(1e-4),
+    )(x)
     x = layers.Dropout(dropout)(x)
     outputs = layers.Dense(1, activation="sigmoid")(x)
     return keras.Model(inputs=inputs, outputs=outputs, name="cnn_1d")
 
 
-def build_cnn_lstm(input_shape, dropout=0.5):
+def build_cnn_lstm(input_shape, filters=16, dropout=0.5, lstm_units=32, dense_units=32):
     inputs = keras.Input(shape=input_shape)
-    x = layers.Conv1D(16, kernel_size=5, padding="same", activation="relu")(inputs)
+    x = layers.Conv1D(filters, kernel_size=5, padding="same", activation="relu")(inputs)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling1D(pool_size=2)(x)
-    x = layers.Dropout(dropout * 0.5)(x)                          
-    x = layers.Conv1D(32, kernel_size=3, padding="same", activation="relu")(x)
+    x = layers.Dropout(dropout * 0.5)(x)
+    x = layers.Conv1D(filters * 2, kernel_size=3, padding="same", activation="relu")(x)
     x = layers.BatchNormalization()(x)
-    x = layers.Dropout(dropout * 0.5)(x)                         
-    x = layers.Bidirectional(layers.LSTM(32, recurrent_dropout=0.2))(x)  
-    x = layers.Dense(32, activation="relu",
-        kernel_regularizer=keras.regularizers.l2(1e-4))(x)       
+    x = layers.Dropout(dropout * 0.5)(x)
+    x = layers.Bidirectional(layers.LSTM(lstm_units, recurrent_dropout=0.2))(x)
+    x = layers.Dense(
+        dense_units,
+        activation="relu",
+        kernel_regularizer=regularizers.l2(1e-4),
+    )(x)
     x = layers.Dropout(dropout)(x)
     outputs = layers.Dense(1, activation="sigmoid")(x)
     return keras.Model(inputs=inputs, outputs=outputs, name="cnn_lstm")
 
 
-def build_model(model_name, input_shape, dropout=0.5):
+def build_model(model_name, input_shape, **kwargs):
     if model_name == "eegnet":
-        return build_eegnet(input_shape=input_shape, dropout=dropout)
+        return build_eegnet(input_shape=input_shape, **kwargs)
     if model_name == "cnn_1d":
-        return build_cnn_1d(input_shape=input_shape, dropout=dropout)
+        return build_cnn_1d(input_shape=input_shape, **kwargs)
     if model_name == "cnn_lstm":
-        return build_cnn_lstm(input_shape=input_shape, dropout=dropout)
+        return build_cnn_lstm(input_shape=input_shape, **kwargs)
 
     raise ValueError(f"Modelo no soportado: {model_name}")

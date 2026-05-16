@@ -193,7 +193,7 @@ def test_get_model_catalog_groups_ml_and_dl_models():
     catalog = get_model_catalog()
 
     assert len(catalog["machine_learning"]) >= 3
-    assert len(catalog["deep_learning"]) >= 3
+    assert len(catalog["deep_learning"]) >= 2
     assert all(model["common_parameters"] for model in catalog["machine_learning"])
     assert all(model["common_parameters"] for model in catalog["deep_learning"])
 

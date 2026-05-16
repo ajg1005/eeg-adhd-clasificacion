@@ -45,7 +45,7 @@ def preprocess_dataset(
 
     # Codificar las clases si vienen como texto
     label_map = {"Control": 0, "ADHD": 1}
-    df[label_col] = df[label_col].replace(label_map)
+    df[label_col] = pd.to_numeric(df[label_col].replace(label_map)).astype(int)
 
 
     # Variables EEG, todas menos class e id

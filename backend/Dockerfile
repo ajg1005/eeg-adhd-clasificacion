@@ -2,7 +2,8 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_ROOT_USER_ACTION=ignore
 
 RUN groupadd --system --gid 1001 app \
     && useradd --system --uid 1001 --gid app --create-home app
@@ -11,7 +12,7 @@ WORKDIR /app
 
 COPY --chown=app:app requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --root-user-action=ignore -r requirements.txt
 
 COPY --chown=app:app backend ./backend
 COPY --chown=app:app scripts ./scripts

@@ -77,20 +77,6 @@ MODEL_CATALOG: list[dict[str, Any]] = [
             {"name": "lstm_units", "default": "32-64", "description": "Unidades recurrentes."},
         ],
     },
-    {
-        "model_id": "eegnet",
-        "display_name": "EEGNet",
-        "model_family": "deep_learning",
-        "description": "Arquitectura especifica para EEG con convoluciones temporales y espaciales.",
-        "use_case": "Modelo neuronal especializado para senales EEG multicanal.",
-        "common_parameters": [
-            {"name": "epochs", "default": "50", "description": MAX_EPOCHS_DESCRIPTION},
-            {"name": "batch_size", "default": "32", "description": BATCH_SIZE_DESCRIPTION},
-            {"name": "learning_rate", "default": "0.001", "description": LEARNING_RATE_DESCRIPTION},
-            {"name": "dropout", "default": "0.25-0.5", "description": DROPOUT_DESCRIPTION},
-            {"name": "kernels", "default": "temporal/espacial", "description": "Filtros usados por la arquitectura."},
-        ],
-    },
 ]
 
 

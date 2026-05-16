@@ -2,6 +2,45 @@ function Percent({ value }) {
   return `${((value || 0) * 100).toFixed(1)}%`;
 }
 
+function ImportanceValue({ value }) {
+  return Number(value || 0).toFixed(4);
+}
+
+function ImportanceList({ rows, title }) {
+  const maxValue = Math.max(
+    ...rows.map((row) => Math.max(0, row.importance_mean || 0)),
+    0
+  );
+
+  return (
+    <div className="importance-card">
+      <h3>{title}</h3>
+      <div className="importance-list">
+        {rows.map((row) => {
+          const width =
+            maxValue > 0
+              ? `${Math.max(4, (Math.max(0, row.importance_mean) / maxValue) * 100)}%`
+              : "4%";
+
+          return (
+            <div className="importance-row" key={row.feature}>
+              <div>
+                <strong>{row.feature}</strong>
+                <div className="importance-track">
+                  <span className="importance-fill" style={{ width }} />
+                </div>
+              </div>
+              <span>
+                <ImportanceValue value={row.importance_mean} />
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function TrainingResultsPanel({
   filteredPatientResults,
   onPatientFilterChange,
@@ -11,6 +50,8 @@ export function TrainingResultsPanel({
   if (!result) {
     return null;
   }
+
+  const featureImportance = result.feature_importance;
 
   return (
     <div className="panel training-section">
@@ -64,6 +105,38 @@ export function TrainingResultsPanel({
           </pre>
         </div>
       </div>
+
+      {featureImportance && (
+        <div className="feature-importance-block">
+          <div className="section-heading-row">
+            <div>
+              <h3>Importancia de features</h3>
+              <p className="muted">
+                {featureImportance.method} sobre {featureImportance.source}
+              </p>
+            </div>
+            <div className="importance-meta">
+              <span>{featureImportance.scoring}</span>
+              <span>{featureImportance.evaluated_epochs} epochs</span>
+            </div>
+          </div>
+
+          {featureImportance.error ? (
+            <p className="muted">No se pudo calcular: {featureImportance.error}</p>
+          ) : (
+            <div className="feature-importance-grid">
+              <ImportanceList
+                rows={featureImportance.top_features || []}
+                title="Top features"
+              />
+              <ImportanceList
+                rows={featureImportance.by_channel || []}
+                title="Por canal EEG"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="section-heading-row result-filter-row">
         <div>

@@ -143,6 +143,23 @@ class PatientTrainingResult(BaseModel):
     correct: bool
 
 
+class FeatureImportanceItem(BaseModel):
+    feature: str
+    importance_mean: float
+    importance_std: float
+
+
+class FeatureImportanceResponse(BaseModel):
+    method: str
+    scoring: str
+    n_repeats: int
+    evaluated_epochs: int
+    source: str
+    top_features: list[FeatureImportanceItem]
+    by_channel: list[FeatureImportanceItem]
+    error: str | None = None
+
+
 class TrainingRunResponse(FlexibleSchema):
     accuracy: float
     precision: float
@@ -153,5 +170,6 @@ class TrainingRunResponse(FlexibleSchema):
     confusion_matrix: list[list[int]]
     patient_results: list[PatientTrainingResult]
     fold_results: list[dict[str, Any]]
+    feature_importance: FeatureImportanceResponse | None = None
     configuration: dict[str, Any]
     training_time_seconds: float

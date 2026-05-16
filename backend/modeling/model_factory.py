@@ -1,10 +1,4 @@
-﻿from typing import Any
-
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
-from xgboost import XGBClassifier
+from typing import Any
 
 
 ML_MODEL_OPTIONS: dict[str, dict[str, Any]] = {
@@ -66,66 +60,13 @@ def _model_params(model_name: str, params: dict[str, Any] | None) -> dict[str, A
     return {**defaults, **_clean_params(params)}
 
 
-# Crear el estimador ML elegido por el usuario desde la vista de entrenamiento.
+# Wrapper UI: valida que el modelo esta expuesto en la UI, mezcla los defaults
+# del catalogo con los params del usuario y delega en scripts.pipeline.
 def create_ml_model(model_name: str, params: dict[str, Any] | None = None):
-    params = _model_params(model_name, params)
+    from scripts.pipeline import create_ml_model as _build_ml_model
 
-    if model_name in {"rbf_svc", "svm_rbf"}:
-        return Pipeline(
-            steps=[
-                ("scaler", StandardScaler()),
-                (
-                    "model",
-                    SVC(
-                        kernel="rbf",
-                        probability=True,
-                        C=float(params.get("C", 10.0)),
-                        gamma=params.get("gamma", "scale"),
-                        class_weight=params.get("class_weight", "balanced"),
-                        random_state=42,
-                    ),
-                ),
-            ]
-        )
+    if model_name not in ML_MODEL_OPTIONS:
+        raise ValueError(f"Modelo ML no disponible en la UI: {model_name}")
 
-    if model_name == "random_forest":
-        return Pipeline(
-            steps=[
-                (
-                    "model",
-                    RandomForestClassifier(
-                        n_estimators=int(params.get("n_estimators", 100)),
-                        max_depth=params.get("max_depth", 10),
-                        criterion=params.get("criterion", "entropy"),
-                        max_features="sqrt",
-                        bootstrap=True,
-                        class_weight=params.get("class_weight", "balanced"),
-                        random_state=42,
-                        n_jobs=-1,
-                    ),
-                )
-            ]
-        )
-
-    if model_name == "xgboost":
-        return Pipeline(
-            steps=[
-                (
-                    "model",
-                    XGBClassifier(
-                        n_estimators=int(params.get("n_estimators", 200)),
-                        max_depth=int(params.get("max_depth", 4)),
-                        learning_rate=float(params.get("learning_rate", 0.05)),
-                        subsample=float(params.get("subsample", 0.8)),
-                        colsample_bytree=float(params.get("colsample_bytree", 0.8)),
-                        objective="binary:logistic",
-                        eval_metric="logloss",
-                        tree_method="hist",
-                        random_state=42,
-                    ),
-                )
-            ]
-        )
-
-    raise ValueError(f"Modelo ML no soportado: {model_name}")
-
+    merged = _model_params(model_name, params)
+    return _build_ml_model(model_name, merged)
