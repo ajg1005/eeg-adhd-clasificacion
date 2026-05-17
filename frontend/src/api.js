@@ -118,32 +118,6 @@ export async function getModelInfo(modelId = "ml_best") {
   return response.json();
 }
 
-export async function getDatasetSummary(
-  file,
-  classFilter = "all",
-  maxPatients = 10
-) {
-  // Cargar estadisticas del dataset y pacientes filtrados
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const params = new URLSearchParams({
-    class_filter: classFilter,
-    max_patients: String(maxPatients),
-  });
-
-  const response = await fetch(`${API_BASE_URL}/dataset/summary?${params}`, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error(await readError(response, "No se pudo resumir el dataset"));
-  }
-
-  return response.json();
-}
-
 export async function validateCsv(file, modelId = "ml_best") {
   // Enviar el CSV para validar columnas y canales antes de predecir
   const formData = new FormData();
@@ -160,34 +134,6 @@ export async function validateCsv(file, modelId = "ml_best") {
 
   if (!response.ok) {
     throw new Error(await readError(response, "CSV no valido"));
-  }
-
-  return response.json();
-}
-
-export async function getSignalPreview(
-  file,
-  channel,
-  maxPoints = 1000,
-  modelId = "ml_best"
-) {
-  // Obtener unos puntos de un canal para pintar la senal
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const params = new URLSearchParams({
-    channel,
-    max_points: String(maxPoints),
-    model_id: modelId,
-  });
-
-  const response = await fetch(`${API_BASE_URL}/preview?${params}`, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error(await readError(response, "No se pudo cargar la senal"));
   }
 
   return response.json();

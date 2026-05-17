@@ -4,7 +4,6 @@ import pytest
 
 from backend.constants import REQUIRED_EEG_COLUMNS as EEG_CHANNELS
 from backend.modeling.common import map_prediction_label, validate_eeg_dataframe
-from backend.services.dataset_service import build_dataset_summary
 from backend.modeling.model_catalog import get_model_catalog
 from backend.modeling.model_factory import create_ml_model
 from backend.services.training_service import get_dataset_stats, get_training_options
@@ -151,42 +150,6 @@ def test_extract_epoch_features_basic_values():
     assert features.loc[0, "Fp1_max"] == 5.0
     assert features.loc[0, "Fp2_range"] == 4.0
 
-
-# comprueba estadisticas basicas del dataset cargado
-def test_build_dataset_summary_counts_classes_and_patients():
-    df = pd.DataFrame(
-        {
-            "ID": ["s1", "s1", "s2", "s2", "s3"],
-            "Class": [0, 0, 1, 1, "ADHD"],
-            "Fp1": [0.1, 0.2, 0.3, 0.4, 0.5],
-            "Fp2": [1.1, 1.2, 1.3, 1.4, 1.5],
-        }
-    )
-
-    summary = build_dataset_summary(df, class_filter="all", max_patients=2)
-
-    assert summary["rows"] == 5
-    assert summary["n_eeg_channels"] == 2
-    assert summary["total_patients"] == 3
-    assert summary["shown_patients_count"] == 2
-    assert summary["class_counts"] == {"ADHD": 3, "Control": 2}
-
-
-# comprueba que se pueden mostrar solo pacientes tdah
-def test_build_dataset_summary_filters_adhd_patients():
-    df = pd.DataFrame(
-        {
-            "ID": ["s1", "s1", "s2", "s2", "s3"],
-            "Class": [0, 0, 1, 1, "ADHD"],
-            "Fp1": [0.1, 0.2, 0.3, 0.4, 0.5],
-        }
-    )
-
-    summary = build_dataset_summary(df, class_filter="adhd", max_patients=10)
-
-    assert summary["filtered_patients_count"] == 2
-    assert [patient["patient_id"] for patient in summary["patients"]] == ["s2", "s3"]
-    assert all(patient["class_label"] == "ADHD" for patient in summary["patients"])
 
 # comprueba que el catalogo separa modelos ml y dl con parametros
 def test_get_model_catalog_groups_ml_and_dl_models():

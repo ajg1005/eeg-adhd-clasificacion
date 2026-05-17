@@ -342,7 +342,8 @@ def _importance_rows(importance_df: pd.DataFrame, limit: int) -> list[dict[str, 
 
 
 def _dl_callbacks(training_params: dict[str, Any]):
-    keras = __import__("keras")
+    import keras
+
     patience = int(training_params.get("early_stopping_patience", 5))
     return [
         create_early_stopping(patience),

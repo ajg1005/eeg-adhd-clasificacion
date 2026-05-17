@@ -1,2 +1,1 @@
-﻿export const TABS = ["Datos", "Modelo", "Entrenamiento", "Señal EEG", "Predicción"];
-
+export const TABS = ["Modelo", "Dataset entrenamiento", "Entrenamiento", "Predicción"];

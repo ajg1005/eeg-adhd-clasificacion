@@ -72,39 +72,6 @@ class PredictionResponse(FlexibleSchema):
     metadata: dict[str, Any]
 
 
-class SignalSample(BaseModel):
-    sample: int
-    value: float
-
-
-class PreviewResponse(BaseModel):
-    channel: str
-    n_points: int
-    samples: list[SignalSample]
-
-
-class PatientSummary(BaseModel):
-    patient_id: str
-    class_label: str
-    n_samples: int
-
-
-class DatasetSummaryResponse(BaseModel):
-    rows: int
-    columns: int
-    has_id: bool
-    has_class: bool
-    class_counts: dict[str, int]
-    eeg_channels: list[str]
-    n_eeg_channels: int
-    total_patients: int
-    filtered_patients_count: int
-    shown_patients_count: int
-    patients: list[PatientSummary]
-    class_filter: str
-    max_patients: int
-
-
 class TrainingOptionsResponse(FlexibleSchema):
     default_model_type: str
     default_models: dict[str, str]

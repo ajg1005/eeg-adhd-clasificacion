@@ -4,37 +4,78 @@ Aplicacion web para clasificar senales EEG como `ADHD` o `Control` mediante mode
 
 ## Introduccion
 
-Este proyecto desarrolla un sistema de apoyo academico para la clasificacion de TDAH a partir de senales EEG. La aplicacion permite subir un archivo CSV, validar su estructura, visualizar senales EEG y obtener una prediccion usando modelos previamente entrenados.
+Este proyecto desarrolla un sistema de apoyo academico para la clasificacion de TDAH a partir de senales EEG. La aplicacion permite cargar archivos CSV, explorar el dataset, entrenar modelos de forma interactiva y obtener predicciones usando modelos previamente entrenados.
 
 Se han implementado dos enfoques:
 
-- Un modelo clasico de Machine Learning basado en caracteristicas temporales y espectrales.
-- Un modelo de Deep Learning entrenado directamente sobre ventanas de senal EEG.
+- Modelos clasicos de Machine Learning (SVM RBF, Random Forest, XGBoost) basados en caracteristicas temporales y espectrales por ventana EEG.
+- Modelos de Deep Learning (CNN 1D, CNN-LSTM) entrenados directamente sobre ventanas crudas de senal EEG.
 
-El backend esta desarrollado con FastAPI y el frontend con React. Esta separacion permite mantener la logica de inferencia y la interfaz de usuario desacopladas.
+El backend esta desarrollado con FastAPI y el frontend con React. Toda la evaluacion se hace con validacion cruzada cross-subject (`StratifiedGroupKFold`) para evitar leakage por paciente.
 
 El sistema tiene caracter academico y no debe utilizarse como herramienta de diagnostico clinico.
 
+## Interfaz
+
+La aplicacion se organiza en cuatro pestanas:
+
+- **Modelo**: informacion del mejor modelo exportado (ML o DL), metricas de CV y figuras de evaluacion.
+- **Dataset entrenamiento**: carga un CSV con varios pacientes, muestra estadisticas (filas, columnas, clases, canales) y permite filtrar la lista de pacientes por clase.
+- **Entrenamiento**: usa el dataset cargado, configura parametros EEG/modelo/entrenamiento y lanza un entrenamiento cross-subject con resultados detallados.
+- **Prediccion**: sube el CSV de un paciente, se valida contra el modelo seleccionado y se obtiene la clasificacion final junto con la distribucion de epochs.
+
 ## Tecnologias utilizadas
 
-- Python
-- FastAPI
-- scikit-learn
+- Python 3.12, FastAPI, Pydantic
+- scikit-learn, XGBoost
 - TensorFlow / Keras
-- pandas, NumPy, SciPy
-- React
-- Vite
+- pandas, NumPy, SciPy, matplotlib
+- React 19 + Vite
 - Recharts
+- Docker, Docker Compose
 
 ## Estructura del proyecto
 
 ```text
-backend/      API y logica de servicio
-frontend/     Interfaz web
-scripts/      Entrenamiento, inferencia y procesado de senales
-models/       Modelos entrenados y metadatos
-results/      Resultados de validacion y configuracion
+backend/      API FastAPI, servicios y factories de modelos consumidos por la UI
+frontend/    Interfaz React (Vite)
+scripts/      Pipeline de investigacion: entrenamiento offline, export del mejor
+              modelo y scripts de analisis (comparacion estadistica, feature
+              importance)
+models/       Modelos entrenados exportados y sus metadatos
+results/      Resultados de validacion cruzada y configuracion de los mejores
+              modelos
 Figuras/      Figuras generadas durante los experimentos
-notebooks/    Notebooks de experimentacion
-tests/        Tests y archivos CSV de ejemplo
+notebooks/    Notebooks de experimentacion preliminar
+tests/        Tests basicos con pytest
 ```
+
+## Como ejecutarlo
+
+Con Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+Backend: http://localhost:8000 · Frontend: http://localhost:5173
+
+Sin Docker (requiere Python 3.12):
+
+```bash
+python -m venv .venv
+.venv/bin/activate          # Linux/Mac
+.venv\Scripts\Activate.ps1  # Windows
+pip install -r requirements-dev.txt
+
+uvicorn backend.main:app --reload      # backend
+cd frontend && npm install && npm run dev  # frontend
+```
+
+## Scripts de investigacion
+
+- `python scripts/train_ml.py`: entrena y evalua los modelos ML con CV cross-subject.
+- `python scripts/train_dl.py`: entrena y evalua los modelos DL con CV cross-subject.
+- `python scripts/export_model.py` y `export_model_dl.py`: exportan el modelo final seleccionado.
+- `python scripts/compare_models.py`: comparacion estadistica entre modelos (t-test pareado + bootstrap CI).
+- `python scripts/feature_importance.py`: importancia de features con permutation_importance sobre test held-out cross-subject.

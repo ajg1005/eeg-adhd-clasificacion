@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { getDatasetStats, getTrainingOptions, runTraining } from "../api";
-import { TrainingDatasetPanel } from "./training/TrainingDatasetPanel";
+import { getTrainingOptions, runTraining } from "../api";
 import { TrainingEegParamsPanel } from "./training/TrainingEegParamsPanel";
 import { TrainingModelPanel } from "./training/TrainingModelPanel";
 import { TrainingResultsPanel } from "./training/TrainingResultsPanel";
@@ -27,10 +26,8 @@ function modelDefaults(options, modelType, modelName) {
   return options?.model_types?.[modelType]?.models?.[modelName]?.default_params || {};
 }
 
-export function TrainingView() {
+export function TrainingView({ file, stats }) {
   const [options, setOptions] = useState(null);
-  const [file, setFile] = useState(null);
-  const [stats, setStats] = useState(null);
   const [modelType, setModelType] = useState("ml");
   const [modelName, setModelName] = useState("");
   const [eegParams, setEegParams] = useState({});
@@ -38,7 +35,6 @@ export function TrainingView() {
   const [trainingParams, setTrainingParams] = useState({});
   const [result, setResult] = useState(null);
   const [resultPatientFilter, setResultPatientFilter] = useState("");
-  const [loadingStats, setLoadingStats] = useState(false);
   const [loadingTraining, setLoadingTraining] = useState(false);
   const [error, setError] = useState("");
 
@@ -84,32 +80,6 @@ export function TrainingView() {
     );
   }, [result, resultPatientFilter]);
 
-  function handleFileChange(event) {
-    const selectedFile = event.target.files[0] || null;
-    setFile(selectedFile);
-    setStats(null);
-    setResult(null);
-    setError("");
-  }
-
-  async function handleAnalyzeDataset() {
-    if (!file) {
-      setError("Sube primero un CSV EEG.");
-      return;
-    }
-
-    setLoadingStats(true);
-    setError("");
-
-    try {
-      setStats(await getDatasetStats(file));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoadingStats(false);
-    }
-  }
-
   function handleModelTypeChange(nextType) {
     if (!options) {
       return;
@@ -146,7 +116,7 @@ export function TrainingView() {
 
   async function handleRunTraining() {
     if (!file) {
-      setError("Sube primero un CSV EEG.");
+      setError("Sube primero un CSV en la pestana 'Dataset entrenamiento'.");
       return;
     }
 
@@ -174,13 +144,46 @@ export function TrainingView() {
     <section className="training-layout interactive-training">
       {error && <div className="alert alert-error">{error}</div>}
 
-      <TrainingDatasetPanel
-        file={file}
-        loadingStats={loadingStats}
-        onAnalyzeDataset={handleAnalyzeDataset}
-        onFileChange={handleFileChange}
-        stats={stats}
-      />
+      {!file && (
+        <div className="panel">
+          <p className="muted">
+            Antes de entrenar, sube un CSV en la pestana <strong>Dataset entrenamiento</strong>.
+          </p>
+        </div>
+      )}
+
+      {file && !stats && (
+        <div className="panel">
+          <p className="muted">
+            Has cargado <strong>{file.name}</strong> pero todavia no has analizado el dataset.
+            Vuelve a <strong>Dataset entrenamiento</strong> y pulsa "Analizar dataset".
+          </p>
+        </div>
+      )}
+
+      {file && stats && (
+        <div className="panel">
+          <h3>Dataset cargado</h3>
+          <div className="metric-grid training-metrics-row">
+            <div>
+              <span>Archivo</span>
+              <strong>{file.name}</strong>
+            </div>
+            <div>
+              <span>Pacientes</span>
+              <strong>{stats.n_patients}</strong>
+            </div>
+            <div>
+              <span>Filas</span>
+              <strong>{stats.rows}</strong>
+            </div>
+            <div>
+              <span>Canales EEG</span>
+              <strong>{stats.eeg_columns.length}</strong>
+            </div>
+          </div>
+        </div>
+      )}
 
       <TrainingEegParamsPanel
         eegParams={eegParams}

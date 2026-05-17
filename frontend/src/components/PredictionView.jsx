@@ -1,4 +1,4 @@
-﻿import {
+import {
   Bar,
   BarChart,
   CartesianGrid,
@@ -11,35 +11,65 @@
 import { formatPercent } from "../utils/formatters";
 
 export function PredictionView({
-  adhdEpochs,
-  controlEpochs,
   decisionScore,
   file,
-  finalClassEpochPercentage,
   loadingPrediction,
+  loadingValidation,
+  modelInfo,
+  onFileChange,
   onPredict,
   prediction,
   predictionChartData,
-  thresholdUsed,
   validation,
 }) {
   return (
     <section className="grid-layout">
       <div className="panel">
-        <h2>Ejecutar predicción</h2>
+        <h2>Archivo del paciente</h2>
 
-        {file ? (
+        <label className="file-drop">
+          <span>Seleccionar CSV</span>
+          <input type="file" accept=".csv" onChange={onFileChange} />
+        </label>
+
+        {file && (
           <div className="file-info">
             <strong>{file.name}</strong>
-            <span>{validation ? `${validation.rows} filas` : "CSV cargado"}</span>
+            <span>{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
           </div>
-        ) : (
-          <p className="muted">Primero sube un CSV en la pestaña Datos.</p>
+        )}
+
+        {loadingValidation && <p>Validando archivo...</p>}
+
+        {validation && (
+          <p className="ok-text">
+            CSV valido · {validation.rows} filas · {validation.available_channels.length} canales
+          </p>
+        )}
+
+        {modelInfo && validation && (
+          <div className="channel-validation">
+            <p className="muted">Canales esperados por el modelo:</p>
+            <div className="channel-list">
+              {modelInfo.channels.map((channel) => (
+                <span
+                  className={
+                    validation?.available_channels?.includes(channel)
+                      ? "channel-ok"
+                      : ""
+                  }
+                  key={channel}
+                >
+                  {channel}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
 
         <button
           className="primary-button"
-          disabled={!file || loadingPrediction}
+          disabled={!file || loadingPrediction || loadingValidation}
           onClick={onPredict}
           type="button"
         >
@@ -54,42 +84,27 @@ export function PredictionView({
           <>
             <div className="result-main">
               <div>
-                <span>Resultado global</span>
+                <span>Clasificación</span>
                 <strong>{prediction.prediction_label}</strong>
               </div>
               <div>
-                <span>Score global</span>
+                <span>Confianza</span>
                 <strong>{formatPercent(decisionScore)}</strong>
-              </div>
-              <div>
-                <span>Epochs analizadas</span>
-                <strong>{prediction.n_epochs}</strong>
-              </div>
-              <div>
-                <span>Epochs ADHD</span>
-                <strong>{adhdEpochs}</strong>
-              </div>
-              <div>
-                <span>Epochs Control</span>
-                <strong>{controlEpochs}</strong>
-              </div>
-              <div>
-                <span>Porcentaje {prediction.prediction_label}</span>
-                <strong>{formatPercent(finalClassEpochPercentage)}</strong>
-              </div>
-              <div>
-                <span>Threshold usado</span>
-                <strong>{thresholdUsed}</strong>
               </div>
             </div>
 
-            <h3>Distribucion por epoch</h3>
+            <p className="muted">
+              Se han analizado <strong>{prediction.n_epochs}</strong> ventanas de la señal
+              con el modelo <strong>{prediction.model_name || modelInfo?.model_name}</strong>.
+            </p>
+
+            <h3>Distribución por ventana</h3>
             <div className="chart-box">
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={predictionChartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="clase" />
-                  <YAxis domain={[0, 100]} />
+                  <YAxis domain={[0, 100]} unit="%" />
                   <Tooltip />
                   <Bar dataKey="porcentaje" fill="#be7c4d" radius={[6, 6, 0, 0]} />
                 </BarChart>
@@ -103,4 +118,3 @@ export function PredictionView({
     </section>
   );
 }
-

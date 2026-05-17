@@ -16,7 +16,6 @@ def plot_confusion_matrix(y_test, y_score, save_path=None):
     ConfusionMatrixDisplay.from_predictions(y_test, y_score, ax=ax)
     plt.tight_layout()
     _save_fig(fig, save_path)
-    plt.show()
     plt.close(fig)
 
 
@@ -25,7 +24,6 @@ def plot_roc_curve(y_test, y_score, save_path=None):
     RocCurveDisplay.from_predictions(y_test, y_score, ax=ax)
     plt.tight_layout()
     _save_fig(fig, save_path)
-    plt.show()
     plt.close(fig)
 
 
@@ -42,5 +40,4 @@ def plot_model_metric_bar(summary_df, metric_name, save_path=None):
     plt.xticks(rotation=20)
     plt.tight_layout()
     _save_fig(fig, save_path)
-    plt.show()
     plt.close(fig)
