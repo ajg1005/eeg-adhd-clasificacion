@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from backend.modeling.dl_factory import DL_MODEL_OPTIONS
 from backend.modeling.model_factory import ML_MODEL_OPTIONS
 from backend.services.training_data import (
-    get_dataset_stats,
+    get_dataset_stats as _get_dataset_stats,
     prepare_epochs,
     read_csv,
     validate_training_dataframe,
@@ -51,6 +51,10 @@ TRAINING_PARAMS_BY_TYPE = {
     "ml": [],
     "dl": ["epochs", "batch_size", "learning_rate", "early_stopping_patience"],
 }
+
+
+def get_dataset_stats(file_bytes: bytes, preview_rows: int = 5) -> dict[str, Any]:
+    return _get_dataset_stats(file_bytes, preview_rows)
 
 
 def get_training_options() -> dict[str, Any]:

@@ -1,20 +1,21 @@
 ﻿from pathlib import Path
-import sys
 import json
 import joblib
 import pandas as pd
 from sklearn.base import clone
+
+from data_load import load_dataset
+from epochs import create_epochs
+from features import extract_epoch_features
+from pipeline import get_models
+from preprocessing import preprocess_dataset
+from spectral_features import extract_spectral_features
 
 
 # Rutas
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SRC_DIR = BASE_DIR / "src"
-
-if SRC_DIR.exists():
-    sys.path.append(str(SRC_DIR))
-
 CSV_PATH = BASE_DIR / "data" / "adhdata.csv"
 RESULTS_DIR = BASE_DIR / "results"
 MODELS_DIR = BASE_DIR / "models" / "ml"
@@ -26,18 +27,6 @@ FEATURE_COLUMNS_PATH = MODELS_DIR / "feature_columns.json"
 METADATA_PATH = MODELS_DIR / "model_metadata.json"
 
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
-
-
-# Imports del proyecto
-
-
-from data_load import load_dataset
-from epochs import create_epochs
-from features import extract_epoch_features
-from pipeline import get_models
-from preprocessing import preprocess_dataset
-from spectral_features import extract_spectral_features
-
 
 
 # Funciones
