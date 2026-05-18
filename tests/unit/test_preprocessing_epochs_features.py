@@ -67,6 +67,6 @@ def test_extract_epoch_features_basic_values():
     features = extract_epoch_features(x_epochs, ["Fp1", "Fp2"])
 
     assert features.loc[0, "Fp1_mean"] == pytest.approx(3.0)
-    assert features.loc[0, "Fp1_min"] == pytest.approx(10)
+    assert features.loc[0, "Fp1_min"] == pytest.approx(1.0)
     assert features.loc[0, "Fp1_max"] == pytest.approx(5.0)
     assert features.loc[0, "Fp2_range"] == pytest.approx(4.0)
