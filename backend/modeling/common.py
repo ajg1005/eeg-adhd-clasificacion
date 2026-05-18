@@ -63,7 +63,7 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
 
     df_clean, eeg_cols = preprocess_dataset(df)
 
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df_clean,
         eeg_columns=eeg_cols,
         label_column="Class",
@@ -72,48 +72,48 @@ def prepare_features_from_dataframe(df, metadata, feature_columns):
         step_size=step_size,
     )
 
-    if len(X_epochs) == 0:
+    if len(x_epochs) == 0:
         raise ValueError(
             "No se han podido generar epochs. El archivo puede ser demasiado corto."
         )
 
-    X_time = extract_epoch_features(
-        X_epochs,
+    x_time = extract_epoch_features(
+        x_epochs,
         eeg_cols,
     )
 
-    X_spectral = extract_spectral_features(
-        X_epochs=X_epochs,
+    x_spectral = extract_spectral_features(
+        x_epochs=x_epochs,
         channel_names=eeg_cols,
         sfreq=sfreq,
         nperseg=nperseg,
     )
 
     if feature_mode in ["time", "temporal"]:
-        X_features = X_time
+        x_features = x_time
     elif feature_mode == "spectral":
-        X_features = X_spectral
+        x_features = x_spectral
     elif feature_mode == "combined":
-        X_features = pd.concat(
+        x_features = pd.concat(
             [
-                X_time.reset_index(drop=True),
-                X_spectral.reset_index(drop=True),
+                x_time.reset_index(drop=True),
+                x_spectral.reset_index(drop=True),
             ],
             axis=1,
         )
     else:
         raise ValueError(f"feature_mode no válido: {feature_mode}")
 
-    missing_features = [col for col in feature_columns if col not in X_features.columns]
+    missing_features = [col for col in feature_columns if col not in x_features.columns]
 
     if missing_features:
         raise ValueError(
             f"Faltan features esperadas por el modelo: {missing_features[:20]}"
         )
 
-    X_features = X_features[feature_columns]
+    x_features = x_features[feature_columns]
 
-    return X_features, X_epochs, y_epochs, groups_epochs
+    return x_features, x_epochs, y_epochs, groups_epochs
 
 
 # Preparar epochs crudas con el mismo preprocesado usado en entrenamiento DL
@@ -150,7 +150,7 @@ def prepare_dl_epochs_from_dataframe(df, metadata):
             subject_col="ID",
         )
 
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df_clean,
         eeg_columns=eeg_cols,
         label_column="Class",
@@ -159,9 +159,9 @@ def prepare_dl_epochs_from_dataframe(df, metadata):
         step_size=step_size,
     )
 
-    if len(X_epochs) == 0:
+    if len(x_epochs) == 0:
         raise ValueError(
             "No se han podido generar epochs. El archivo puede ser demasiado corto."
         )
 
-    return X_epochs.astype("float32"), y_epochs, groups_epochs
+    return x_epochs.astype("float32"), y_epochs, groups_epochs

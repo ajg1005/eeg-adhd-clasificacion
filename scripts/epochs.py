@@ -9,7 +9,7 @@ def create_epochs(
     epoch_size=128,
     step_size=64,
 ):
-    X_epochs = []
+    x_epochs = []
     y_epochs = []
     groups_epochs = []
 
@@ -35,9 +35,9 @@ def create_epochs(
             epoch_signal = signal[start:end]
 
             # Guardar la epoch, la etiqueta y el sujeto
-            X_epochs.append(epoch_signal)
+            x_epochs.append(epoch_signal)
             y_epochs.append(subject_label)
             groups_epochs.append(subject_id)
 
     # Devolver todo en arrays de numpy
-    return np.array(X_epochs), np.array(y_epochs), np.array(groups_epochs)
+    return np.array(x_epochs), np.array(y_epochs), np.array(groups_epochs)

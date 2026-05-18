@@ -61,7 +61,7 @@ def build_features(X_epochs, eeg_cols, config):
 
     if feature_mode == "spectral":
         return extract_spectral_features(
-            X_epochs=X_epochs,
+            x_epochs=X_epochs,
             channel_names=eeg_cols,
             sfreq=config["sfreq"],
             nperseg=config["nperseg"],
@@ -71,7 +71,7 @@ def build_features(X_epochs, eeg_cols, config):
         X_time = extract_epoch_features(X_epochs, eeg_cols)
 
         X_spectral = extract_spectral_features(
-            X_epochs=X_epochs,
+            x_epochs=X_epochs,
             channel_names=eeg_cols,
             sfreq=config["sfreq"],
             nperseg=config["nperseg"],
@@ -120,9 +120,9 @@ def main():
     print("Shape groups_epochs:", groups_epochs.shape)
 
     print("Extrayendo features...")
-    X_features = build_features(X_epochs, eeg_cols, config)
+    x_features = build_features(X_epochs, eeg_cols, config)
 
-    print("Shape X_features:", X_features.shape)
+    print("Shape X_features:", x_features.shape)
 
     print("Cargando modelos disponibles...")
     models = get_models()
@@ -135,14 +135,14 @@ def main():
 
     print("Entrenando modelo final...")
     final_model = clone(models[best_model_name])
-    final_model.fit(X_features, y_epochs)
+    final_model.fit(x_features, y_epochs)
 
     print("Guardando modelo...")
     joblib.dump(final_model, MODEL_PATH)
 
     print("Guardando columnas de features...")
     with open(FEATURE_COLUMNS_PATH, "w", encoding="utf-8") as f:
-        json.dump(list(X_features.columns), f, indent=4)
+        json.dump(list(x_features.columns), f, indent=4)
 
     print("Guardando metadata...")
     metadata = {
@@ -166,8 +166,8 @@ def main():
             "1": "ADHD"
         },
 
-        "n_epochs_training": int(len(X_features)),
-        "n_features": int(X_features.shape[1]),
+        "n_epochs_training": int(len(x_features)),
+        "n_features": int(x_features.shape[1]),
         "n_subjects_training": int(len(set(groups_epochs))),
 
         "cv_metrics": config.get("cv_metrics", {}),

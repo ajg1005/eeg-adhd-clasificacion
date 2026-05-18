@@ -6,13 +6,6 @@ import numpy as np
 import pandas as pd
 from sklearn.base import clone
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import (
-    accuracy_score,
-    balanced_accuracy_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
 
 from backend.modeling.dl_factory import create_dl_model, create_early_stopping
 from backend.modeling.model_factory import create_ml_model
@@ -22,6 +15,7 @@ from backend.services.training_data import (
     features_for_mode,
     n_splits_for_groups,
 )
+from scripts.evaluation import find_best_threshold, metrics_dict
 from scripts.split import make_group_kfold_splits, make_group_shuffle_split
 
 
@@ -30,16 +24,6 @@ FEATURE_IMPORTANCE_N_REPEATS = 1
 FEATURE_IMPORTANCE_TOP_FEATURES = 15
 FEATURE_IMPORTANCE_TOP_CHANNELS = 10
 FEATURE_IMPORTANCE_SCORING = "f1_weighted"
-
-
-def metrics_dict(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
-    return {
-        "accuracy": float(accuracy_score(y_true, y_pred)),
-        "precision": float(precision_score(y_true, y_pred, average="weighted", zero_division=0)),
-        "recall": float(recall_score(y_true, y_pred, average="weighted", zero_division=0)),
-        "f1_score": float(f1_score(y_true, y_pred, average="weighted", zero_division=0)),
-        "balanced_accuracy": float(balanced_accuracy_score(y_true, y_pred)),
-    }
 
 
 def patient_results(groups: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray) -> list[dict[str, Any]]:
@@ -173,7 +157,7 @@ def run_dl_cross_subject_cv(
 
         batch_size = int(training_params.get("batch_size", 32))
         y_val_score = model.predict(X_val, batch_size=batch_size, verbose=0).reshape(-1)
-        threshold = _find_best_threshold(y_val.astype(int), y_val_score)
+        threshold = find_best_threshold(y_val.astype(int), y_val_score)
         y_score = model.predict(X_test, batch_size=batch_size, verbose=0).reshape(-1)
         y_pred = (y_score >= threshold).astype(int)
 
@@ -196,24 +180,6 @@ def run_dl_cross_subject_cv(
         "fold_results": fold_results,
         "evaluation_mode": f"{n_splits}-fold StratifiedGroupKFold cross-subject CV with inner validation",
     }
-
-
-def _find_best_threshold(y_true: np.ndarray, y_score: np.ndarray) -> float:
-    best_threshold = 0.5
-    best_balanced_accuracy = -np.inf
-    best_f1 = -np.inf
-
-    for threshold in np.linspace(0.2, 0.8, 61):
-        y_pred = (y_score >= threshold).astype(int)
-        balanced = balanced_accuracy_score(y_true, y_pred)
-        f1 = f1_score(y_true, y_pred, average="weighted", zero_division=0)
-
-        if balanced > best_balanced_accuracy or (np.isclose(balanced, best_balanced_accuracy) and f1 > best_f1):
-            best_threshold = float(threshold)
-            best_balanced_accuracy = float(balanced)
-            best_f1 = float(f1)
-
-    return best_threshold
 
 
 def _safe_feature_importance_for_fold(

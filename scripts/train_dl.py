@@ -6,16 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from sklearn.metrics import (
-    accuracy_score,
-    balanced_accuracy_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
 
 from data_load import load_dataset
 from epochs import create_epochs
+from evaluation import find_best_threshold, metrics_dict
 from preprocessing import preprocess_dataset
 from signal_preprocessing import apply_basic_filtering, zscore_per_subject
 from split import make_group_kfold_splits, make_group_shuffle_split
@@ -56,51 +50,16 @@ def set_seed(seed):
     keras.utils.set_random_seed(seed)
 
 
+# Adapta el dict estandar de metrics_dict a los nombres de columna del CSV de research
 def compute_metrics(y_true, y_pred):
+    raw = metrics_dict(y_true, y_pred)
     return {
-        "Accuracy_epoch": accuracy_score(y_true, y_pred),
-        "BalancedAccuracy_epoch": balanced_accuracy_score(y_true, y_pred),
-        "Precision_epoch": precision_score(
-            y_true,
-            y_pred,
-            average="weighted",
-            zero_division=0,
-        ),
-        "Recall_epoch": recall_score(
-            y_true,
-            y_pred,
-            average="weighted",
-            zero_division=0,
-        ),
-        "F1_epoch": f1_score(
-            y_true,
-            y_pred,
-            average="weighted",
-            zero_division=0,
-        ),
+        "Accuracy_epoch": raw["accuracy"],
+        "BalancedAccuracy_epoch": raw["balanced_accuracy"],
+        "Precision_epoch": raw["precision"],
+        "Recall_epoch": raw["recall"],
+        "F1_epoch": raw["f1_score"],
     }
-
-
-def find_best_threshold(y_true, y_score):
-    """
-    Ajusta el umbral usando la validacion interna.
-    Maximiza balanced accuracy y usa F1 como desempate.
-    """
-    best_threshold = 0.5
-    best_bal_acc = -np.inf
-    best_f1 = -np.inf
-
-    for threshold in np.linspace(0.2, 0.8, 61):
-        y_pred = (y_score >= threshold).astype(int)
-        bal_acc = balanced_accuracy_score(y_true, y_pred)
-        f1 = f1_score(y_true, y_pred, average="weighted", zero_division=0)
-
-        if bal_acc > best_bal_acc or (np.isclose(bal_acc, best_bal_acc) and f1 > best_f1):
-            best_threshold = float(threshold)
-            best_bal_acc = float(bal_acc)
-            best_f1 = float(f1)
-
-    return best_threshold
 
 
 def plot_training_history(history, model_name, fold):

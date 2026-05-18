@@ -2,16 +2,10 @@ from pathlib import Path
 import json
 import pandas as pd
 from sklearn.base import clone
-from sklearn.metrics import (
-    accuracy_score,
-    balanced_accuracy_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
 
 from data_load import load_dataset
 from epochs import create_epochs
+from evaluation import metrics_dict
 from features import extract_epoch_features
 from pipeline import get_models
 from preprocessing import preprocess_dataset
@@ -56,7 +50,7 @@ def main():
 
     # Features espectrales
     X_spectral = extract_spectral_features(
-        X_epochs=X_epochs,
+        x_epochs=X_epochs,
         channel_names=eeg_cols,
         sfreq=128,
         nperseg=960,
@@ -133,33 +127,23 @@ def main():
                 oof_predictions[model_name]["y_score"].extend(y_score)
 
             # Métricas por epoch
-            acc_epoch = accuracy_score(y_test, y_pred)
-            bal_acc_epoch = balanced_accuracy_score(y_test, y_pred)
-            prec_epoch = precision_score(
-                y_test, y_pred, average="weighted", zero_division=0
-            )
-            rec_epoch = recall_score(
-                y_test, y_pred, average="weighted", zero_division=0
-            )
-            f1_epoch = f1_score(
-                y_test, y_pred, average="weighted", zero_division=0
-            )
+            m = metrics_dict(y_test, y_pred)
 
             results.append({
                 "Modelo": model_name,
                 "Fold": fold,
-                "Accuracy_epoch": acc_epoch,
-                "BalancedAccuracy_epoch": bal_acc_epoch,
-                "Precision_epoch": prec_epoch,
-                "Recall_epoch": rec_epoch,
-                "F1_epoch": f1_epoch,
+                "Accuracy_epoch": m["accuracy"],
+                "BalancedAccuracy_epoch": m["balanced_accuracy"],
+                "Precision_epoch": m["precision"],
+                "Recall_epoch": m["recall"],
+                "F1_epoch": m["f1_score"],
             })
 
             print(
                 f"{model_name} - Fold {fold} | "
-                f"Accuracy epoch: {acc_epoch:.4f} | "
-                f"Balanced Acc: {bal_acc_epoch:.4f} | "
-                f"F1 epoch: {f1_epoch:.4f}"
+                f"Accuracy epoch: {m['accuracy']:.4f} | "
+                f"Balanced Acc: {m['balanced_accuracy']:.4f} | "
+                f"F1 epoch: {m['f1_score']:.4f}"
             )
             
     

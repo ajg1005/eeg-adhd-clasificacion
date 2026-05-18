@@ -108,7 +108,7 @@ def _extract_channel_spectral_features(signal, ch_name, sfreq, bands, nperseg):
 
 
 def extract_spectral_features(
-    X_epochs,
+    x_epochs,
     channel_names,
     sfreq=128,
     bands=EEG_BANDS,
@@ -125,7 +125,7 @@ def extract_spectral_features(
 
     rows = []
 
-    for epoch in X_epochs:
+    for epoch in x_epochs:
         row = {}
 
         for ch_idx, ch_name in enumerate(channel_names):

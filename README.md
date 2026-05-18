@@ -1,5 +1,9 @@
 # EEG ADHD Classifier
 
+![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TU_ORG_KEY_eeg-adhd-clasificacion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=TU_ORG_KEY_eeg-adhd-clasificacion)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=TU_ORG_KEY_eeg-adhd-clasificacion&metric=coverage)](https://sonarcloud.io/summary/new_code?id=TU_ORG_KEY_eeg-adhd-clasificacion)
+
 Aplicacion web para clasificar senales EEG como `ADHD` o `Control` mediante modelos de Machine Learning y Deep Learning.
 
 ## Introduccion
@@ -77,5 +81,4 @@ cd frontend && npm install && npm run dev  # frontend
 - `python scripts/train_ml.py`: entrena y evalua los modelos ML con CV cross-subject.
 - `python scripts/train_dl.py`: entrena y evalua los modelos DL con CV cross-subject.
 - `python scripts/export_model.py` y `export_model_dl.py`: exportan el modelo final seleccionado.
-- `python scripts/compare_models.py`: comparacion estadistica entre modelos (t-test pareado + bootstrap CI).
 - `python scripts/feature_importance.py`: importancia de features con permutation_importance sobre test held-out cross-subject.
