@@ -55,7 +55,7 @@ def run_ml_cross_subject_cv(
     eeg_params: dict[str, Any],
     prepared: PreparedEpochs,
 ) -> dict[str, Any]:
-    features = features_for_mode(prepared.X_epochs, prepared.eeg_columns, eeg_params)
+    features = features_for_mode(prepared.x_epochs, prepared.eeg_columns, eeg_params)
     n_splits = n_splits_for_groups(prepared.y_epochs, prepared.groups_epochs)
     cv_splits = make_group_kfold_splits(features, prepared.y_epochs, prepared.groups_epochs, n_splits=n_splits)
     base_model = create_ml_model(model_name, model_params)
@@ -110,7 +110,7 @@ def run_dl_cross_subject_cv(
 ) -> dict[str, Any]:
     n_splits = n_splits_for_groups(prepared.y_epochs, prepared.groups_epochs)
     cv_splits = make_group_kfold_splits(
-        prepared.X_epochs,
+        prepared.x_epochs,
         prepared.y_epochs,
         prepared.groups_epochs,
         n_splits=n_splits,
@@ -123,7 +123,7 @@ def run_dl_cross_subject_cv(
 
     for split_data in cv_splits:
         fold = int(split_data["fold"])
-        X_train, X_val, y_train, y_val, groups_train, groups_val = make_group_shuffle_split(
+        x_train, x_val, y_train, y_val, groups_train, groups_val = make_group_shuffle_split(
             split_data["X_train"],
             split_data["y_train"],
             split_data["groups_train"],
@@ -131,8 +131,8 @@ def run_dl_cross_subject_cv(
             random_state=42 + fold,
         )
 
-        X_train = np.asarray(X_train).astype(np.float32)
-        X_val = np.asarray(X_val).astype(np.float32)
+        x_train = np.asarray(x_train).astype(np.float32)
+        x_val = np.asarray(x_val).astype(np.float32)
         X_test = np.asarray(split_data["X_test"]).astype(np.float32)
         y_train = np.asarray(y_train).astype(np.float32)
         y_val = np.asarray(y_val).astype(np.float32)
@@ -141,14 +141,14 @@ def run_dl_cross_subject_cv(
 
         model = create_dl_model(
             model_name=model_name,
-            input_shape=X_train.shape[1:],
+            input_shape=x_train.shape[1:],
             model_params=model_params,
             training_params=training_params,
         )
         model.fit(
-            X_train,
+            x_train,
             y_train,
-            validation_data=(X_val, y_val),
+            validation_data=(x_val, y_val),
             epochs=int(training_params.get("epochs", 25)),
             batch_size=int(training_params.get("batch_size", 32)),
             callbacks=_dl_callbacks(training_params),
@@ -156,7 +156,7 @@ def run_dl_cross_subject_cv(
         )
 
         batch_size = int(training_params.get("batch_size", 32))
-        y_val_score = model.predict(X_val, batch_size=batch_size, verbose=0).reshape(-1)
+        y_val_score = model.predict(x_val, batch_size=batch_size, verbose=0).reshape(-1)
         threshold = find_best_threshold(y_val.astype(int), y_val_score)
         y_score = model.predict(X_test, batch_size=batch_size, verbose=0).reshape(-1)
         y_pred = (y_score >= threshold).astype(int)
@@ -211,11 +211,11 @@ def _feature_importance_for_fold(
     eeg_columns: list[str],
     fold: int,
 ) -> dict[str, Any]:
-    X_eval, y_eval = _stratified_subsample(X_test, y_test, FEATURE_IMPORTANCE_MAX_EPOCHS)
+    x_eval, y_eval = _stratified_subsample(X_test, y_test, FEATURE_IMPORTANCE_MAX_EPOCHS)
 
     result = permutation_importance(
         model,
-        X_eval,
+        x_eval,
         y_eval,
         scoring=FEATURE_IMPORTANCE_SCORING,
         n_repeats=FEATURE_IMPORTANCE_N_REPEATS,
@@ -225,7 +225,7 @@ def _feature_importance_for_fold(
 
     importance_df = pd.DataFrame(
         {
-            "feature": list(X_eval.columns),
+            "feature": list(x_eval.columns),
             "importance_mean": result.importances_mean,
             "importance_std": result.importances_std,
         }
@@ -235,7 +235,7 @@ def _feature_importance_for_fold(
         "method": "permutation_importance",
         "scoring": FEATURE_IMPORTANCE_SCORING,
         "n_repeats": FEATURE_IMPORTANCE_N_REPEATS,
-        "evaluated_epochs": int(len(X_eval)),
+        "evaluated_epochs": int(len(x_eval)),
         "source": f"fold {fold} test set sin solape de pacientes",
         "top_features": _importance_rows(importance_df, FEATURE_IMPORTANCE_TOP_FEATURES),
         "by_channel": _importance_rows(
@@ -250,8 +250,8 @@ def _stratified_subsample(X: pd.DataFrame, y: np.ndarray, max_rows: int) -> tupl
     if max_rows <= 0 or len(X) <= max_rows:
         return X.reset_index(drop=True), y
 
-    _, X_sample, _, y_sample = _groupless_stratified_split(X, y, max_rows)
-    return X_sample.reset_index(drop=True), np.asarray(y_sample).astype(int)
+    _, x_sample, _, y_sample = _groupless_stratified_split(X, y, max_rows)
+    return x_sample.reset_index(drop=True), np.asarray(y_sample).astype(int)
 
 
 def _groupless_stratified_split(

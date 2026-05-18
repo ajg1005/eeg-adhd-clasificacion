@@ -1,13 +1,17 @@
 FROM node:22-alpine
 
-RUN mkdir -p /app && chown node:node /app
 WORKDIR /app
+
+COPY frontend/package*.json ./
+
+RUN npm ci --ignore-scripts
+
+COPY frontend .
+
+RUN mkdir -p /app/node_modules/.vite /tmp/vite \
+    && chown -R node:node /app/node_modules/.vite /tmp/vite
+
 USER node
-
-COPY --chown=node:node frontend/package*.json ./
-RUN npm ci
-
-COPY --chown=node:node frontend .
 
 EXPOSE 5173
 

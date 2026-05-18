@@ -37,7 +37,7 @@ __all__ = [
 
 @dataclass
 class PreparedEpochs:
-    X_epochs: np.ndarray
+    x_epochs: np.ndarray
     y_epochs: np.ndarray
     groups_epochs: np.ndarray
     eeg_columns: list[str]
@@ -93,18 +93,18 @@ def prepare_epochs(df: pd.DataFrame, eeg_params: dict[str, Any]) -> PreparedEpoc
         df = apply_basic_filtering(df, REQUIRED_EEG_COLUMNS, sfreq=sfreq)
         df = zscore_per_subject(df, REQUIRED_EEG_COLUMNS)
 
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df,
         eeg_columns=REQUIRED_EEG_COLUMNS,
         epoch_size=int(eeg_params.get("epoch_size", 1920)),
         step_size=int(eeg_params.get("step_size", 960)),
     )
 
-    if len(X_epochs) == 0:
+    if len(x_epochs) == 0:
         raise ValueError("No se han podido crear epochs. Revisa epoch_size y step_size.")
 
     return PreparedEpochs(
-        X_epochs=X_epochs,
+        x_epochs=x_epochs,
         y_epochs=y_epochs.astype(int),
         groups_epochs=groups_epochs.astype(str),
         eeg_columns=REQUIRED_EEG_COLUMNS,
@@ -112,21 +112,21 @@ def prepare_epochs(df: pd.DataFrame, eeg_params: dict[str, Any]) -> PreparedEpoc
 
 
 def features_for_mode(
-    X_epochs: np.ndarray,
+    x_epochs: np.ndarray,
     eeg_columns: list[str],
     eeg_params: dict[str, Any],
 ) -> pd.DataFrame:
     mode = eeg_params.get("feature_mode", "combined")
     sfreq = int(eeg_params.get("sfreq", 128))
-    nperseg = min(int(eeg_params.get("nperseg", 960)), X_epochs.shape[1])
+    nperseg = min(int(eeg_params.get("nperseg", 960)), x_epochs.shape[1])
 
     if mode == "temporal":
-        return extract_epoch_features(X_epochs, eeg_columns)
+        return extract_epoch_features(x_epochs, eeg_columns)
     if mode == "spectral":
-        return extract_spectral_features(X_epochs, eeg_columns, sfreq=sfreq, nperseg=nperseg)
+        return extract_spectral_features(x_epochs, eeg_columns, sfreq=sfreq, nperseg=nperseg)
     if mode == "combined":
-        temporal = extract_epoch_features(X_epochs, eeg_columns)
-        spectral = extract_spectral_features(X_epochs, eeg_columns, sfreq=sfreq, nperseg=nperseg)
+        temporal = extract_epoch_features(x_epochs, eeg_columns)
+        spectral = extract_spectral_features(x_epochs, eeg_columns, sfreq=sfreq, nperseg=nperseg)
         return pd.concat([temporal, spectral], axis=1)
 
     raise ValueError(f"Modo de features no soportado: {mode}")

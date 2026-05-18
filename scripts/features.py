@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 
 
-def extract_epoch_features(X_epochs, channel_names):
+def extract_epoch_features(x_epochs, channel_names):
 
     # Comprobar dimensiones
-    if X_epochs.ndim != 3:
+    if x_epochs.ndim != 3:
         raise ValueError("X_epochs debe tener forma (n_epochs, epoch_size, n_channels)")
 
-    n_epochs, _, n_channels = X_epochs.shape
+    _, _, n_channels = x_epochs.shape
 
     if len(channel_names) != n_channels:
         raise ValueError("El número de canales no coincide con channel_names")
@@ -17,7 +17,7 @@ def extract_epoch_features(X_epochs, channel_names):
     rows = []
 
     # Iterar por epoch guardar las features
-    for epoch in X_epochs:
+    for epoch in x_epochs:
         
         row = {}
 

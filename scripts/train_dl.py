@@ -126,10 +126,10 @@ def build_summary_df(results):
     }).round(4)
 
 
-def prepare_dl_arrays(X_train, X_val, X_test, y_train, y_val, y_test):
+def prepare_dl_arrays(X_train, x_val, X_test, y_train, y_val, y_test):
     return (
         np.asarray(X_train).astype(np.float32),
-        np.asarray(X_val).astype(np.float32),
+        np.asarray(x_val).astype(np.float32),
         np.asarray(X_test).astype(np.float32),
         np.asarray(y_train).astype(np.float32),
         np.asarray(y_val).astype(np.float32),
@@ -161,13 +161,13 @@ def build_compiled_model(model_name, input_shape, seed):
     return model
 
 
-def fit_model(model_name, X_train, y_train, X_val, y_val, seed, fold):
+def fit_model(model_name, X_train, y_train, x_val, y_val, seed, fold):
     model = build_compiled_model(model_name, X_train.shape[1:], seed)
 
     history = model.fit(
         X_train,
         y_train,
-        validation_data=(X_val, y_val),
+        validation_data=(x_val, y_val),
         epochs=N_EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=build_callbacks(),
@@ -201,18 +201,18 @@ def evaluate_model(model, X_test, y_test, threshold=0.5):
     return metrics, y_test, y_pred, y_score
 
 
-def run_single_model_fold(model_name, X_train, y_train, X_val, y_val, X_test, y_test, seed, fold):
+def run_single_model_fold(model_name, X_train, y_train, x_val, y_val, X_test, y_test, seed, fold):
     model = fit_model(
         model_name=model_name,
         X_train=X_train,
         y_train=y_train,
-        X_val=X_val,
+        x_val=x_val,
         y_val=y_val,
         seed=seed,
         fold=fold,
     )
 
-    y_val_score = model.predict(X_val, batch_size=BATCH_SIZE, verbose=0).ravel()
+    y_val_score = model.predict(x_val, batch_size=BATCH_SIZE, verbose=0).ravel()
     best_threshold = find_best_threshold(y_val, y_val_score)
 
     print(f"{model_name} | threshold ajustado en validacion: {best_threshold:.2f}")
@@ -246,7 +246,7 @@ def save_best_tf_outputs(summary_df, oof_predictions):
     return best_model_name
 
 
-def save_best_tf_config(summary_df, best_model_name, X_epochs, groups_epochs, eeg_cols):
+def save_best_tf_config(summary_df, best_model_name, x_epochs, groups_epochs, eeg_cols):
     def metric_value(metric, stat):
         return float(summary_df.loc[best_model_name, (metric, stat)])
 
@@ -282,9 +282,9 @@ def save_best_tf_config(summary_df, best_model_name, X_epochs, groups_epochs, ee
             "test_loss_std": metric_value("TestLoss", "std"),
         },
         "dataset_summary": {
-            "n_epochs_total": int(len(X_epochs)),
+            "n_epochs_total": int(len(x_epochs)),
             "n_subjects": int(len(set(groups_epochs))),
-            "input_shape": list(X_epochs.shape[1:]),
+            "input_shape": list(x_epochs.shape[1:]),
         },
         "training_strategy": (
             "5-fold StratifiedGroupKFold cross-subject CV with inner "
@@ -309,7 +309,7 @@ def main():
     df_filtered = apply_basic_filtering(df_clean, eeg_cols, subject_col="ID")
     df_normalized = zscore_per_subject(df_filtered, eeg_cols, subject_col="ID")
 
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df_normalized,
         eeg_columns=eeg_cols,
         label_column="Class",
@@ -318,12 +318,12 @@ def main():
         step_size=STEP_SIZE,
     )
 
-    print("Shape X_epochs:", X_epochs.shape)
+    print("Shape X_epochs:", x_epochs.shape)
     print("Shape y_epochs:", y_epochs.shape)
     print("Shape groups_epochs:", groups_epochs.shape)
 
     cv_splits = make_group_kfold_splits(
-        X_epochs,
+        x_epochs,
         y_epochs,
         groups_epochs,
         n_splits=N_SPLITS,
@@ -337,7 +337,7 @@ def main():
 
     for split_data in cv_splits:
         fold = split_data["fold"]
-        X_train_full = split_data["X_train"]
+        x_train_full = split_data["X_train"]
         X_test = split_data["X_test"]
         y_train_full = split_data["y_train"]
         y_test = split_data["y_test"]
@@ -349,8 +349,8 @@ def main():
         print("Sujetos test outer:", len(set(groups_test)))
         print("Solapamiento outer train/test:", len(set(groups_train_full) & set(groups_test)))
 
-        X_train, X_val, y_train, y_val, groups_train, groups_val = make_group_shuffle_split(
-            X_train_full,
+        X_train, x_val, y_train, y_val, groups_train, groups_val = make_group_shuffle_split(
+            x_train_full,
             y_train_full,
             groups_train_full,
             test_size=0.2,
@@ -361,9 +361,9 @@ def main():
         print("Sujetos val inner:", len(set(groups_val)))
         print("Solapamiento inner train/val:", len(set(groups_train) & set(groups_val)))
 
-        X_train, X_val, X_test_ready, y_train, y_val, y_test_ready = prepare_dl_arrays(
+        X_train, x_val, x_test_ready, y_train, y_val, y_test_ready = prepare_dl_arrays(
             X_train,
-            X_val,
+            x_val,
             X_test,
             y_train,
             y_val,
@@ -377,9 +377,9 @@ def main():
                 model_name=model_name,
                 X_train=X_train,
                 y_train=y_train,
-                X_val=X_val,
+                x_val=x_val,
                 y_val=y_val,
-                X_test=X_test_ready,
+                X_test=x_test_ready,
                 y_test=y_test_ready,
                 seed=RANDOM_STATE + fold,
                 fold=fold,
@@ -408,7 +408,7 @@ def main():
     summary_df.to_csv(RESULTS_DIR / "dl_cv_summary.csv")
 
     best_model_name = save_best_tf_outputs(summary_df, oof_predictions)
-    save_best_tf_config(summary_df, best_model_name, X_epochs, groups_epochs, eeg_cols)
+    save_best_tf_config(summary_df, best_model_name, x_epochs, groups_epochs, eeg_cols)
 
 
 if __name__ == "__main__":

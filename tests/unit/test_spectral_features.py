@@ -6,11 +6,11 @@ from scripts.spectral_features import extract_spectral_features
 def test_extract_spectral_features_returns_band_powers_per_channel():
     # Crea un array X_epochs sintetico (n_epochs, n_samples, n_channels)
 
-    X_epochs = X_epochs = np.random.default_rng(42).standard_normal((2, 256, 3))
+    x_epochs = x_epochs = np.random.default_rng(42).standard_normal((2, 256, 3))
 
     channels =   channels = ["Fp1", "Fp2", "F3"]
 
-    features = extract_spectral_features(X_epochs, channels, sfreq=128, nperseg=128)
+    features = extract_spectral_features(x_epochs, channels, sfreq=128, nperseg=128)
 
     #Comprueba que para cada canal aparece una columna por cada banda
     for channel in channels:

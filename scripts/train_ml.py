@@ -32,7 +32,7 @@ def main():
     df_clean, eeg_cols = preprocess_dataset(df)
 
     # Segmentar en epochs
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df_clean,
         eeg_columns=eeg_cols,
         label_column="Class",
@@ -41,34 +41,34 @@ def main():
         step_size=960,
     )
 
-    print("Shape X_epochs:", X_epochs.shape)
+    print("Shape X_epochs:", x_epochs.shape)
     print("Shape y_epochs:", y_epochs.shape)
     print("Shape groups_epochs:", groups_epochs.shape)
 
     # Features temporales
-    X_time = extract_epoch_features(X_epochs, eeg_cols)
+    x_time = extract_epoch_features(x_epochs, eeg_cols)
 
     # Features espectrales
-    X_spectral = extract_spectral_features(
-        x_epochs=X_epochs,
+    x_spectral = extract_spectral_features(
+        x_epochs=x_epochs,
         channel_names=eeg_cols,
         sfreq=128,
         nperseg=960,
     )
 
     # Features combinadas
-    X_combined = pd.concat(
-        [X_time.reset_index(drop=True), X_spectral.reset_index(drop=True)],
+    x_combined = pd.concat(
+        [x_time.reset_index(drop=True), x_spectral.reset_index(drop=True)],
         axis=1,
     )
 
-    X_features = X_combined
+    x_features = x_combined
 
-    print("Shape X_features:", X_features.shape)
+    print("Shape X_features:", x_features.shape)
 
     # CV cross-subject sobre todo el dataset
     cv_splits = make_group_kfold_splits(
-        X_features,
+        x_features,
         y_epochs,
         groups_epochs,
         n_splits=5,
@@ -203,8 +203,8 @@ def main():
         },
 
         "dataset_summary": {
-            "n_epochs_total": int(len(X_features)),
-            "n_features": int(X_features.shape[1]),
+            "n_epochs_total": int(len(x_features)),
+            "n_features": int(x_features.shape[1]),
             "n_subjects": int(len(set(groups_epochs))),
         },
 

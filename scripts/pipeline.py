@@ -32,7 +32,10 @@ def create_ml_model(model_name, params=None):
                 random_state=RANDOM_STATE,
                 class_weight=params.get("class_weight", "balanced"),
             )),
-        ])
+            
+        ], memory=None,
+        )
+
 
     if model_name in {"rbf_svc", "svm_rbf"}:
         return Pipeline([
@@ -45,7 +48,8 @@ def create_ml_model(model_name, params=None):
                 class_weight=params.get("class_weight", "balanced"),
                 random_state=RANDOM_STATE,
             )),
-        ])
+        ], memory=None,
+        )
 
     if model_name == "knn":
         return Pipeline([
@@ -54,7 +58,8 @@ def create_ml_model(model_name, params=None):
                 n_neighbors=int(params.get("n_neighbors", 5)),
                 weights=params.get("weights", "distance"),
             )),
-        ])
+        ], memory=None,
+        )
 
     if model_name == "random_forest":
         return Pipeline([
@@ -67,8 +72,10 @@ def create_ml_model(model_name, params=None):
                 class_weight=params.get("class_weight", "balanced"),
                 random_state=RANDOM_STATE,
                 n_jobs=-1,
+                min_samples_leaf=1
             )),
-        ])
+        ], memory=None,
+        )
 
     if model_name == "xgboost":
         return Pipeline([
@@ -83,10 +90,11 @@ def create_ml_model(model_name, params=None):
                 tree_method="hist",
                 random_state=RANDOM_STATE,
             )),
-        ])
+        ], memory=None,
+        )
 
     raise ValueError(f"Modelo ML no soportado: {model_name}")
 
 
-def get_models(random_state=RANDOM_STATE):
+def get_models():
     return {name: create_ml_model(name) for name in ALL_MODEL_NAMES}

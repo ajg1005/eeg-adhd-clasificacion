@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+import pytest
 from backend.constants import REQUIRED_EEG_COLUMNS as EEG_CHANNELS
 from scripts.epochs import create_epochs
 from scripts.features import extract_epoch_features
@@ -39,22 +39,22 @@ def test_create_epochs_groups_by_subject_and_step_size():
         }
     )
 
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df,
         eeg_columns=["Fp1", "Fp2"],
         epoch_size=3,
         step_size=2,
     )
 
-    assert X_epochs.shape == (4, 3, 2)
+    assert x_epochs.shape == (4, 3, 2)
     assert y_epochs.tolist() == [0, 0, 1, 1]
     assert groups_epochs.tolist() == ["s1", "s1", "s2", "s2"]
-    assert X_epochs[1, :, 0].tolist() == [2, 3, 4]
+    assert x_epochs[1, :, 0].tolist() == [2, 3, 4]
 
 
 # comprueba algunas features temporales basicas (media, min, max, rango)
 def test_extract_epoch_features_basic_values():
-    X_epochs = np.array(
+    x_epochs = np.array(
         [
             [
                 [1.0, 2.0],
@@ -64,9 +64,9 @@ def test_extract_epoch_features_basic_values():
         ]
     )
 
-    features = extract_epoch_features(X_epochs, ["Fp1", "Fp2"])
+    features = extract_epoch_features(x_epochs, ["Fp1", "Fp2"])
 
-    assert features.loc[0, "Fp1_mean"] == 3.0
-    assert features.loc[0, "Fp1_min"] == 1.0
-    assert features.loc[0, "Fp1_max"] == 5.0
-    assert features.loc[0, "Fp2_range"] == 4.0
+    assert features.loc[0, "Fp1_mean"] == pytest.approx(3.0)
+    assert features.loc[0, "Fp1_min"] == pytest.approx(10)
+    assert features.loc[0, "Fp1_max"] == pytest.approx(5.0)
+    assert features.loc[0, "Fp2_range"] == pytest.approx(4.0)

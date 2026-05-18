@@ -92,37 +92,37 @@ def load_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def build_features(metadata, eeg_cols, X_epochs):
+def build_features(metadata, eeg_cols, x_epochs):
     feature_mode = metadata["feature_mode"].lower()
     sfreq = int(metadata["sfreq"])
     nperseg = int(metadata.get("nperseg", metadata["epoch_size"]))
 
     if feature_mode in {"time", "temporal"}:
-        return extract_epoch_features(X_epochs, eeg_cols)
+        return extract_epoch_features(x_epochs, eeg_cols)
     if feature_mode == "spectral":
-        return extract_spectral_features(X_epochs, eeg_cols, sfreq=sfreq, nperseg=nperseg)
+        return extract_spectral_features(x_epochs, eeg_cols, sfreq=sfreq, nperseg=nperseg)
     if feature_mode == "combined":
-        temporal = extract_epoch_features(X_epochs, eeg_cols)
-        spectral = extract_spectral_features(X_epochs, eeg_cols, sfreq=sfreq, nperseg=nperseg)
+        temporal = extract_epoch_features(x_epochs, eeg_cols)
+        spectral = extract_spectral_features(x_epochs, eeg_cols, sfreq=sfreq, nperseg=nperseg)
         return pd.concat([temporal.reset_index(drop=True), spectral.reset_index(drop=True)], axis=1)
 
     raise ValueError(f"feature_mode no soportado: {metadata['feature_mode']}")
 
 
-def align_feature_columns(X_features, feature_columns):
-    missing = [feature for feature in feature_columns if feature not in X_features.columns]
+def align_feature_columns(x_features, feature_columns):
+    missing = [feature for feature in feature_columns if feature not in x_features.columns]
     if missing:
         preview = ", ".join(missing[:10])
         raise ValueError(f"Faltan features esperadas por el modelo: {preview}")
 
-    return X_features.loc[:, feature_columns]
+    return x_features.loc[:, feature_columns]
 
 
 def stratified_subsample(X, y, sample_size):
     if sample_size <= 0 or len(X) <= sample_size:
         return X.reset_index(drop=True), np.asarray(y).astype(int)
 
-    _, X_sample, _, y_sample = train_test_split(
+    _, x_sample, _, y_sample = train_test_split(
         X,
         y,
         test_size=sample_size,
@@ -130,7 +130,7 @@ def stratified_subsample(X, y, sample_size):
         random_state=RANDOM_STATE,
     )
     print(f"Submuestreado test set a {sample_size} epochs para acelerar.")
-    return X_sample.reset_index(drop=True), np.asarray(y_sample).astype(int)
+    return x_sample.reset_index(drop=True), np.asarray(y_sample).astype(int)
 
 
 def aggregate_by_channel(importance_df, channels):
@@ -160,25 +160,25 @@ def main():
     df = load_dataset(CSV_PATH)
     df_clean, eeg_cols = preprocess_dataset(df)
 
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df_clean,
         eeg_columns=eeg_cols,
         epoch_size=metadata["epoch_size"],
         step_size=metadata["step_size"],
     )
 
-    X_features = align_feature_columns(
-        build_features(metadata, eeg_cols, X_epochs),
+    x_features = align_feature_columns(
+        build_features(metadata, eeg_cols, x_epochs),
         feature_columns,
     )
     y_epochs = np.asarray(y_epochs).astype(int)
     groups_epochs = np.asarray(groups_epochs).astype(str)
 
-    print(f"Total epochs: {len(X_features)} | pacientes: {len(set(groups_epochs))}")
+    print(f"Total epochs: {len(x_features)} | pacientes: {len(set(groups_epochs))}")
 
     # Split cross-subject: ningun paciente se solapa entre train y test
     X_train, X_test, y_train, y_test, groups_train, groups_test = make_group_shuffle_split(
-        X_features,
+        x_features,
         y_epochs,
         groups_epochs,
         test_size=args.test_size,
@@ -199,13 +199,13 @@ def main():
     fresh_model.fit(X_train, y_train)
 
     # Opcional: submuestrear test si es muy grande
-    X_test_used, y_test_used = stratified_subsample(X_test, y_test, args.test_sample_size)
+    x_test_used, y_test_used = stratified_subsample(X_test, y_test, args.test_sample_size)
 
     print(f"Calculando permutation_importance en test ({args.n_repeats} repeticiones, "
-          f"{len(X_test_used)} epochs, scoring={args.scoring}, n_jobs={args.n_jobs})...")
+          f"{len(x_test_used)} epochs, scoring={args.scoring}, n_jobs={args.n_jobs})...")
     result = permutation_importance(
         fresh_model,
-        X_test_used,
+        x_test_used,
         y_test_used,
         scoring=args.scoring,
         n_repeats=args.n_repeats,

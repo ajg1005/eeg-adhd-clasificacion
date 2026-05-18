@@ -53,25 +53,25 @@ def load_config():
         return json.load(f)
 
 
-def build_features(X_epochs, eeg_cols, config):
+def build_features(x_epochs, eeg_cols, config):
     feature_mode = config["feature_mode"]
 
     if feature_mode == "time":
-        return extract_epoch_features(X_epochs, eeg_cols)
+        return extract_epoch_features(x_epochs, eeg_cols)
 
     if feature_mode == "spectral":
         return extract_spectral_features(
-            x_epochs=X_epochs,
+            x_epochs=x_epochs,
             channel_names=eeg_cols,
             sfreq=config["sfreq"],
             nperseg=config["nperseg"],
         )
 
     if feature_mode == "combined":
-        X_time = extract_epoch_features(X_epochs, eeg_cols)
+        x_time = extract_epoch_features(x_epochs, eeg_cols)
 
-        X_spectral = extract_spectral_features(
-            x_epochs=X_epochs,
+        x_spectral = extract_spectral_features(
+            x_epochs=x_epochs,
             channel_names=eeg_cols,
             sfreq=config["sfreq"],
             nperseg=config["nperseg"],
@@ -79,8 +79,8 @@ def build_features(X_epochs, eeg_cols, config):
 
         return pd.concat(
             [
-                X_time.reset_index(drop=True),
-                X_spectral.reset_index(drop=True),
+                x_time.reset_index(drop=True),
+                x_spectral.reset_index(drop=True),
             ],
             axis=1,
         )
@@ -106,7 +106,7 @@ def main():
     df_clean, eeg_cols = preprocess_dataset(df)
 
     print("Creando epochs...")
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df_clean,
         eeg_columns=eeg_cols,
         label_column="Class",
@@ -115,12 +115,12 @@ def main():
         step_size=config["step_size"],
     )
 
-    print("Shape X_epochs:", X_epochs.shape)
+    print("Shape X_epochs:", x_epochs.shape)
     print("Shape y_epochs:", y_epochs.shape)
     print("Shape groups_epochs:", groups_epochs.shape)
 
     print("Extrayendo features...")
-    x_features = build_features(X_epochs, eeg_cols, config)
+    x_features = build_features(x_epochs, eeg_cols, config)
 
     print("Shape X_features:", x_features.shape)
 

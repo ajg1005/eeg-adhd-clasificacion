@@ -100,7 +100,7 @@ def prepare_dataset(config):
             subject_col="ID",
         )
 
-    X_epochs, y_epochs, groups_epochs = create_epochs(
+    x_epochs, y_epochs, groups_epochs = create_epochs(
         df=df_model,
         eeg_columns=eeg_cols,
         label_column="Class",
@@ -109,7 +109,7 @@ def prepare_dataset(config):
         step_size=config["step_size"],
     )
 
-    return X_epochs, y_epochs, groups_epochs, eeg_cols
+    return x_epochs, y_epochs, groups_epochs, eeg_cols
 
 
 def main():
@@ -121,14 +121,14 @@ def main():
 
     print(f"Modelo DL elegido: {config['best_model']}")
 
-    X_epochs, y_epochs, groups_epochs, eeg_cols = prepare_dataset(config)
+    x_epochs, y_epochs, groups_epochs, eeg_cols = prepare_dataset(config)
 
-    print("Shape X_epochs:", X_epochs.shape)
+    print("Shape X_epochs:", x_epochs.shape)
     print("Shape y_epochs:", y_epochs.shape)
     print("Sujetos:", len(set(groups_epochs)))
 
-    X_train, X_val, y_train, y_val, groups_train, groups_val = make_group_shuffle_split(
-        X_epochs,
+    X_train, x_val, y_train, y_val, groups_train, groups_val = make_group_shuffle_split(
+        x_epochs,
         y_epochs,
         groups_epochs,
         test_size=0.2,
@@ -140,7 +140,7 @@ def main():
     print("Solapamiento train/val:", len(set(groups_train) & set(groups_val)))
 
     X_train = np.asarray(X_train).astype(np.float32)
-    X_val = np.asarray(X_val).astype(np.float32)
+    x_val = np.asarray(x_val).astype(np.float32)
     y_train = np.asarray(y_train).astype(np.float32)
     y_val = np.asarray(y_val).astype(np.float32)
 
@@ -149,7 +149,7 @@ def main():
     history = model.fit(
         X_train,
         y_train,
-        validation_data=(X_val, y_val),
+        validation_data=(x_val, y_val),
         epochs=config["n_epochs"],
         batch_size=config["batch_size"],
         callbacks=build_callbacks(config["patience"]),
@@ -157,7 +157,7 @@ def main():
     )
 
     threshold = float(config.get("threshold_cv_mean", 0.5))
-    y_val_score = model.predict(X_val, batch_size=config["batch_size"], verbose=0).ravel()
+    y_val_score = model.predict(x_val, batch_size=config["batch_size"], verbose=0).ravel()
     y_val_pred = (y_val_score >= threshold).astype(int)
 
     export_metrics = {
@@ -174,7 +174,7 @@ def main():
         "cv_metrics": config["cv_metrics"],
         "dataset_summary": config["dataset_summary"],
         "n_epochs_train": int(len(X_train)),
-        "n_epochs_val": int(len(X_val)),
+        "n_epochs_val": int(len(x_val)),
     }
 
     metadata = {

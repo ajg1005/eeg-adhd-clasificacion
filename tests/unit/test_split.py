@@ -33,7 +33,7 @@ def _toy_dataset(n_subjects_per_class=5, samples_per_subject=10):
 # comprueba que ningun paciente aparece a la vez en train y test
 def test_make_group_shuffle_split_no_subject_overlap():
     X, y, groups = _toy_dataset()
-    X_train, X_test, y_train, y_test, groups_train, groups_test = make_group_shuffle_split(
+    _, _, _, _, groups_train, groups_test = make_group_shuffle_split(
         X, y, groups, test_size=0.2, random_state=42,
     )
     train_subjects = set(groups_train)
@@ -50,7 +50,7 @@ def test_make_group_shuffle_split_preserves_label_consistency():
     X, y, groups = _toy_dataset()
     original_labels = dict(zip(groups, y))
 
-    X_train, X_test, y_train, y_test, groups_train, groups_test = make_group_shuffle_split(
+    _, _, y_train, y_test, groups_train, groups_test = make_group_shuffle_split(
         X, y, groups, test_size=0.2, random_state=42,
     )
 
