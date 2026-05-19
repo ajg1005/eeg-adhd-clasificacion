@@ -1,15 +1,13 @@
 ﻿from pathlib import Path
 import json
 import joblib
-import pandas as pd
 from sklearn.base import clone
 
 from data_load import load_dataset
 from epochs import create_epochs
-from features import extract_epoch_features
+from feature_pipeline import build_features_from_config
 from pipeline import get_models
 from preprocessing import preprocess_dataset
-from spectral_features import extract_spectral_features
 
 
 # Rutas
@@ -40,41 +38,6 @@ def load_config():
 
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
-
-
-def build_features(x_epochs, eeg_cols, config):
-    feature_mode = config["feature_mode"]
-
-    if feature_mode == "time":
-        return extract_epoch_features(x_epochs, eeg_cols)
-
-    if feature_mode == "spectral":
-        return extract_spectral_features(
-            x_epochs=x_epochs,
-            channel_names=eeg_cols,
-            sfreq=config["sfreq"],
-            nperseg=config["nperseg"],
-        )
-
-    if feature_mode == "combined":
-        x_time = extract_epoch_features(x_epochs, eeg_cols)
-
-        x_spectral = extract_spectral_features(
-            x_epochs=x_epochs,
-            channel_names=eeg_cols,
-            sfreq=config["sfreq"],
-            nperseg=config["nperseg"],
-        )
-
-        return pd.concat(
-            [
-                x_time.reset_index(drop=True),
-                x_spectral.reset_index(drop=True),
-            ],
-            axis=1,
-        )
-
-    raise ValueError(f"feature_mode no valido: {feature_mode}")
 
 
 def main():
@@ -109,7 +72,7 @@ def main():
     print("Shape groups_epochs:", groups_epochs.shape)
 
     print("Extrayendo features...")
-    x_features = build_features(x_epochs, eeg_cols, config)
+    x_features = build_features_from_config(x_epochs, eeg_cols, config)
 
     print("Shape X_features:", x_features.shape)
 

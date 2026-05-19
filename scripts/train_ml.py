@@ -6,10 +6,9 @@ from sklearn.base import clone
 from data_load import load_dataset
 from epochs import create_epochs
 from evaluation import metrics_dict
-from features import extract_epoch_features
+from feature_pipeline import build_features_from_epochs
 from pipeline import get_models
 from preprocessing import preprocess_dataset
-from spectral_features import extract_spectral_features
 from split import make_group_kfold_splits
 from visual import (
     plot_confusion_matrix,
@@ -45,24 +44,13 @@ def main():
     print("Shape y_epochs:", y_epochs.shape)
     print("Shape groups_epochs:", groups_epochs.shape)
 
-    # Features temporales
-    x_time = extract_epoch_features(x_epochs, eeg_cols)
-
-    # Features espectrales
-    x_spectral = extract_spectral_features(
+    x_features = build_features_from_epochs(
         x_epochs=x_epochs,
         channel_names=eeg_cols,
+        feature_mode="combined",
         sfreq=128,
         nperseg=960,
     )
-
-    # Features combinadas
-    x_combined = pd.concat(
-        [x_time.reset_index(drop=True), x_spectral.reset_index(drop=True)],
-        axis=1,
-    )
-
-    x_features = x_combined
 
     print("Shape X_features:", x_features.shape)
 

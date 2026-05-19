@@ -14,10 +14,9 @@ from backend.constants import (
     normalize_class_to_int as normalize_class_value,
 )
 from scripts.epochs import create_epochs
-from scripts.features import extract_epoch_features
+from scripts.feature_pipeline import build_features_from_epochs
 from scripts.preprocessing import preprocess_dataset
 from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
-from scripts.spectral_features import extract_spectral_features
 
 
 __all__ = [
@@ -116,20 +115,13 @@ def features_for_mode(
     eeg_columns: list[str],
     eeg_params: dict[str, Any],
 ) -> pd.DataFrame:
-    mode = eeg_params.get("feature_mode", "combined")
-    sfreq = int(eeg_params.get("sfreq", 128))
-    nperseg = min(int(eeg_params.get("nperseg", 960)), x_epochs.shape[1])
-
-    if mode == "temporal":
-        return extract_epoch_features(x_epochs, eeg_columns)
-    if mode == "spectral":
-        return extract_spectral_features(x_epochs, eeg_columns, sfreq=sfreq, nperseg=nperseg)
-    if mode == "combined":
-        temporal = extract_epoch_features(x_epochs, eeg_columns)
-        spectral = extract_spectral_features(x_epochs, eeg_columns, sfreq=sfreq, nperseg=nperseg)
-        return pd.concat([temporal, spectral], axis=1)
-
-    raise ValueError(f"Modo de features no soportado: {mode}")
+    return build_features_from_epochs(
+        x_epochs=x_epochs,
+        channel_names=eeg_columns,
+        feature_mode=eeg_params.get("feature_mode", "combined"),
+        sfreq=int(eeg_params.get("sfreq", 128)),
+        nperseg=int(eeg_params.get("nperseg", 960)),
+    )
 
 
 def n_splits_for_groups(y_epochs: np.ndarray, groups_epochs: np.ndarray) -> int:

@@ -48,9 +48,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from data_load import load_dataset  # noqa: E402
 from epochs import create_epochs  # noqa: E402
-from features import extract_epoch_features  # noqa: E402
+from feature_pipeline import align_feature_columns, build_features_from_config  # noqa: E402
 from preprocessing import preprocess_dataset  # noqa: E402
-from spectral_features import extract_spectral_features  # noqa: E402
 from split import make_group_shuffle_split  # noqa: E402
 
 
@@ -90,32 +89,6 @@ def load_json(path):
     if not path.exists():
         raise FileNotFoundError(f"No existe {path}. Ejecuta scripts/export_model.py primero.")
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def build_features(metadata, eeg_cols, x_epochs):
-    feature_mode = metadata["feature_mode"].lower()
-    sfreq = int(metadata["sfreq"])
-    nperseg = int(metadata.get("nperseg", metadata["epoch_size"]))
-
-    if feature_mode in {"time", "temporal"}:
-        return extract_epoch_features(x_epochs, eeg_cols)
-    if feature_mode == "spectral":
-        return extract_spectral_features(x_epochs, eeg_cols, sfreq=sfreq, nperseg=nperseg)
-    if feature_mode == "combined":
-        temporal = extract_epoch_features(x_epochs, eeg_cols)
-        spectral = extract_spectral_features(x_epochs, eeg_cols, sfreq=sfreq, nperseg=nperseg)
-        return pd.concat([temporal.reset_index(drop=True), spectral.reset_index(drop=True)], axis=1)
-
-    raise ValueError(f"feature_mode no soportado: {metadata['feature_mode']}")
-
-
-def align_feature_columns(x_features, feature_columns):
-    missing = [feature for feature in feature_columns if feature not in x_features.columns]
-    if missing:
-        preview = ", ".join(missing[:10])
-        raise ValueError(f"Faltan features esperadas por el modelo: {preview}")
-
-    return x_features.loc[:, feature_columns]
 
 
 def stratified_subsample(X, y, sample_size):
@@ -168,7 +141,7 @@ def main():
     )
 
     x_features = align_feature_columns(
-        build_features(metadata, eeg_cols, x_epochs),
+        build_features_from_config(x_epochs, eeg_cols, metadata),
         feature_columns,
     )
     y_epochs = np.asarray(y_epochs).astype(int)
