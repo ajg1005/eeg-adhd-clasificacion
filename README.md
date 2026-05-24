@@ -1,8 +1,8 @@
 # EEG ADHD Classifier
 
-![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=TU_ORG_KEY_eeg-adhd-clasificacion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=TU_ORG_KEY_eeg-adhd-clasificacion)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=TU_ORG_KEY_eeg-adhd-clasificacion&metric=coverage)](https://sonarcloud.io/summary/new_code?id=TU_ORG_KEY_eeg-adhd-clasificacion)
+[![CI](https://github.com/ajg1005/eeg-adhd-clasificacion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ajg1005/eeg-adhd-clasificacion/actions/workflows/ci.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ajg1005_eeg-adhd-clasificacion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ajg1005_eeg-adhd-clasificacion)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ajg1005_eeg-adhd-clasificacion&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ajg1005_eeg-adhd-clasificacion)
 
 Aplicacion web para clasificar senales EEG como `ADHD` o `Control` mediante modelos de Machine Learning y Deep Learning.
 
@@ -64,17 +64,6 @@ docker compose up --build
 
 Backend: http://localhost:8000 · Frontend: http://localhost:5173
 
-Sin Docker (requiere Python 3.12):
-
-```bash
-python -m venv .venv
-.venv/bin/activate          # Linux/Mac
-.venv\Scripts\Activate.ps1  # Windows
-pip install -r requirements-dev.txt
-
-uvicorn backend.main:app --reload      # backend
-cd frontend && npm install && npm run dev  # frontend
-```
 
 ## Scripts de investigacion
 
