@@ -27,7 +27,6 @@ Ejemplos:
 import argparse
 import json
 import sys
-from pathlib import Path
 
 import joblib
 import matplotlib
@@ -41,8 +40,29 @@ from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-SCRIPTS_DIR = BASE_DIR / "scripts"
+try:
+    from scripts.constants import RANDOM_STATE
+    from scripts.paths import (
+        CSV_PATH,
+        FIGURES_DIR,
+        ML_FEATURE_COLUMNS_PATH as FEATURE_COLUMNS_PATH,
+        ML_METADATA_PATH as METADATA_PATH,
+        ML_MODEL_PATH as MODEL_PATH,
+        RESULTS_DIR,
+        SCRIPTS_DIR,
+    )
+except ModuleNotFoundError:
+    from constants import RANDOM_STATE
+    from paths import (
+        CSV_PATH,
+        FIGURES_DIR,
+        ML_FEATURE_COLUMNS_PATH as FEATURE_COLUMNS_PATH,
+        ML_METADATA_PATH as METADATA_PATH,
+        ML_MODEL_PATH as MODEL_PATH,
+        RESULTS_DIR,
+        SCRIPTS_DIR,
+    )
+
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -52,20 +72,9 @@ from feature_pipeline import align_feature_columns, build_features_from_config  
 from preprocessing import preprocess_dataset  # noqa: E402
 from split import make_group_shuffle_split  # noqa: E402
 
-
-CSV_PATH = BASE_DIR / "data" / "adhdata.csv"
-MODELS_DIR = BASE_DIR / "models" / "ml"
-MODEL_PATH = MODELS_DIR / "final_model.joblib"
-METADATA_PATH = MODELS_DIR / "model_metadata.json"
-FEATURE_COLUMNS_PATH = MODELS_DIR / "feature_columns.json"
-
-FIGURES_DIR = BASE_DIR / "Figuras"
-RESULTS_DIR = BASE_DIR / "results"
-
 DEFAULT_TEST_SAMPLE_SIZE = 0  # 0 = usar todo el test set
 DEFAULT_N_REPEATS = 10
 DEFAULT_TEST_SIZE = 0.2
-RANDOM_STATE = 42
 
 
 def parse_args():

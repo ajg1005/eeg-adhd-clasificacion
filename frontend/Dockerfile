@@ -9,7 +9,7 @@ RUN npm ci --ignore-scripts
 COPY frontend .
 
 RUN mkdir -p /app/node_modules/.vite /tmp/vite \
-    && chown -R node:node /app/node_modules/.vite /tmp/vite
+    && chown -R node:node /app /tmp/vite
 
 USER node
 

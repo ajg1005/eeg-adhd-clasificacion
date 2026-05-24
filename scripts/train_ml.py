@@ -1,4 +1,3 @@
-from pathlib import Path
 import json
 import pandas as pd
 from sklearn.base import clone
@@ -8,6 +7,7 @@ from epochs import create_epochs
 from evaluation import metrics_dict
 from feature_pipeline import build_features_from_epochs
 from pipeline import get_models
+from paths import CSV_PATH, FIGURES_DIR, ML_BEST_CONFIG_PATH, RESULTS_DIR
 from preprocessing import preprocess_dataset
 from split import make_group_kfold_splits
 from visual import (
@@ -16,14 +16,9 @@ from visual import (
     plot_roc_curve,
 )
 
-
-# Rutas para el dataset
-CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "adhdata.csv"
-OUTPUT_DIR = Path(__file__).resolve().parent.parent
-
-#Guardar mejor modelo
-RESULTS_DIR = OUTPUT_DIR / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def main():
     # Cargar el dataset, limpiar y preprocesar
@@ -73,9 +68,6 @@ def main():
         model_name: {"y_true": [], "y_pred": [], "y_score": []}
         for model_name in models.keys()
     }
-
-    figures_dir = OUTPUT_DIR / "Figuras"
-    figures_dir.mkdir(parents=True, exist_ok=True)
 
     for split_data in cv_splits:
         fold = split_data["fold"]
@@ -200,7 +192,7 @@ def main():
         "note": "This file is used by export_model.py to train and export the final model."
     }
 
-    config_path = RESULTS_DIR / "best_model_config.json"
+    config_path = ML_BEST_CONFIG_PATH
 
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(best_model_config, f, indent=4)
@@ -211,14 +203,14 @@ def main():
     plot_model_metric_bar(
         summary_df,
         metric_name="BalancedAccuracy_epoch",
-        save_path=figures_dir / "cv_model_comparison_balanced_accuracy.png",
+        save_path=FIGURES_DIR / "cv_model_comparison_balanced_accuracy.png",
     )
 
     # Figura 2: comparación de modelos por F1
     plot_model_metric_bar(
         summary_df,
         metric_name="F1_epoch",
-        save_path=figures_dir / "cv_model_comparison_f1.png",
+        save_path=FIGURES_DIR / "cv_model_comparison_f1.png",
     )
 
     # Figura 3: matriz de confusión global out-of-fold del mejor modelo
@@ -228,7 +220,7 @@ def main():
     plot_confusion_matrix(
         best_y_true,
         best_y_pred,
-        save_path=figures_dir / f"{best_model_name}_cv_confusion_matrix.png",
+        save_path=FIGURES_DIR / f"{best_model_name}_cv_confusion_matrix.png",
     )
 
     # Figura 4: curva ROC global out-of-fold del mejor modelo
@@ -238,7 +230,7 @@ def main():
         plot_roc_curve(
             best_y_true,
             best_y_score,
-            save_path=figures_dir / f"{best_model_name}_cv_roc_curve.png",
+            save_path=FIGURES_DIR / f"{best_model_name}_cv_roc_curve.png",
         )
     else:
         print(f"\nEl modelo {best_model_name} no dispone de scores continuos para ROC.")

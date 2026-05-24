@@ -7,14 +7,15 @@ import pandas as pd
 from sklearn.base import clone
 from sklearn.inspection import permutation_importance
 
+from backend.constants import CLASS_TO_LABEL
 from backend.modeling.dl_factory import create_dl_model, create_early_stopping
 from backend.modeling.model_factory import create_ml_model
 from backend.services.training_data import (
-    CLASS_TO_LABEL,
     PreparedEpochs,
     features_for_mode,
     n_splits_for_groups,
 )
+from scripts.constants import RANDOM_STATE
 from scripts.evaluation import find_best_threshold, metrics_dict
 from scripts.split import make_group_kfold_splits, make_group_shuffle_split
 
@@ -128,7 +129,7 @@ def run_dl_cross_subject_cv(
             split_data["y_train"],
             split_data["groups_train"],
             test_size=0.2,
-            random_state=42 + fold,
+            random_state=RANDOM_STATE + fold,
         )
 
         x_train = np.asarray(x_train).astype(np.float32)
@@ -219,7 +220,7 @@ def _feature_importance_for_fold(
         y_eval,
         scoring=FEATURE_IMPORTANCE_SCORING,
         n_repeats=FEATURE_IMPORTANCE_N_REPEATS,
-        random_state=42,
+        random_state=RANDOM_STATE,
         n_jobs=1,
     )
 
@@ -268,7 +269,7 @@ def _groupless_stratified_split(
             y,
             test_size=sample_size,
             stratify=stratify,
-            random_state=42,
+            random_state=RANDOM_STATE,
         )
     except ValueError:
         return train_test_split(
@@ -276,7 +277,7 @@ def _groupless_stratified_split(
             y,
             test_size=sample_size,
             stratify=None,
-            random_state=42,
+            random_state=RANDOM_STATE,
         )
 
 

@@ -52,6 +52,19 @@ def invalid_missing_columns_csv_path(fixtures_dir):
 
 
 @pytest.fixture
+def post_csv():
+    """Helper para enviar un CSV a un endpoint via TestClient."""
+    def _post(client, path, url, data=None):
+        with path.open("rb") as csv_file:
+            return client.post(
+                url,
+                data=data or {},
+                files={"file": (path.name, csv_file, "text/csv")},
+            )
+    return _post
+
+
+@pytest.fixture
 def eeg_dataframe_factory():
     def _factory(patients=None, samples_per_patient=32):
         patients = patients or [

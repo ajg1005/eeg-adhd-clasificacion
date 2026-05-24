@@ -6,22 +6,17 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
 
-
-RANDOM_STATE = 42
-
-ALL_MODEL_NAMES = [
-    "logistic_regression",
-    "rbf_svc",
-    "knn",
-    "random_forest",
-    "xgboost",
-]
+try:
+    from scripts.constants import RANDOM_STATE
+    from scripts.ml_model_registry import ALL_MODEL_NAMES, merged_ml_params
+except ModuleNotFoundError:
+    from constants import RANDOM_STATE
+    from ml_model_registry import ALL_MODEL_NAMES, merged_ml_params
 
 
-# Fuente de verdad para construir cualquier modelo ML del proyecto.
-# La UI consume un subconjunto via backend/modeling/model_factory.
+# Construye los modelos ML usando los defaults del registro compartido.
 def create_ml_model(model_name, params=None):
-    params = dict(params or {})
+    params = merged_ml_params(model_name, params)
 
     if model_name == "logistic_regression":
         return Pipeline([
@@ -30,7 +25,7 @@ def create_ml_model(model_name, params=None):
                 max_iter=int(params.get("max_iter", 1000)),
                 C=float(params.get("C", 1.0)),
                 random_state=RANDOM_STATE,
-                class_weight=params.get("class_weight", "balanced"),
+                class_weight=params["class_weight"],
             )),
             
         ], memory=None,
@@ -43,9 +38,9 @@ def create_ml_model(model_name, params=None):
             ("model", SVC(
                 kernel="rbf",
                 probability=True,
-                C=float(params.get("C", 10.0)),
-                gamma=params.get("gamma", "scale"),
-                class_weight=params.get("class_weight", "balanced"),
+                C=float(params["C"]),
+                gamma=params["gamma"],
+                class_weight=params["class_weight"],
                 random_state=RANDOM_STATE,
             )),
         ], memory=None,
@@ -55,8 +50,8 @@ def create_ml_model(model_name, params=None):
         return Pipeline([
             ("scaler", StandardScaler()),
             ("model", KNeighborsClassifier(
-                n_neighbors=int(params.get("n_neighbors", 5)),
-                weights=params.get("weights", "distance"),
+                n_neighbors=int(params["n_neighbors"]),
+                weights=params["weights"],
             )),
         ], memory=None,
         )
@@ -64,15 +59,15 @@ def create_ml_model(model_name, params=None):
     if model_name == "random_forest":
         return Pipeline([
             ("model", RandomForestClassifier(
-                n_estimators=int(params.get("n_estimators", 100)),
-                max_depth=params.get("max_depth", 10),
-                criterion=params.get("criterion", "entropy"),
-                max_features="sqrt",
-                bootstrap=True,
-                class_weight=params.get("class_weight", "balanced"),
+                n_estimators=int(params["n_estimators"]),
+                max_depth=params["max_depth"],
+                criterion=params["criterion"],
+                max_features=params["max_features"],
+                bootstrap=bool(params["bootstrap"]),
+                class_weight=params["class_weight"],
                 random_state=RANDOM_STATE,
                 n_jobs=-1,
-                min_samples_leaf=1
+                min_samples_leaf=int(params["min_samples_leaf"]),
             )),
         ], memory=None,
         )
@@ -80,11 +75,11 @@ def create_ml_model(model_name, params=None):
     if model_name == "xgboost":
         return Pipeline([
             ("model", XGBClassifier(
-                n_estimators=int(params.get("n_estimators", 200)),
-                max_depth=int(params.get("max_depth", 4)),
-                learning_rate=float(params.get("learning_rate", 0.05)),
-                subsample=float(params.get("subsample", 0.8)),
-                colsample_bytree=float(params.get("colsample_bytree", 0.8)),
+                n_estimators=int(params["n_estimators"]),
+                max_depth=int(params["max_depth"]),
+                learning_rate=float(params["learning_rate"]),
+                subsample=float(params["subsample"]),
+                colsample_bytree=float(params["colsample_bytree"]),
                 objective="binary:logistic",
                 eval_metric="logloss",
                 tree_method="hist",

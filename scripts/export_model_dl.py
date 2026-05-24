@@ -1,4 +1,3 @@
-from pathlib import Path
 import json
 
 import keras
@@ -6,22 +5,22 @@ import numpy as np
 import tensorflow as tf
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
 
+from constants import RANDOM_STATE
 from data_load import load_dataset
 from epochs import create_epochs
 from preprocessing import preprocess_dataset
+from paths import (
+    CSV_PATH,
+    DL_BEST_CONFIG_PATH as CONFIG_PATH,
+    DL_METADATA_PATH as METADATA_PATH,
+    DL_METRICS_PATH as METRICS_PATH,
+    DL_MODEL_PATH as MODEL_PATH,
+    DL_MODELS_DIR as MODELS_DIR,
+)
 from signal_preprocessing import apply_basic_filtering, zscore_per_subject
 from split import make_group_shuffle_split
 from tf_models import build_model
 
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-CSV_PATH = BASE_DIR / "data" / "adhdata.csv"
-CONFIG_PATH = BASE_DIR / "results" / "dl_best_model_config.json"
-MODELS_DIR = BASE_DIR / "models" / "dl"
-
-MODEL_PATH = MODELS_DIR / "final_model.keras"
-METADATA_PATH = MODELS_DIR / "model_metadata.json"
-METRICS_PATH = MODELS_DIR / "model_metrics.json"
 
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -132,7 +131,7 @@ def main():
         y_epochs,
         groups_epochs,
         test_size=0.2,
-        random_state=42,
+        random_state=RANDOM_STATE,
     )
 
     print("Sujetos train:", len(set(groups_train)))

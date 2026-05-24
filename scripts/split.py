@@ -5,13 +5,18 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+try:
+    from scripts.constants import RANDOM_STATE
+except ModuleNotFoundError:
+    from constants import RANDOM_STATE
+
 
 def make_group_shuffle_split(
     X,
     y,
     groups,
     test_size=0.2,
-    random_state=42,
+    random_state=RANDOM_STATE,
 ):
     y_array = np.asarray(y)
     groups_array = np.asarray(groups)
@@ -78,7 +83,7 @@ def make_group_kfold_splits(
     groups,
     n_splits=5,
 ):
-    splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=42)
+    splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
     splits = []
 
     for fold, (train_idx, test_idx) in enumerate(

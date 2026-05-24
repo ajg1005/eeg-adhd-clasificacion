@@ -1,4 +1,3 @@
-from pathlib import Path
 import json
 
 import keras
@@ -7,21 +6,23 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from constants import RANDOM_STATE
 from data_load import load_dataset
 from epochs import create_epochs
 from evaluation import find_best_threshold, metrics_dict
+from paths import (
+    CSV_PATH,
+    DL_BEST_CONFIG_PATH,
+    FIGURES_DIR,
+    RESULTS_DIR,
+    TRAINING_CURVES_DIR,
+)
 from preprocessing import preprocess_dataset
 from signal_preprocessing import apply_basic_filtering, zscore_per_subject
 from split import make_group_kfold_splits, make_group_shuffle_split
 from tf_models import build_model
 from visual import plot_confusion_matrix, plot_roc_curve
 
-
-CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "adhdata.csv"
-OUTPUT_DIR = Path(__file__).resolve().parent.parent
-FIGURES_DIR = OUTPUT_DIR / "Figuras"
-TRAINING_CURVES_DIR = FIGURES_DIR / "training_curves_tf"
-RESULTS_DIR = OUTPUT_DIR / "results"
 
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 TRAINING_CURVES_DIR.mkdir(parents=True, exist_ok=True)
@@ -43,7 +44,6 @@ LR_REDUCE_PATIENCE = 1
 LR_MIN = 1e-6
 
 N_SPLITS = 5
-RANDOM_STATE = 42
 
 
 def set_seed(seed):
@@ -293,7 +293,7 @@ def save_best_tf_config(summary_df, best_model_name, x_epochs, groups_epochs, ee
         "note": "This file is used by export_model_dl.py to train and export the final DL model.",
     }
 
-    config_path = RESULTS_DIR / "dl_best_model_config.json"
+    config_path = DL_BEST_CONFIG_PATH
 
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(best_config, f, indent=4)

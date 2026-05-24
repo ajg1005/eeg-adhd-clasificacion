@@ -8,30 +8,15 @@ import numpy as np
 import pandas as pd
 
 from backend.constants import (
-    CLASS_TO_LABEL,
     REQUIRED_COLUMNS,
     REQUIRED_EEG_COLUMNS,
     normalize_class_to_int as normalize_class_value,
+    normalize_class_to_label,
 )
 from scripts.epochs import create_epochs
 from scripts.feature_pipeline import build_features_from_epochs
 from scripts.preprocessing import preprocess_dataset
 from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
-
-
-__all__ = [
-    "CLASS_TO_LABEL",
-    "REQUIRED_COLUMNS",
-    "REQUIRED_EEG_COLUMNS",
-    "PreparedEpochs",
-    "read_csv",
-    "normalize_class_value",
-    "get_dataset_stats",
-    "validate_training_dataframe",
-    "prepare_epochs",
-    "features_for_mode",
-    "n_splits_for_groups",
-]
 
 
 @dataclass
@@ -135,13 +120,6 @@ def n_splits_for_groups(y_epochs: np.ndarray, groups_epochs: np.ndarray) -> int:
     return n_splits
 
 
-def _class_name(value: Any) -> str:
-    normalized = normalize_class_value(value)
-    if normalized is None:
-        return str(value)
-    return CLASS_TO_LABEL[normalized]
-
-
 def _missing_required_columns(df: pd.DataFrame) -> list[str]:
     return [column for column in REQUIRED_COLUMNS if column not in df.columns]
 
@@ -150,7 +128,7 @@ def _class_distribution(df: pd.DataFrame) -> dict[str, int]:
     if "Class" not in df.columns:
         return {}
 
-    labels = df["Class"].map(_class_name)
+    labels = df["Class"].map(normalize_class_to_label)
     return {str(label): int(count) for label, count in labels.value_counts(dropna=False).items()}
 
 
@@ -160,6 +138,6 @@ def _patient_rows(df: pd.DataFrame) -> list[dict[str, Any]]:
 
     rows = []
     for patient_id, patient_df in df.groupby("ID", sort=False):
-        label = _class_name(patient_df["Class"].iloc[0]) if "Class" in patient_df.columns else "N/A"
+        label = normalize_class_to_label(patient_df["Class"].iloc[0]) if "Class" in patient_df.columns else "N/A"
         rows.append({"patient_id": str(patient_id), "class_label": label, "rows": int(len(patient_df))})
     return rows

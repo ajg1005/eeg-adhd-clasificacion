@@ -1,4 +1,3 @@
-﻿from pathlib import Path
 import json
 import joblib
 from sklearn.base import clone
@@ -7,27 +6,18 @@ from data_load import load_dataset
 from epochs import create_epochs
 from feature_pipeline import build_features_from_config
 from pipeline import get_models
+from paths import (
+    CSV_PATH,
+    ML_BEST_CONFIG_PATH as CONFIG_PATH,
+    ML_FEATURE_COLUMNS_PATH as FEATURE_COLUMNS_PATH,
+    ML_METADATA_PATH as METADATA_PATH,
+    ML_MODEL_PATH as MODEL_PATH,
+    ML_MODELS_DIR as MODELS_DIR,
+)
 from preprocessing import preprocess_dataset
 
 
-# Rutas
-
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-CSV_PATH = BASE_DIR / "data" / "adhdata.csv"
-RESULTS_DIR = BASE_DIR / "results"
-MODELS_DIR = BASE_DIR / "models" / "ml"
-
-CONFIG_PATH = RESULTS_DIR / "best_model_config.json"
-
-MODEL_PATH = MODELS_DIR / "final_model.joblib"
-FEATURE_COLUMNS_PATH = MODELS_DIR / "feature_columns.json"
-METADATA_PATH = MODELS_DIR / "model_metadata.json"
-
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
-
-
-# Funciones
 
 
 def load_config():

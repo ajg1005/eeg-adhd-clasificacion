@@ -1,35 +1,10 @@
 import pandas as pd
 
 
-
-# Mirar informacion basica del dataset
-def inspect_dataset(df: pd.DataFrame):
-    print("Shape:", df.shape)
-    print("\nColumnas:")
-    print(df.columns.tolist())
-
-    print("\nTipos:")
-    print(df.dtypes)
-
-    print("\nValores nulos:")
-    print(df.isnull().sum())
-
-    print("\nPrimeras filas:")
-    print(df.head().to_string())
-
-    if "Class" in df.columns:
-        print("\nDistribución de clases:")
-        print(df["Class"].value_counts(dropna=False))
-
-    if "ID" in df.columns:
-        print("\nNúmero de pacientes únicos:")
-        print(df["ID"].nunique())
-
-
 def preprocess_dataset(
     df: pd.DataFrame,
     subject_col: str = "ID",
-    label_col: str = "Class"
+    label_col: str = "Class",
 ) -> tuple[pd.DataFrame, list[str]]:
     # Copia
     df = df.copy()
@@ -46,7 +21,6 @@ def preprocess_dataset(
     # Codificar las clases si vienen como texto: "Control" -> 0, "ADHD" -> 1.
     label_map = {"Control": 0, "ADHD": 1}
     df[label_col] = df[label_col].map(label_map).fillna(df[label_col]).astype(int)
-
 
     # Variables EEG, todas menos class e id
     eeg_cols = [col for col in df.columns if col not in [subject_col, label_col]]

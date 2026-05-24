@@ -11,6 +11,8 @@ RUN pip install --no-cache-dir --only-binary=:all: -r requirements.txt
 
 COPY backend ./backend
 COPY scripts ./scripts
+COPY models ./models
+COPY Figuras ./Figuras
 
 RUN mkdir -p /app/logs /app/tmp \
     && chown -R app:app /app/logs /app/tmp \
