@@ -26,7 +26,7 @@ function modelDefaults(options, modelType, modelName) {
   return options?.model_types?.[modelType]?.models?.[modelName]?.default_params || {};
 }
 
-export function TrainingView({ file, stats }) {
+export function TrainingView({ file, onTrainingStateChange, stats }) {
   const [options, setOptions] = useState(null);
   const [modelType, setModelType] = useState("ml");
   const [modelName, setModelName] = useState("");
@@ -121,6 +121,7 @@ export function TrainingView({ file, stats }) {
     }
 
     setLoadingTraining(true);
+    onTrainingStateChange?.(true);
     setError("");
     setResult(null);
 
@@ -137,6 +138,7 @@ export function TrainingView({ file, stats }) {
       setError(err.message);
     } finally {
       setLoadingTraining(false);
+      onTrainingStateChange?.(false);
     }
   }
 

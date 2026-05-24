@@ -17,6 +17,7 @@ from scripts.epochs import create_epochs
 from scripts.feature_pipeline import build_features_from_epochs
 from scripts.preprocessing import preprocess_dataset
 from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
+from scripts.validators import validate_training_dataframe  # noqa: F401  re-exportado por compat
 
 
 @dataclass
@@ -45,26 +46,6 @@ def get_dataset_stats(file_bytes: bytes, preview_rows: int = 5) -> dict[str, Any
         "missing_required_columns": _missing_required_columns(df),
         "preview": df.head(preview_rows).replace({np.nan: None}).to_dict(orient="records"),
     }
-
-
-def validate_training_dataframe(df: pd.DataFrame) -> None:
-    missing = _missing_required_columns(df)
-    if missing:
-        raise ValueError(f"Faltan columnas obligatorias: {missing}")
-
-    if df.empty:
-        raise ValueError("El dataset esta vacio.")
-
-    for column in REQUIRED_EEG_COLUMNS:
-        if not pd.api.types.is_numeric_dtype(df[column]):
-            raise ValueError(f"La columna EEG {column} debe ser numerica.")
-
-    normalized_labels = df["Class"].map(normalize_class_value)
-    if normalized_labels.isna().any():
-        raise ValueError("La columna Class contiene valores no soportados.")
-
-    if normalized_labels.nunique() < 2:
-        raise ValueError("Se necesitan pacientes de Control y TDAH para entrenar y evaluar.")
 
 
 def prepare_epochs(df: pd.DataFrame, eeg_params: dict[str, Any]) -> PreparedEpochs:

@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cached_property, lru_cache
 import json
 from typing import Any
 
@@ -115,8 +115,13 @@ class MLPredictor:
         self.metadata_path = self.model_dir / "model_metadata.json"
         self.metrics_path = self.model_dir / "model_metrics.json"
 
-    def load_artifacts(self):
-        # Cargar modelo ML, columnas esperadas, metadatos y metricas
+    @cached_property
+    def artifacts(self):
+        """Carga una vez el modelo ML y sus metadatos.
+
+        cached_property evita leer los artefactos desde disco en cada llamada a
+        /model/info, /validate o /predict.
+        """
         if not self.model_path.exists():
             raise FileNotFoundError(f"No existe el modelo: {self.model_path}")
 
@@ -132,6 +137,9 @@ class MLPredictor:
         metrics = load_json(self.metrics_path) if self.metrics_path.exists() else None
 
         return model, feature_columns, metadata, metrics
+
+    def load_artifacts(self):
+        return self.artifacts
 
     def info(self) -> dict[str, Any]:
         _, feature_columns, metadata, metrics = self.load_artifacts()
@@ -158,15 +166,15 @@ class MLPredictor:
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
         # Prediccion final agregando todas las epochs del archivo
         model, feature_columns, metadata, metrics = self.load_artifacts()
-        X_features, _, _, _ = prepare_features_from_dataframe(
+        x_features, _, _, _ = prepare_features_from_dataframe(
             df=df,
             metadata=metadata,
             feature_columns=feature_columns,
         )
-        epoch_predictions = model.predict(X_features)
+        epoch_predictions = model.predict(x_features)
 
         if hasattr(model, "predict_proba"):
-            probabilities = model.predict_proba(X_features)
+            probabilities = model.predict_proba(x_features)
             class_labels = list(model.classes_)
             mean_probabilities = probabilities.mean(axis=0)
             best_idx = int(np.argmax(mean_probabilities))
@@ -217,8 +225,13 @@ class DLPredictor:
         self.metadata_path = self.model_dir / "model_metadata.json"
         self.metrics_path = self.model_dir / "model_metrics.json"
 
-    def load_artifacts(self):
-        # Cargar modelo DL, metadatos y metricas
+    @cached_property
+    def artifacts(self):
+        """Carga una vez el modelo DL y sus metadatos.
+
+        Los modelos de Keras son mas costosos de reconstruir desde disco, por
+        lo que se mantienen en memoria durante la vida del predictor.
+        """
         import keras
 
         if not self.model_path.exists():
@@ -232,6 +245,9 @@ class DLPredictor:
         metrics = load_json(self.metrics_path) if self.metrics_path.exists() else None
 
         return model, metadata, metrics
+
+    def load_artifacts(self):
+        return self.artifacts
 
     def info(self) -> dict[str, Any]:
         _, metadata, metrics = self.load_artifacts()
@@ -258,10 +274,10 @@ class DLPredictor:
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
         # Prediccion DL agregando la probabilidad media de las epochs
         model, metadata, metrics = self.load_artifacts()
-        X_epochs, _, _ = prepare_dl_epochs_from_dataframe(df=df, metadata=metadata)
+        x_epochs, _, _ = prepare_dl_epochs_from_dataframe(df=df, metadata=metadata)
 
         threshold = float(metadata.get("threshold", 0.5))
-        epoch_scores = model.predict(X_epochs, batch_size=32, verbose=0).ravel()
+        epoch_scores = model.predict(x_epochs, batch_size=32, verbose=0).ravel()
         epoch_predictions = (epoch_scores >= threshold).astype(int)
         mean_score = float(np.mean(epoch_scores))
         final_prediction = int(mean_score >= threshold)

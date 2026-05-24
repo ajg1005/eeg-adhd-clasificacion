@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 from typing import Any
 
 import numpy as np
@@ -140,39 +141,43 @@ def run_dl_cross_subject_cv(
         y_test = np.asarray(split_data["y_test"]).astype(int)
         groups_test = np.asarray(split_data["groups_test"]).astype(str)
 
-        model = create_dl_model(
-            model_name=model_name,
-            input_shape=x_train.shape[1:],
-            model_params=model_params,
-            training_params=training_params,
-        )
-        model.fit(
-            x_train,
-            y_train,
-            validation_data=(x_val, y_val),
-            epochs=int(training_params.get("epochs", 25)),
-            batch_size=int(training_params.get("batch_size", 32)),
-            callbacks=_dl_callbacks(training_params),
-            verbose=0,
-        )
+        model = None
+        try:
+            model = create_dl_model(
+                model_name=model_name,
+                input_shape=x_train.shape[1:],
+                model_params=model_params,
+                training_params=training_params,
+            )
+            model.fit(
+                x_train,
+                y_train,
+                validation_data=(x_val, y_val),
+                epochs=int(training_params.get("epochs", 25)),
+                batch_size=int(training_params.get("batch_size", 32)),
+                callbacks=_dl_callbacks(training_params),
+                verbose=0,
+            )
 
-        batch_size = int(training_params.get("batch_size", 32))
-        y_val_score = model.predict(x_val, batch_size=batch_size, verbose=0).reshape(-1)
-        threshold = find_best_threshold(y_val.astype(int), y_val_score)
-        y_score = model.predict(X_test, batch_size=batch_size, verbose=0).reshape(-1)
-        y_pred = (y_score >= threshold).astype(int)
+            batch_size = int(training_params.get("batch_size", 32))
+            y_val_score = model.predict(x_val, batch_size=batch_size, verbose=0).reshape(-1)
+            threshold = find_best_threshold(y_val.astype(int), y_val_score)
+            y_score = model.predict(X_test, batch_size=batch_size, verbose=0).reshape(-1)
+            y_pred = (y_score >= threshold).astype(int)
 
-        fold_metrics = metrics_dict(y_test, y_pred)
-        fold_metrics["fold"] = fold
-        fold_metrics["best_threshold"] = float(threshold)
-        fold_metrics["n_train_subjects"] = int(len(set(groups_train)))
-        fold_metrics["n_val_subjects"] = int(len(set(groups_val)))
-        fold_metrics["n_test_subjects"] = int(len(set(groups_test)))
-        fold_results.append(fold_metrics)
+            fold_metrics = metrics_dict(y_test, y_pred)
+            fold_metrics["fold"] = fold
+            fold_metrics["best_threshold"] = float(threshold)
+            fold_metrics["n_train_subjects"] = int(len(set(groups_train)))
+            fold_metrics["n_val_subjects"] = int(len(set(groups_val)))
+            fold_metrics["n_test_subjects"] = int(len(set(groups_test)))
+            fold_results.append(fold_metrics)
 
-        y_true_all.extend(y_test.tolist())
-        y_pred_all.extend(y_pred.tolist())
-        groups_all.extend(groups_test.tolist())
+            y_true_all.extend(y_test.tolist())
+            y_pred_all.extend(y_pred.tolist())
+            groups_all.extend(groups_test.tolist())
+        finally:
+            _release_keras_model(model)
 
     return {
         "y_true": np.asarray(y_true_all, dtype=int),
@@ -322,3 +327,29 @@ def _dl_callbacks(training_params: dict[str, Any]):
             verbose=0,
         ),
     ]
+
+
+def _release_keras_model(model) -> None:
+    """Libera memoria entre folds de entrenamiento DL.
+
+    La API puede entrenar varios modelos Keras en la misma ejecucion. Limpiar la
+    sesion evita que queden grafos/modelos antiguos retenidos en memoria.
+    """
+    if model is not None:
+        del model
+
+    try:
+        import keras
+
+        keras.backend.clear_session()
+        _clear_predictor_cache()
+    except Exception:
+        pass
+
+    gc.collect()
+
+
+def _clear_predictor_cache() -> None:
+    from backend.modeling.predictors import get_predictor
+
+    get_predictor.cache_clear()

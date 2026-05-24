@@ -2,74 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-
-class FlexibleSchema(BaseModel):
-    class Config:
-        extra = "allow"
-
-
-class HealthResponse(BaseModel):
-    status: str
-
-
-class ModelRegistryItem(FlexibleSchema):
-    model_id: str
-    display_name: str
-    model_family: str
-    description: str | None = None
-    enabled: bool | None = None
-
-
-class ModelsResponse(BaseModel):
-    models: list[ModelRegistryItem]
-
-
-class ModelCatalogResponse(FlexibleSchema):
-    machine_learning: list[dict[str, Any]]
-    deep_learning: list[dict[str, Any]]
-
-
-class ModelInfoResponse(FlexibleSchema):
-    model_id: str
-    display_name: str
-    model_name: str | None = None
-    model_family: str
-    feature_mode: str | None = None
-    sfreq: int | float | None = None
-    epoch_size: int | None = None
-    step_size: int | None = None
-    channels: list[str]
-    n_features: int | None = None
-    metrics: dict[str, Any] | None = None
-    metadata: dict[str, Any]
-
-
-class FigureItem(BaseModel):
-    title: str
-    url: str
-
-
-class FiguresResponse(BaseModel):
-    figures: list[FigureItem]
-
-
-class ValidationResponse(FlexibleSchema):
-    valid: bool
-    filename: str | None = None
-    rows: int
-    columns: int
-    available_channels: list[str]
-    expected_channels: list[str]
-    has_id: bool
-    has_class: bool
-
-
-class PredictionResponse(FlexibleSchema):
-    prediction_label: str
-    n_epochs: int
-    epoch_count_by_class: dict[str, int]
-    epoch_percentage_by_class: dict[str, float]
-    metadata: dict[str, Any]
+from backend.schemas.common import FlexibleSchema
 
 
 class TrainingOptionsResponse(FlexibleSchema):

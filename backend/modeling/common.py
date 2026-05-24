@@ -1,9 +1,8 @@
-import pandas as pd
-
 from scripts.epochs import create_epochs
 from scripts.feature_pipeline import align_feature_columns, build_features_from_config
 from scripts.preprocessing import preprocess_dataset
 from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
+from scripts.validators import validate_eeg_dataframe  # noqa: F401  re-exportado por compat
 
 
 def map_prediction_label(prediction):
@@ -15,26 +14,6 @@ def map_prediction_label(prediction):
     }
 
     return mapping.get(prediction, str(prediction))
-
-
-def validate_eeg_dataframe(df, expected_channels):
-    if df is None or df.empty:
-        raise ValueError("El archivo esta vacio.")
-
-    missing_channels = [channel for channel in expected_channels if channel not in df.columns]
-
-    if missing_channels:
-        raise ValueError(f"Faltan canales EEG esperados: {missing_channels}")
-
-    non_numeric = []
-    for column in expected_channels:
-        if not pd.api.types.is_numeric_dtype(df[column]):
-            non_numeric.append(column)
-
-    if non_numeric:
-        raise ValueError(f"Estas columnas EEG no son numericas: {non_numeric}")
-
-    return True
 
 
 def prepare_features_from_dataframe(df, metadata, feature_columns):

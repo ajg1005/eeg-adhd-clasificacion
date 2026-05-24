@@ -38,7 +38,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           pytest -v -m "not slow" --tb=short \
-            --cov=backend --cov=scripts \
+            --cov \
             --cov-report=xml --cov-report=term
 
       - name: SonarCloud analysis

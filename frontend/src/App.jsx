@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { useInferenceController } from "./hooks/useInferenceController";
 import { useTrainingDataset } from "./hooks/useTrainingDataset";
 import { TABS } from "./config/tabs";
@@ -13,6 +15,29 @@ import "./App.css";
 function App() {
   const controller = useInferenceController();
   const trainingDataset = useTrainingDataset();
+  const [trainingInProgress, setTrainingInProgress] = useState(false);
+
+  useEffect(() => {
+    function handleBeforeUnload(event) {
+      if (!trainingInProgress) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [trainingInProgress]);
+
+  function handleTabChange(nextTab) {
+    if (trainingInProgress && nextTab !== controller.activeTab) {
+      return;
+    }
+
+    controller.setActiveTab(nextTab);
+  }
 
   return (
     <main className="app-shell">
@@ -20,9 +45,16 @@ function App() {
 
       <Tabs
         activeTab={controller.activeTab}
-        onTabChange={controller.setActiveTab}
+        disabled={trainingInProgress}
+        onTabChange={handleTabChange}
         tabs={TABS}
       />
+
+      {trainingInProgress && (
+        <div className="alert alert-warning">
+          Entrenamiento en curso. Espera a que termine antes de cambiar de pestaña o recargar.
+        </div>
+      )}
 
       {controller.error && <div className="alert alert-error">{controller.error}</div>}
 
@@ -60,7 +92,11 @@ function App() {
       )}
 
       {controller.activeTab === "Entrenamiento" && (
-        <TrainingView file={trainingDataset.file} stats={trainingDataset.stats} />
+        <TrainingView
+          file={trainingDataset.file}
+          onTrainingStateChange={setTrainingInProgress}
+          stats={trainingDataset.stats}
+        />
       )}
 
       {controller.activeTab === "Predicción" && (
