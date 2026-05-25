@@ -34,13 +34,15 @@ DEFAULT_EEG_PARAMS = {
         "epoch_size": 512,
         "step_size": 256,
         "sfreq": 128,
-        "nperseg": 256,
-        "feature_mode": "combined",
         "use_filtering": True,
     },
 }
 DEFAULT_MODEL_TYPE = "ml"
 DEFAULT_MODELS = {"ml": "xgboost", "dl": "cnn_1d"}
+EEG_PARAMS_BY_TYPE = {
+    "ml": ["epoch_size", "step_size", "sfreq", "nperseg", "feature_mode", "use_filtering"],
+    "dl": ["epoch_size", "step_size", "sfreq", "use_filtering"],
+}
 DEFAULT_TRAINING_PARAMS = {
     "epochs": 25,
     "batch_size": 32,
@@ -62,6 +64,7 @@ def get_training_options() -> dict[str, Any]:
         "default_model_type": DEFAULT_MODEL_TYPE,
         "default_models": DEFAULT_MODELS,
         "default_eeg_params": DEFAULT_EEG_PARAMS,
+        "eeg_params_by_type": EEG_PARAMS_BY_TYPE,
         "default_training_params": DEFAULT_TRAINING_PARAMS,
         "training_params_by_type": TRAINING_PARAMS_BY_TYPE,
         "model_types": {

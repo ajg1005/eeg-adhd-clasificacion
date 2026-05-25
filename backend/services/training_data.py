@@ -10,7 +10,6 @@ import pandas as pd
 from backend.constants import (
     REQUIRED_COLUMNS,
     REQUIRED_EEG_COLUMNS,
-    normalize_class_to_int as normalize_class_value,
     normalize_class_to_label,
 )
 from scripts.epochs import create_epochs
@@ -50,7 +49,6 @@ def get_dataset_stats(file_bytes: bytes, preview_rows: int = 5) -> dict[str, Any
 
 def prepare_epochs(df: pd.DataFrame, eeg_params: dict[str, Any]) -> PreparedEpochs:
     df = df.copy()
-    df["Class"] = df["Class"].map(normalize_class_value)
     df, _ = preprocess_dataset(df)
 
     if bool(eeg_params.get("use_filtering", False)):

@@ -28,6 +28,10 @@ def test_training_options_include_models_and_eeg_params():
     assert "cnn_1d" in options["model_types"]["dl"]["models"]
     assert "cnn_lstm" in options["model_types"]["dl"]["models"]
     assert options["eeg_params"]["feature_mode"] == ["temporal", "spectral", "combined"]
+    assert "feature_mode" in options["eeg_params_by_type"]["ml"]
+    assert "nperseg" in options["eeg_params_by_type"]["ml"]
+    assert "feature_mode" not in options["eeg_params_by_type"]["dl"]
+    assert "nperseg" not in options["eeg_params_by_type"]["dl"]
 
 
 # comprueba que la fabrica de modelos crea un pipeline de XGBoost con su paso "model"

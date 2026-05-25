@@ -4,6 +4,12 @@ export function TrainingEegParamsPanel({
   onEegParamChange,
   options,
 }) {
+  const visibleParamNames = options?.eeg_params_by_type?.[modelType]
+    || Object.keys(options?.eeg_params || {});
+  const visibleParams = Object.entries(options?.eeg_params || {}).filter(([name]) =>
+    visibleParamNames.includes(name)
+  );
+
   return (
     <div className="panel training-section">
       <h2>Parametros EEG</h2>
@@ -13,7 +19,7 @@ export function TrainingEegParamsPanel({
           : "DL usa la configuracion del script: epoch_size 512, step_size 256, filtrado y zscore por paciente."}
       </p>
       <div className="controls-row">
-        {Object.entries(options?.eeg_params || {}).map(([name, values]) => (
+        {visibleParams.map(([name, values]) => (
           <label key={name}>
             {name}
             <select
