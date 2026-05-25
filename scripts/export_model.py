@@ -31,7 +31,7 @@ def load_config():
 
 
 def main():
-    print("Cargando configuracion del mejor modelo...")
+    print("Cargando configuración del mejor modelo...")
     config = load_config()
 
     best_model_name = config["best_model"]

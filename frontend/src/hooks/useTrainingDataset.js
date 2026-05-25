@@ -3,8 +3,7 @@ import { useState } from "react";
 import { getDatasetStats } from "../api";
 
 
-// Estado compartido del dataset de entrenamiento entre las pestanas
-// "Dataset entrenamiento" (carga y exploracion) y "Entrenamiento" (params + train).
+// Estado compartido del dataset entre "Dataset entrenamiento" y "Entrenamiento".
 export function useTrainingDataset() {
   const [file, setFile] = useState(null);
   const [stats, setStats] = useState(null);

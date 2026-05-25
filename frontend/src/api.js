@@ -1,10 +1,9 @@
-﻿// URL base del backend. Configurable via VITE_API_BASE_URL para soportar
-// distintos entornos (dev local, Docker, despliegue). Fallback a localhost
-// para que `npm run dev` funcione sin necesidad de fichero .env.
+// URL base del backend. Configurable vía VITE_API_BASE_URL para soportar
+// distintos entornos (dev local, Docker, despliegue).
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
-// Leer el mensaje de error que devuelve FastAPI
+// Leer el mensaje de error que devuelve FastAPI.
 async function readError(response, fallbackMessage) {
   try {
     const error = await response.json();
@@ -15,7 +14,7 @@ async function readError(response, fallbackMessage) {
 }
 
 export async function getHealth() {
-  // Comprobar que el backend esta levantado
+  // Comprobar que el backend está levantado.
   const response = await fetch(`${API_BASE_URL}/health`);
 
   if (!response.ok) {
@@ -26,7 +25,7 @@ export async function getHealth() {
 }
 
 export async function getModels() {
-  // Pedir al backend los modelos disponibles
+  // Pedir al backend los modelos disponibles.
   const response = await fetch(`${API_BASE_URL}/models`);
 
   if (!response.ok) {
@@ -39,18 +38,18 @@ export async function getModels() {
 }
 
 export async function getModelCatalog() {
-  // Cargar modelos candidatos y parametros habituales de entrenamiento
+  // Cargar modelos candidatos y parámetros habituales de entrenamiento.
   const response = await fetch(`${API_BASE_URL}/model/catalog`);
 
   if (!response.ok) {
-    throw new Error("No se pudo cargar el catalogo de modelos");
+    throw new Error("No se pudo cargar el catálogo de modelos");
   }
 
   return response.json();
 }
 
 export async function getTrainingOptions() {
-  // Cargar parametros de red y entrenamiento
+  // Cargar parámetros de red y entrenamiento.
   const response = await fetch(`${API_BASE_URL}/training/options`);
 
   if (!response.ok) {
@@ -63,7 +62,7 @@ export async function getTrainingOptions() {
 
 
 export async function getDatasetStats(file) {
-  // Analizar estructura del CSV para la pantalla de entrenamiento
+  // Analizar estructura del CSV para la pantalla de entrenamiento.
   const formData = new FormData();
   formData.append("file", file);
 
@@ -81,7 +80,7 @@ export async function getDatasetStats(file) {
 
 
 export async function runTraining(file, payload) {
-  // Entrenar un modelo interactivo con los parametros elegidos en la vista
+  // Entrenar un modelo interactivo con los parámetros elegidos en la vista.
   const formData = new FormData();
   formData.append("file", file);
   formData.append("model_type", payload.modelType);
@@ -104,7 +103,7 @@ export async function runTraining(file, payload) {
 }
 
 export async function getModelInfo(modelId = "ml_best") {
-  // Cargar metadatos y metricas del modelo seleccionado
+  // Cargar metadatos y métricas del modelo seleccionado.
   const params = new URLSearchParams({
     model_id: modelId,
   });
@@ -112,14 +111,14 @@ export async function getModelInfo(modelId = "ml_best") {
   const response = await fetch(`${API_BASE_URL}/model/info?${params}`);
 
   if (!response.ok) {
-    throw new Error("No se pudo cargar la informacion del modelo");
+    throw new Error("No se pudo cargar la información del modelo");
   }
 
   return response.json();
 }
 
 export async function validateCsv(file, modelId = "ml_best") {
-  // Enviar el CSV para validar columnas y canales antes de predecir
+  // Enviar el CSV para validar columnas y canales antes de predecir.
   const formData = new FormData();
   formData.append("file", file);
 
@@ -140,7 +139,7 @@ export async function validateCsv(file, modelId = "ml_best") {
 }
 
 export async function predictCsv(file, modelId = "ml_best") {
-  // Enviar el CSV al modelo elegido
+  // Enviar el CSV al modelo elegido.
   const formData = new FormData();
   formData.append("file", file);
 
@@ -154,14 +153,14 @@ export async function predictCsv(file, modelId = "ml_best") {
   });
 
   if (!response.ok) {
-    throw new Error(await readError(response, "Error durante la prediccion"));
+    throw new Error(await readError(response, "Error durante la predicción"));
   }
 
   return response.json();
 }
 
 export async function getModelFigures(modelId = "ml_best") {
-  // Cargar las figuras ya generadas durante la evaluacion
+  // Cargar las figuras ya generadas durante la evaluación.
   const params = new URLSearchParams({
     model_id: modelId,
   });

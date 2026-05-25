@@ -21,28 +21,28 @@ UI_MODELS = ["rbf_svc", "random_forest", "xgboost"]
 RESEARCH_ONLY_MODELS = ["logistic_regression", "knn"]
 
 
-# comprueba que scripts/pipeline construye los 5 modelos sin error
+# Comprueba que scripts/pipeline construye los 5 modelos sin error.
 @pytest.mark.parametrize("model_name", ALL_MODEL_NAMES)
 def test_scripts_pipeline_supports_all_models(model_name):
     pipeline = scripts_create(model_name)
     assert "model" in pipeline.named_steps
 
 
-# comprueba que el backend acepta los 3 modelos expuestos en la UI
+# Comprueba que el backend acepta los 3 modelos expuestos en la UI.
 @pytest.mark.parametrize("model_name", UI_MODELS)
 def test_backend_factory_supports_ui_models(model_name):
     pipeline = backend_create(model_name)
     assert "model" in pipeline.named_steps
 
 
-# comprueba que el backend rechaza los modelos que solo son de research
+# Comprueba que el backend rechaza los modelos que solo son de research.
 @pytest.mark.parametrize("model_name", RESEARCH_ONLY_MODELS)
 def test_backend_factory_rejects_non_ui_models(model_name):
     with pytest.raises(ValueError, match="no disponible en la UI"):
         backend_create(model_name)
 
 
-# comprueba que get_models devuelve los 5 modelos como pipelines listos
+# Comprueba que get_models devuelve los 5 modelos como pipelines listos.
 def test_get_models_returns_all_five():
     models = get_models()
     assert set(models.keys()) == set(ALL_MODEL_NAMES)
@@ -50,7 +50,7 @@ def test_get_models_returns_all_five():
         assert "model" in pipeline.named_steps
 
 
-# comprueba que backend (defaults UI) y scripts (mismos params) generan el mismo modelo
+# Comprueba que backend y scripts generan el mismo modelo con defaults UI.
 @pytest.mark.parametrize("model_name", UI_MODELS)
 def test_factory_consistency_with_ui_defaults(model_name):
     ui_defaults = ML_MODEL_OPTIONS[model_name]["default_params"]
@@ -69,7 +69,7 @@ def test_factory_consistency_with_ui_defaults(model_name):
         )
 
 
-# comprueba que el string "none" del frontend se traduce a None de Python
+# Comprueba que el string "none" del frontend se traduce a None de Python.
 def test_backend_clean_params_converts_none_string():
     pipeline = backend_create("random_forest", {"class_weight": "none"})
     rf = pipeline.named_steps["model"]

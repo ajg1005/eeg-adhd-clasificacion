@@ -16,10 +16,10 @@ except ModuleNotFoundError:
     from constants import REQUIRED_EEG_COLUMNS, normalize_class_to_int
 
 
-# Comprueba que el DataFrame contiene los canales EEG esperados y que son numericos
+# Comprueba que el DataFrame contiene los canales EEG esperados y que son numéricos.
 def validate_eeg_dataframe(df: pd.DataFrame, expected_channels: Iterable[str]) -> bool:
     if df is None or df.empty:
-        raise ValueError("El archivo esta vacio.")
+        raise ValueError("El archivo está vacío.")
 
     expected = list(expected_channels)
     missing_channels = [channel for channel in expected if channel not in df.columns]
@@ -31,12 +31,12 @@ def validate_eeg_dataframe(df: pd.DataFrame, expected_channels: Iterable[str]) -
         if not pd.api.types.is_numeric_dtype(df[column])
     ]
     if non_numeric:
-        raise ValueError(f"Estas columnas EEG no son numericas: {non_numeric}")
+        raise ValueError(f"Estas columnas EEG no son numéricas: {non_numeric}")
 
     return True
 
 
-# Validacion estricta: ademas de los canales, exige Class normalizable con 2 clases
+# Validación estricta para datasets de entrenamiento.
 def validate_training_dataframe(df: pd.DataFrame) -> None:
     validate_eeg_dataframe(df, REQUIRED_EEG_COLUMNS)
 

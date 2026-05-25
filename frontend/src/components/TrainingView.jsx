@@ -116,7 +116,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
 
   async function handleRunTraining() {
     if (!file) {
-      setError("Sube primero un CSV en la pestana 'Dataset entrenamiento'.");
+      setError("Sube primero un CSV en la pestaña 'Dataset entrenamiento'.");
       return;
     }
 
@@ -149,7 +149,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
       {!file && (
         <div className="panel">
           <p className="muted">
-            Antes de entrenar, sube un CSV en la pestana <strong>Dataset entrenamiento</strong>.
+            Antes de entrenar, sube un CSV en la pestaña <strong>Dataset entrenamiento</strong>.
           </p>
         </div>
       )}
@@ -157,7 +157,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
       {file && !stats && (
         <div className="panel">
           <p className="muted">
-            Has cargado <strong>{file.name}</strong> pero todavia no has analizado el dataset.
+            Has cargado <strong>{file.name}</strong> pero todavía no has analizado el dataset.
             Vuelve a <strong>Dataset entrenamiento</strong> y pulsa "Analizar dataset".
           </p>
         </div>

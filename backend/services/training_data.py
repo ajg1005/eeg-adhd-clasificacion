@@ -30,7 +30,7 @@ class PreparedEpochs:
 
 def read_csv(file_bytes: bytes) -> pd.DataFrame:
     if not file_bytes:
-        raise ValueError("El archivo CSV esta vacio.")
+        raise ValueError("El archivo CSV está vacío.")
     return pd.read_csv(BytesIO(file_bytes))
 
 

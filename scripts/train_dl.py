@@ -50,7 +50,7 @@ def set_seed(seed):
     keras.utils.set_random_seed(seed)
 
 
-# Adapta el dict estandar de metrics_dict a los nombres de columna del CSV de research
+# Adapta el dict estándar de metrics_dict a los nombres de columna del CSV de research.
 def compute_metrics(y_true, y_pred):
     raw = metrics_dict(y_true, y_pred)
     return {
@@ -64,7 +64,7 @@ def compute_metrics(y_true, y_pred):
 
 def plot_training_history(history, model_name, fold):
     """
-    Guarda curvas de entrenamiento y validacion para loss, accuracy y AUC.
+    Guarda curvas de entrenamiento y validación para loss, accuracy y AUC.
     """
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
@@ -215,7 +215,7 @@ def run_single_model_fold(model_name, X_train, y_train, x_val, y_val, X_test, y_
     y_val_score = model.predict(x_val, batch_size=BATCH_SIZE, verbose=0).ravel()
     best_threshold = find_best_threshold(y_val, y_val_score)
 
-    print(f"{model_name} | threshold ajustado en validacion: {best_threshold:.2f}")
+    print(f"{model_name} | threshold ajustado en validación: {best_threshold:.2f}")
 
     return evaluate_model(model, X_test, y_test, threshold=best_threshold)
 

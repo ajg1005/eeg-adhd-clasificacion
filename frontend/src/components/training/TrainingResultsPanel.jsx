@@ -57,7 +57,7 @@ export function TrainingResultsPanel({
     <div className="panel training-section">
       <h2>Resultados del entrenamiento</h2>
       {result.configuration?.evaluation_mode && (
-        <p className="muted">Evaluacion: {result.configuration.evaluation_mode}</p>
+        <p className="muted">Evaluación: {result.configuration.evaluation_mode}</p>
       )}
 
       <div className="metric-grid metrics-wide training-result-grid">
@@ -180,7 +180,7 @@ export function TrainingResultsPanel({
                 <td>
                   <Percent value={patient.adhd_epoch_percentage} />
                 </td>
-                <td>{patient.correct ? "Si" : "No"}</td>
+                <td>{patient.correct ? "Sí" : "No"}</td>
               </tr>
             ))}
           </tbody>

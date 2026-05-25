@@ -139,7 +139,7 @@ export function ModelView({
               </div>
             </>
           ) : (
-            <p>No hay metricas disponibles.</p>
+            <p>No hay métricas disponibles.</p>
           )}
         </div>
       </section>

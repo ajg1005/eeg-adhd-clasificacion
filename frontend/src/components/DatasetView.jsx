@@ -40,8 +40,8 @@ export function DatasetView({
           <div>
             <h2>Dataset de entrenamiento</h2>
             <p className="muted">
-              Carga un CSV con varios pacientes y revisa las estadisticas antes
-              de pasar a la pestana de entrenamiento.
+              Carga un CSV con varios pacientes y revisa las estadísticas antes
+              de pasar a la pestaña de entrenamiento.
             </p>
           </div>
           <button

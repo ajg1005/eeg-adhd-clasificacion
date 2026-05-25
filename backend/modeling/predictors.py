@@ -15,13 +15,13 @@ from backend.modeling.common import (
 )
 
 
-# Modelos que puede seleccionar el frontend
+# Modelos que puede seleccionar el frontend.
 MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     "ml_best": {
         "model_id": "ml_best",
         "display_name": "Mejor modelo ML",
         "model_family": "machine_learning",
-        "description": "Modelo clasico basado en features temporales y espectrales.",
+        "description": "Modelo clásico basado en features temporales y espectrales.",
         "feature_mode": None,
         "enabled": True,
         "figures": [
@@ -64,13 +64,13 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
 }
 
 
-# Leer metadatos y metricas guardadas al exportar modelos
+# Leer metadatos y métricas guardadas al exportar modelos.
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-# Buscar la configuracion del modelo seleccionado
+# Buscar la configuración del modelo seleccionado.
 def get_model_config(model_id: str) -> dict[str, Any]:
     try:
         model_config = MODEL_REGISTRY[model_id]
@@ -164,7 +164,6 @@ class MLPredictor:
         return validate_dataframe(df, metadata.get("channels", []))
 
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
-        # Prediccion final agregando todas las epochs del archivo
         model, feature_columns, metadata, metrics = self.load_artifacts()
         x_features, _, _, _ = prepare_features_from_dataframe(
             df=df,
@@ -186,6 +185,7 @@ class MLPredictor:
             final_prediction = values[best_idx]
             confidence = float(counts[best_idx] / len(epoch_predictions))
 
+        # Predicción final agregando todas las epochs del archivo.
         unique_preds, pred_counts = np.unique(epoch_predictions, return_counts=True)
         epoch_count_by_class = {
             map_prediction_label(label): int(count)
@@ -272,7 +272,6 @@ class DLPredictor:
         return validate_dataframe(df, metadata.get("channels", []))
 
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
-        # Prediccion DL agregando la probabilidad media de las epochs
         model, metadata, metrics = self.load_artifacts()
         x_epochs, _, _ = prepare_dl_epochs_from_dataframe(df=df, metadata=metadata)
 
@@ -280,6 +279,8 @@ class DLPredictor:
         epoch_scores = model.predict(x_epochs, batch_size=32, verbose=0).ravel()
         epoch_predictions = (epoch_scores >= threshold).astype(int)
         mean_score = float(np.mean(epoch_scores))
+
+        # Predicción DL agregando la probabilidad media de las epochs.
         final_prediction = int(mean_score >= threshold)
         confidence = mean_score if final_prediction == 1 else 1.0 - mean_score
 

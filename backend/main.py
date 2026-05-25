@@ -8,7 +8,7 @@ from backend.routers import health, models, prediction, training_router
 
 app = FastAPI(
     title="EEG ADHD Classifier API",
-    description="API para clasificacion ADHD/Control a partir de senales EEG.",
+    description="API para clasificación ADHD/Control a partir de señales EEG.",
     version="0.1.0",
 )
 

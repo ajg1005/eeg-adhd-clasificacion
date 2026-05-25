@@ -113,7 +113,7 @@ def prepare_dataset(config):
 
 def main():
     print("TensorFlow version:", tf.__version__)
-    print("Cargando configuracion del mejor modelo DL...")
+    print("Cargando configuración del mejor modelo DL...")
 
     config = load_config()
     set_seed(42)
