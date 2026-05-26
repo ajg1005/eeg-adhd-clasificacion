@@ -4,18 +4,18 @@ from typing import Any
 DL_MODEL_OPTIONS: dict[str, dict[str, Any]] = {
     "cnn_1d": {
         "display_name": "CNN 1D",
-        "default_params": {"filters": 32, "dropout": 0.3},
+        "default_params": {"filters": 16, "dropout": 0.4},
         "parameters": {
             "filters": [16, 32, 64],
-            "dropout": [0.2, 0.3, 0.5],
+            "dropout": [0.2, 0.3, 0.4, 0.5],
         },
     },
     "cnn_lstm": {
         "display_name": "CNN-LSTM",
-        "default_params": {"filters": 32, "dropout": 0.3, "lstm_units": 64},
+        "default_params": {"filters": 16, "dropout": 0.4, "lstm_units": 32},
         "parameters": {
             "filters": [16, 32, 64],
-            "dropout": [0.2, 0.3, 0.5],
+            "dropout": [0.2, 0.3, 0.4, 0.5],
             "lstm_units": [32, 64, 128],
         },
     },
@@ -50,7 +50,7 @@ def create_dl_model(
 
     model = build_model(model_name, input_shape, **model_params)
 
-    learning_rate = float(training_params.get("learning_rate", 0.001))
+    learning_rate = float(training_params.get("learning_rate", 0.0003))
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=learning_rate, clipnorm=1.0),
         loss=keras.losses.BinaryCrossentropy(label_smoothing=0.05),
@@ -63,7 +63,7 @@ def create_dl_model(
     return model
 
 
-def create_early_stopping(patience: int = 5):
+def create_early_stopping(patience: int = 4):
     keras = _keras_module()
     return keras.callbacks.EarlyStopping(
         monitor="val_loss",

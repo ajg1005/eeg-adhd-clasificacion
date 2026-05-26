@@ -56,11 +56,11 @@ MODEL_CATALOG: list[dict[str, Any]] = [
         "description": "Red convolucional 1D aplicada directamente a epochs EEG.",
         "use_case": "Detectar patrones locales en la senal temporal multicanal.",
         "common_parameters": [
-            {"name": "epochs", "default": "50", "description": MAX_EPOCHS_DESCRIPTION},
+            {"name": "epochs", "default": "40", "description": MAX_EPOCHS_DESCRIPTION},
             {"name": "batch_size", "default": "32", "description": BATCH_SIZE_DESCRIPTION},
-            {"name": "learning_rate", "default": "0.001", "description": "Tasa de aprendizaje Adam."},
-            {"name": "dropout", "default": "0.3", "description": "Regularizacion de capas densas/convolucionales."},
-            {"name": "patience", "default": "5", "description": "Early stopping."},
+            {"name": "learning_rate", "default": "0.0003", "description": "Tasa de aprendizaje Adam."},
+            {"name": "dropout", "default": "0.4", "description": "Regularizacion de capas densas/convolucionales."},
+            {"name": "patience", "default": "4", "description": "Early stopping."},
         ],
     },
     {
@@ -70,11 +70,11 @@ MODEL_CATALOG: list[dict[str, Any]] = [
         "description": "Combina convoluciones con memoria recurrente para modelar secuencia temporal.",
         "use_case": "Capturar patrones locales y dependencias temporales de la epoch.",
         "common_parameters": [
-            {"name": "epochs", "default": "50", "description": MAX_EPOCHS_DESCRIPTION},
+            {"name": "epochs", "default": "40", "description": MAX_EPOCHS_DESCRIPTION},
             {"name": "batch_size", "default": "32", "description": BATCH_SIZE_DESCRIPTION},
-            {"name": "learning_rate", "default": "0.001", "description": LEARNING_RATE_DESCRIPTION},
-            {"name": "dropout", "default": "0.3", "description": DROPOUT_DESCRIPTION},
-            {"name": "lstm_units", "default": "32-64", "description": "Unidades recurrentes."},
+            {"name": "learning_rate", "default": "0.0003", "description": LEARNING_RATE_DESCRIPTION},
+            {"name": "dropout", "default": "0.4", "description": DROPOUT_DESCRIPTION},
+            {"name": "lstm_units", "default": "32", "description": "Unidades recurrentes."},
         ],
     },
 ]

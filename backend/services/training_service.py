@@ -44,10 +44,10 @@ EEG_PARAMS_BY_TYPE = {
     "dl": ["epoch_size", "step_size", "sfreq", "use_filtering"],
 }
 DEFAULT_TRAINING_PARAMS = {
-    "epochs": 25,
+    "epochs": 40,
     "batch_size": 32,
-    "learning_rate": 0.001,
-    "early_stopping_patience": 5,
+    "learning_rate": 0.0003,
+    "early_stopping_patience": 4,
 }
 TRAINING_PARAMS_BY_TYPE = {
     "ml": [],
@@ -80,10 +80,10 @@ def get_training_options() -> dict[str, Any]:
             "use_filtering": [False, True],
         },
         "training_params": {
-            "epochs": [10, 25, 50],
+            "epochs": [10, 25, 40, 50],
             "batch_size": [16, 32, 64],
-            "learning_rate": [0.001, 0.0005, 0.0001],
-            "early_stopping_patience": [3, 5, 8],
+            "learning_rate": [0.001, 0.0005, 0.0003, 0.0001],
+            "early_stopping_patience": [3, 4, 5, 8],
         },
     }
 

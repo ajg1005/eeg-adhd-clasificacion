@@ -188,7 +188,7 @@ def main():
             "n_subjects": int(len(set(groups_epochs))),
         },
 
-        "training_strategy": "5-fold GroupKFold cross-subject CV",
+        "training_strategy": "5-fold StratifiedGroupKFold cross-subject CV",
         "note": "This file is used by export_model.py to train and export the final model."
     }
 

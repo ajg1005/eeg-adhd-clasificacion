@@ -117,7 +117,7 @@ def main():
 
         "training_strategy": (
             "Final model trained using the model selected by "
-            "cross-subject cross-validation in train_ml.py."
+            "5-fold StratifiedGroupKFold cross-subject cross-validation in train_ml.py."
         )
     }
 

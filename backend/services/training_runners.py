@@ -153,7 +153,7 @@ def run_dl_cross_subject_cv(
                 x_train,
                 y_train,
                 validation_data=(x_val, y_val),
-                epochs=int(training_params.get("epochs", 25)),
+                epochs=int(training_params.get("epochs", 40)),
                 batch_size=int(training_params.get("batch_size", 32)),
                 callbacks=_dl_callbacks(training_params),
                 verbose=0,
@@ -316,7 +316,7 @@ def _importance_rows(importance_df: pd.DataFrame, limit: int) -> list[dict[str, 
 def _dl_callbacks(training_params: dict[str, Any]):
     import keras
 
-    patience = int(training_params.get("early_stopping_patience", 5))
+    patience = int(training_params.get("early_stopping_patience", 4))
     return [
         create_early_stopping(patience),
         keras.callbacks.ReduceLROnPlateau(

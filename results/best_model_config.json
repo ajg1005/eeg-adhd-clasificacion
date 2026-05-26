@@ -46,6 +46,6 @@
         "n_features": 458,
         "n_subjects": 121
     },
-    "training_strategy": "5-fold GroupKFold cross-subject CV",
+    "training_strategy": "5-fold StratifiedGroupKFold cross-subject CV",
     "note": "This file is used by export_model.py to train and export the final model."
 }

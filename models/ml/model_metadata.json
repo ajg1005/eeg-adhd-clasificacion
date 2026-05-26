@@ -54,5 +54,5 @@
         "n_features": 458,
         "n_subjects": 121
     },
-    "training_strategy": "Final model trained using the model selected by cross-subject cross-validation in train_ml.py."
+    "training_strategy": "Final model trained using the model selected by 5-fold StratifiedGroupKFold cross-subject cross-validation in train_ml.py."
 }
