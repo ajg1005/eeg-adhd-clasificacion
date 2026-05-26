@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import PropTypes from "prop-types";
 
 import { getTrainingOptions, runTraining } from "../api";
 import { TrainingEegParamsPanel } from "./training/TrainingEegParamsPanel";
 import { TrainingModelPanel } from "./training/TrainingModelPanel";
 import { TrainingResultsPanel } from "./training/TrainingResultsPanel";
+import { datasetStatsShape, fileShape } from "../propTypes";
 
 function normalizeValue(value) {
   if (value === "none") {
@@ -222,3 +224,9 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
     </section>
   );
 }
+
+TrainingView.propTypes = {
+  file: fileShape,
+  onTrainingStateChange: PropTypes.func,
+  stats: datasetStatsShape,
+};

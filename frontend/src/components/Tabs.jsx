@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 export function Tabs({ activeTab, disabled = false, onTabChange, tabs }) {
   return (
     <nav className="tabs">
@@ -15,3 +17,10 @@ export function Tabs({ activeTab, disabled = false, onTabChange, tabs }) {
     </nav>
   );
 }
+
+Tabs.propTypes = {
+  activeTab: PropTypes.string.isRequired,
+  disabled: PropTypes.bool,
+  onTabChange: PropTypes.func.isRequired,
+  tabs: PropTypes.arrayOf(PropTypes.string).isRequired,
+};

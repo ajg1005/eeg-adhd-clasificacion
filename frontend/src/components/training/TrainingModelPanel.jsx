@@ -1,3 +1,7 @@
+import PropTypes from "prop-types";
+
+import { fileShape, modelOptionShape } from "../../propTypes";
+
 function selectValue(value) {
   return value === null || value === undefined ? "none" : String(value);
 }
@@ -106,3 +110,29 @@ export function TrainingModelPanel({
     </div>
   );
 }
+
+TrainingModelPanel.propTypes = {
+  currentModelParameters: PropTypes.object.isRequired,
+  currentModels: PropTypes.objectOf(modelOptionShape).isRequired,
+  file: fileShape,
+  loadingTraining: PropTypes.bool.isRequired,
+  modelName: PropTypes.string.isRequired,
+  modelParams: PropTypes.object.isRequired,
+  modelType: PropTypes.string.isRequired,
+  onModelNameChange: PropTypes.func.isRequired,
+  onModelParamChange: PropTypes.func.isRequired,
+  onModelTypeChange: PropTypes.func.isRequired,
+  onRunTraining: PropTypes.func.isRequired,
+  onTrainingParamChange: PropTypes.func.isRequired,
+  trainingParams: PropTypes.object.isRequired,
+  visibleTrainingParams: PropTypes.arrayOf(
+    PropTypes.arrayOf(
+      PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.number,
+        PropTypes.bool,
+        PropTypes.array,
+      ]),
+    ),
+  ).isRequired,
+};

@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 export function TrainingEegParamsPanel({
   eegParams,
   modelType,
@@ -38,3 +40,13 @@ export function TrainingEegParamsPanel({
     </div>
   );
 }
+
+TrainingEegParamsPanel.propTypes = {
+  eegParams: PropTypes.object.isRequired,
+  modelType: PropTypes.string.isRequired,
+  onEegParamChange: PropTypes.func.isRequired,
+  options: PropTypes.shape({
+    eeg_params: PropTypes.object,
+    eeg_params_by_type: PropTypes.object,
+  }),
+};

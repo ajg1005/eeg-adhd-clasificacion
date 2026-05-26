@@ -1,4 +1,7 @@
 import { useMemo } from "react";
+import PropTypes from "prop-types";
+
+import { datasetStatsShape, fileShape } from "../propTypes";
 
 
 function filterPatients(patients, classFilter, maxPatients) {
@@ -154,3 +157,16 @@ export function DatasetView({
     </section>
   );
 }
+
+DatasetView.propTypes = {
+  classFilter: PropTypes.string.isRequired,
+  error: PropTypes.string,
+  file: fileShape,
+  handleAnalyzeDataset: PropTypes.func.isRequired,
+  handleClassFilterChange: PropTypes.func.isRequired,
+  handleFileChange: PropTypes.func.isRequired,
+  handleMaxPatientsChange: PropTypes.func.isRequired,
+  loadingStats: PropTypes.bool.isRequired,
+  maxPatients: PropTypes.number.isRequired,
+  stats: datasetStatsShape,
+};

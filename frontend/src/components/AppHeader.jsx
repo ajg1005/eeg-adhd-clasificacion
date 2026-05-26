@@ -1,4 +1,6 @@
-﻿export function AppHeader({ apiStatus }) {
+import PropTypes from "prop-types";
+
+export function AppHeader({ apiStatus }) {
   return (
     <header className="app-header">
       <div>
@@ -17,3 +19,6 @@
   );
 }
 
+AppHeader.propTypes = {
+  apiStatus: PropTypes.string.isRequired,
+};

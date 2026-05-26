@@ -7,8 +7,25 @@
   XAxis,
   YAxis,
 } from "recharts";
+import PropTypes from "prop-types";
 
+import { modelInfoShape } from "../propTypes";
 import { formatMetric } from "../utils/formatters";
+
+const catalogModelShape = PropTypes.shape({
+  common_parameters: PropTypes.arrayOf(
+    PropTypes.shape({
+      default: PropTypes.string.isRequired,
+      description: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  description: PropTypes.string.isRequired,
+  display_name: PropTypes.string.isRequired,
+  model_family: PropTypes.string.isRequired,
+  model_id: PropTypes.string.isRequired,
+  use_case: PropTypes.string.isRequired,
+});
 
 function ModelCatalogGroup({ models, title }) {
   if (!models?.length) {
@@ -52,6 +69,11 @@ function ModelCatalogGroup({ models, title }) {
     </div>
   );
 }
+
+ModelCatalogGroup.propTypes = {
+  models: PropTypes.arrayOf(catalogModelShape),
+  title: PropTypes.string.isRequired,
+};
 
 export function ModelView({
   metrics,
@@ -177,4 +199,31 @@ export function ModelView({
     </>
   );
 }
+
+ModelView.propTypes = {
+  metrics: PropTypes.shape({
+    accuracy_epoch_mean: PropTypes.number,
+    balanced_accuracy_epoch_mean: PropTypes.number,
+    f1_epoch_mean: PropTypes.number,
+    precision_epoch_mean: PropTypes.number,
+    recall_epoch_mean: PropTypes.number,
+  }),
+  metricsChartData: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      value: PropTypes.number.isRequired,
+    }),
+  ).isRequired,
+  modelCatalog: PropTypes.shape({
+    deep_learning: PropTypes.arrayOf(catalogModelShape),
+    machine_learning: PropTypes.arrayOf(catalogModelShape),
+  }),
+  modelFigures: PropTypes.arrayOf(
+    PropTypes.shape({
+      title: PropTypes.string.isRequired,
+      url: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  modelInfo: modelInfoShape,
+};
 

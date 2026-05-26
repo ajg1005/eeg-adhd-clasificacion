@@ -7,7 +7,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import PropTypes from "prop-types";
 
+import { fileShape, modelInfoShape } from "../propTypes";
 import { formatPercent } from "../utils/formatters";
 
 export function PredictionView({
@@ -118,3 +120,28 @@ export function PredictionView({
     </section>
   );
 }
+
+PredictionView.propTypes = {
+  decisionScore: PropTypes.number,
+  file: fileShape,
+  loadingPrediction: PropTypes.bool.isRequired,
+  loadingValidation: PropTypes.bool.isRequired,
+  modelInfo: modelInfoShape,
+  onFileChange: PropTypes.func.isRequired,
+  onPredict: PropTypes.func.isRequired,
+  prediction: PropTypes.shape({
+    model_name: PropTypes.string,
+    n_epochs: PropTypes.number.isRequired,
+    prediction_label: PropTypes.string.isRequired,
+  }),
+  predictionChartData: PropTypes.arrayOf(
+    PropTypes.shape({
+      clase: PropTypes.string.isRequired,
+      porcentaje: PropTypes.number.isRequired,
+    }),
+  ).isRequired,
+  validation: PropTypes.shape({
+    available_channels: PropTypes.arrayOf(PropTypes.string).isRequired,
+    rows: PropTypes.number.isRequired,
+  }),
+};

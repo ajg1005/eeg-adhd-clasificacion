@@ -1,4 +1,8 @@
-﻿export function ModelSelector({ modelInfo, models, onModelChange, selectedModelId }) {
+import PropTypes from "prop-types";
+
+import { modelInfoShape } from "../propTypes";
+
+export function ModelSelector({ modelInfo, models, onModelChange, selectedModelId }) {
   return (
     <section className="model-selector panel">
       <label>
@@ -14,7 +18,7 @@
 
       {modelInfo && (
         <p className="muted">
-          {modelInfo.display_name} · {modelInfo.model_name} · {" "}
+          {modelInfo.display_name} · {modelInfo.model_name} ·{" "}
           {modelInfo.model_family}
         </p>
       )}
@@ -22,3 +26,14 @@
   );
 }
 
+ModelSelector.propTypes = {
+  modelInfo: modelInfoShape,
+  models: PropTypes.arrayOf(
+    PropTypes.shape({
+      display_name: PropTypes.string.isRequired,
+      model_id: PropTypes.string.isRequired,
+    }),
+  ).isRequired,
+  onModelChange: PropTypes.func.isRequired,
+  selectedModelId: PropTypes.string.isRequired,
+};

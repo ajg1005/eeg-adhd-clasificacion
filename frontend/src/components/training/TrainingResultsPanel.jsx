@@ -1,10 +1,27 @@
+import PropTypes from "prop-types";
+
+import { patientResultShape } from "../../propTypes";
+
+const importanceRowShape = PropTypes.shape({
+  feature: PropTypes.string.isRequired,
+  importance_mean: PropTypes.number,
+});
+
 function Percent({ value }) {
   return `${((value || 0) * 100).toFixed(1)}%`;
 }
 
+Percent.propTypes = {
+  value: PropTypes.number,
+};
+
 function ImportanceValue({ value }) {
   return Number(value || 0).toFixed(4);
 }
+
+ImportanceValue.propTypes = {
+  value: PropTypes.number,
+};
 
 function ImportanceList({ rows, title }) {
   const maxValue = Math.max(
@@ -40,6 +57,11 @@ function ImportanceList({ rows, title }) {
     </div>
   );
 }
+
+ImportanceList.propTypes = {
+  rows: PropTypes.arrayOf(importanceRowShape).isRequired,
+  title: PropTypes.string.isRequired,
+};
 
 export function TrainingResultsPanel({
   filteredPatientResults,
@@ -189,3 +211,33 @@ export function TrainingResultsPanel({
     </div>
   );
 }
+
+TrainingResultsPanel.propTypes = {
+  filteredPatientResults: PropTypes.arrayOf(patientResultShape).isRequired,
+  onPatientFilterChange: PropTypes.func.isRequired,
+  patientFilter: PropTypes.string.isRequired,
+  result: PropTypes.shape({
+    accuracy: PropTypes.number.isRequired,
+    balanced_accuracy: PropTypes.number.isRequired,
+    classification_report: PropTypes.object.isRequired,
+    confusion_matrix: PropTypes.arrayOf(
+      PropTypes.arrayOf(PropTypes.number),
+    ).isRequired,
+    configuration: PropTypes.shape({
+      evaluation_mode: PropTypes.string,
+    }),
+    f1_score: PropTypes.number.isRequired,
+    feature_importance: PropTypes.shape({
+      by_channel: PropTypes.arrayOf(importanceRowShape),
+      error: PropTypes.string,
+      evaluated_epochs: PropTypes.number,
+      method: PropTypes.string,
+      scoring: PropTypes.string,
+      source: PropTypes.string,
+      top_features: PropTypes.arrayOf(importanceRowShape),
+    }),
+    precision: PropTypes.number.isRequired,
+    recall: PropTypes.number.isRequired,
+    training_time_seconds: PropTypes.number.isRequired,
+  }),
+};
