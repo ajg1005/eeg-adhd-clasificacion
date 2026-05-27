@@ -7,6 +7,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 from backend.modeling.dl_factory import DL_MODEL_OPTIONS
 from backend.modeling.model_factory import ML_MODEL_OPTIONS
+from backend.db.repository import save_experiment
 from backend.services.training_data import (
     get_dataset_stats as _get_dataset_stats,
     prepare_epochs,
@@ -92,6 +93,7 @@ def run_training(
     file_bytes: bytes,
     model_type: str,
     model_name: str,
+    filename: str = "training.csv",
     eeg_params: dict[str, Any] | None = None,
     model_params: dict[str, Any] | None = None,
     training_params: dict[str, Any] | None = None,
@@ -110,7 +112,7 @@ def run_training(
     y_pred = evaluation["y_pred"]
     metrics = metrics_dict(y_true, y_pred)
 
-    return {
+    result = {
         **metrics,
         "classification_report": classification_report(
             y_true,
@@ -134,6 +136,13 @@ def run_training(
         },
         "training_time_seconds": round(time.perf_counter() - started_at, 3),
     }
+    result["experiment_id"] = save_experiment(
+        file_bytes=file_bytes,
+        filename=filename,
+        dataframe=df,
+        result=result,
+    )
+    return result
 
 
 def _merge_default_eeg_params(model_type: str, eeg_params: dict[str, Any]) -> dict[str, Any]:

@@ -1,15 +1,18 @@
+import os
+import tempfile
+import uuid
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.config import MODELS_DIR
-from backend.constants import REQUIRED_EEG_COLUMNS
-from backend.main import app
-
+PROJECT_DIR = Path(__file__).resolve().parents[1]
+TEST_DATABASE_PATH = Path(tempfile.gettempdir()) / f"eeg_adhd_tests_{uuid.uuid4().hex}.db"
+os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DATABASE_PATH.as_posix()}"
 
 TESTS_DIR = Path(__file__).resolve().parent
 FIXTURES_DIR = TESTS_DIR / "fixtures"
+MODELS_DIR = PROJECT_DIR / "models"
 
 ML_MODEL_PATH = MODELS_DIR / "ml" / "final_model.joblib"
 DL_MODEL_PATH = MODELS_DIR / "dl" / "final_model.keras"
@@ -28,6 +31,10 @@ requires_dl_model = pytest.mark.skipif(
 
 @pytest.fixture(scope="session")
 def client():
+    from backend.db import init_db
+    from backend.main import app
+
+    init_db()
     return TestClient(app)
 
 
@@ -54,6 +61,7 @@ def invalid_missing_columns_csv_path(fixtures_dir):
 @pytest.fixture
 def post_csv():
     """Helper para enviar un CSV a un endpoint via TestClient."""
+
     def _post(client, path, url, data=None):
         with path.open("rb") as csv_file:
             return client.post(
@@ -61,11 +69,14 @@ def post_csv():
                 data=data or {},
                 files={"file": (path.name, csv_file, "text/csv")},
             )
+
     return _post
 
 
 @pytest.fixture
 def eeg_dataframe_factory():
+    from backend.constants import REQUIRED_EEG_COLUMNS
+
     def _factory(patients=None, samples_per_patient=32):
         patients = patients or [
             ("control_1", 0),

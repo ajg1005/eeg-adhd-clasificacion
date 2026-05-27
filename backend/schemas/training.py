@@ -61,6 +61,7 @@ class FeatureImportanceResponse(BaseModel):
 
 
 class TrainingRunResponse(FlexibleSchema):
+    experiment_id: int
     accuracy: float
     precision: float
     recall: float

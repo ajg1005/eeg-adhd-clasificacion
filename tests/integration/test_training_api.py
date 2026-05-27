@@ -58,9 +58,24 @@ def test_training_run_ml_returns_metrics_and_feature_importance(client, eeg_data
     assert response.status_code == 200
     data = response.json()
     assert 0.0 <= data["accuracy"] <= 1.0
+    assert data["experiment_id"] > 0
     assert data["patient_results"]
     assert data["feature_importance"]["method"] == "permutation_importance"
     assert data["feature_importance"]["top_features"]
+
+    detail_response = client.get(f"/experiments/{data['experiment_id']}")
+    assert detail_response.status_code == 200
+    detail = detail_response.json()
+    assert detail["model_name"] == "random_forest"
+    assert detail["dataset"]["filename"] == "training.csv"
+    assert detail["fold_results"]
+
+    list_response = client.get("/experiments?model_type=ml")
+    assert list_response.status_code == 200
+    assert any(
+        experiment["id"] == data["experiment_id"]
+        for experiment in list_response.json()["experiments"]
+    )
 
 
 # comprueba que /training/run rechaza un dataset con una sola clase
@@ -84,3 +99,10 @@ def test_training_run_rejects_single_class_dataset(client, eeg_dataframe_factory
 
     assert response.status_code == 400
     assert "Control y TDAH" in response.json()["detail"]
+
+
+def test_experiment_detail_returns_404_for_unknown_id(client):
+    response = client.get("/experiments/999999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Experimento no encontrado."

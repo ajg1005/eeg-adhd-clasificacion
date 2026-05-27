@@ -42,6 +42,7 @@ La aplicación se organiza en cuatro pestañas:
 
 ```text
 backend/      API FastAPI, servicios y factories de modelos consumidos por la UI
+alembic/      Migraciones de la base de datos de experimentos y datasets
 frontend/    Interfaz React (Vite)
 scripts/      Pipeline de investigación: entrenamiento offline, export del mejor
               modelo y scripts de análisis (comparación estadística, feature
@@ -63,6 +64,15 @@ docker compose up --build
 ```
 
 Backend: http://localhost:8000 · Frontend: http://localhost:5173
+
+Docker Compose levanta también PostgreSQL y el backend aplica las migraciones
+con Alembic antes de arrancar la API.
+
+En ejecución local sin Docker, aplica primero las migraciones:
+
+```bash
+alembic upgrade head
+```
 
 
 ## Scripts de investigación

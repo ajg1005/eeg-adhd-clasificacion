@@ -13,14 +13,16 @@ COPY backend ./backend
 COPY scripts ./scripts
 COPY models ./models
 COPY Figuras ./Figuras
+COPY alembic.ini .
+COPY alembic ./alembic
 
-RUN mkdir -p /app/logs /app/tmp \
-    && chown -R app:app /app/logs /app/tmp \
+RUN mkdir -p /app/logs /app/tmp /app/results \
+    && chown -R app:app /app/logs /app/tmp /app/results \
     && chmod -R 755 /app \
-    && chmod -R 750 /app/logs /app/tmp
+    && chmod -R 750 /app/logs /app/tmp /app/results
 
 USER app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port 8000"]

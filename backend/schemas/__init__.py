@@ -1,4 +1,11 @@
-from backend.schemas.common import FlexibleSchema
+from backend.schemas.common import FlexibleSchema, OrmSchema
+from backend.schemas.experiments import (
+    ExperimentDatasetResponse,
+    ExperimentDetailResponse,
+    ExperimentFoldResponse,
+    ExperimentSummaryResponse,
+    ExperimentsListResponse,
+)
 from backend.schemas.health import HealthResponse
 from backend.schemas.models import (
     FigureItem,
@@ -22,6 +29,11 @@ from backend.schemas.training import (
 __all__ = [
     "FeatureImportanceItem",
     "FeatureImportanceResponse",
+    "ExperimentDatasetResponse",
+    "ExperimentDetailResponse",
+    "ExperimentFoldResponse",
+    "ExperimentSummaryResponse",
+    "ExperimentsListResponse",
     "FigureItem",
     "FiguresResponse",
     "FlexibleSchema",
@@ -30,6 +42,7 @@ __all__ = [
     "ModelInfoResponse",
     "ModelRegistryItem",
     "ModelsResponse",
+    "OrmSchema",
     "PatientTrainingResult",
     "PredictionResponse",
     "TrainingDatasetPatient",

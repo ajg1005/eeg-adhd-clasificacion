@@ -1,6 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class FlexibleSchema(BaseModel):
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow", from_attributes=True)
+
+
+class OrmSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)

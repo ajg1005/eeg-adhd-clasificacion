@@ -46,9 +46,9 @@ async def training_dataset_stats(file: Annotated[UploadFile, File(...)]):
 
 @router.post("/run", response_model=TrainingRunResponse, responses=TRAINING_RUN_RESPONSES)
 async def training_run(
-    file: Annotated[UploadFile, File(...)],
     model_type: Annotated[str, Form()],
     model_name: Annotated[str, Form()],
+    file: Annotated[UploadFile, File(...)],
     eeg_params: Annotated[str | None, Form()] = None,
     model_params: Annotated[str | None, Form()] = None,
     training_params: Annotated[str | None, Form()] = None,
@@ -58,6 +58,7 @@ async def training_run(
             file_bytes=await file.read(),
             model_type=model_type,
             model_name=model_name,
+            filename=file.filename or "training.csv",
             eeg_params=_json_dict(eeg_params),
             model_params=_json_dict(model_params),
             training_params=_json_dict(training_params),

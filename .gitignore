@@ -14,6 +14,7 @@ __pycache__/
 # Datos grandes
 data/*.csv
 data/*.mat
+results/*.db
 
 # Modelos pesados
 models/*.pkl
