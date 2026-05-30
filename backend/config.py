@@ -7,10 +7,18 @@ MODELS_DIR = Path(os.getenv("MODELS_DIR", BASE_DIR / "models"))
 FIGURES_DIR = Path(os.getenv("FIGURES_DIR", BASE_DIR / "Figuras"))
 RESULTS_DIR = Path(os.getenv("RESULTS_DIR", BASE_DIR / "results"))
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg://eeg_app:eeg_app_password@localhost:5432/eeg_adhd",
-)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    pg_pass = os.getenv("POSTGRES_PASSWORD")
+    if pg_pass:
+        pg_user = os.getenv("POSTGRES_USER", "eeg_app")
+        pg_host = os.getenv("POSTGRES_HOST", "localhost")
+        pg_port = os.getenv("POSTGRES_PORT", "5432")
+        pg_db = os.getenv("POSTGRES_DB", "eeg_adhd")
+        DATABASE_URL = f"postgresql+psycopg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}"
+    else:
+        DATABASE_URL = f"sqlite:///{(BASE_DIR / 'experiments.db').as_posix()}"
 
 
 CORS_ORIGINS = [

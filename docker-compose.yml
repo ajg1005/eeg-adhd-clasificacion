@@ -1,40 +1,35 @@
 services:
   db:
     image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: eeg_adhd
-      POSTGRES_USER: eeg_app
-      POSTGRES_PASSWORD: eeg_app_password
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eeg_app -d eeg_adhd"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
     restart: unless-stopped
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    command: sh -c "alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port 8000"
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql+psycopg://eeg_app:eeg_app_password@db:5432/eeg_adhd
+      POSTGRES_HOST: db
     volumes:
       - ./results:/app/results
     depends_on:
       db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"]
-      interval: 30s
-      timeout: 5s
-      start_period: 20s
-      retries: 3
     restart: unless-stopped
 
   frontend:
@@ -48,8 +43,7 @@ services:
       # Vite la inyecta en import.meta.env.VITE_API_BASE_URL al arrancar.
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://127.0.0.1:8000}
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     restart: unless-stopped
 
 volumes:

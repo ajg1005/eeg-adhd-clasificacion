@@ -9,7 +9,7 @@ class Base(DeclarativeBase):
     """Base declarativa de SQLAlchemy."""
 
 
-class DatasetRecord(Base):
+class Dataset(Base):
     __tablename__ = "datasets"
     __table_args__ = (UniqueConstraint("dataset_hash", name="uq_datasets_hash"),)
 
@@ -23,13 +23,13 @@ class DatasetRecord(Base):
     eeg_columns: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
-    experiments: Mapped[list["ExperimentRecord"]] = relationship(
+    experiments: Mapped[list["Experiment"]] = relationship(
         back_populates="dataset",
         cascade="all, delete-orphan",
     )
 
 
-class ExperimentRecord(Base):
+class Experiment(Base):
     __tablename__ = "experiments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -50,14 +50,14 @@ class ExperimentRecord(Base):
     confusion_matrix: Mapped[list[list[int]]] = mapped_column(JSON, nullable=False)
     classification_report: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
-    dataset: Mapped[DatasetRecord] = relationship(back_populates="experiments")
-    folds: Mapped[list["ExperimentFoldRecord"]] = relationship(
+    dataset: Mapped[Dataset] = relationship(back_populates="experiments")
+    fold_results: Mapped[list["ExperimentFold"]] = relationship(
         back_populates="experiment",
         cascade="all, delete-orphan",
     )
 
 
-class ExperimentFoldRecord(Base):
+class ExperimentFold(Base):
     __tablename__ = "experiment_folds"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -73,4 +73,4 @@ class ExperimentFoldRecord(Base):
     n_test_subjects: Mapped[int | None] = mapped_column(Integer)
     best_threshold: Mapped[float | None] = mapped_column(Float)
 
-    experiment: Mapped[ExperimentRecord] = relationship(back_populates="folds")
+    experiment: Mapped[Experiment] = relationship(back_populates="fold_results")

@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import Field
-
 from backend.schemas.common import OrmSchema
 
 
@@ -53,7 +51,7 @@ class ExperimentDetailResponse(ExperimentSummaryResponse):
     training_params: dict[str, Any]
     confusion_matrix: list[list[int]]
     classification_report: dict[str, Any]
-    fold_results: list[ExperimentFoldResponse] = Field(validation_alias="folds")
+    fold_results: list[ExperimentFoldResponse]
 
 
 class ExperimentsListResponse(OrmSchema):

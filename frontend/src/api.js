@@ -102,6 +102,27 @@ export async function runTraining(file, payload) {
   return response.json();
 }
 
+export async function getExperiments() {
+  const response = await fetch(`${API_BASE_URL}/experiments`);
+
+  if (!response.ok) {
+    throw new Error("No se pudo cargar el historial de experimentos");
+  }
+
+  const data = await response.json();
+  return data.experiments;
+}
+
+export async function getExperimentDetail(experimentId) {
+  const response = await fetch(`${API_BASE_URL}/experiments/${experimentId}`);
+
+  if (!response.ok) {
+    throw new Error(await readError(response, "No se pudo cargar el experimento"));
+  }
+
+  return response.json();
+}
+
 export async function getModelInfo(modelId = "ml_best") {
   // Cargar metadatos y métricas del modelo seleccionado.
   const params = new URLSearchParams({

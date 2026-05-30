@@ -5,6 +5,7 @@ import { useTrainingDataset } from "./hooks/useTrainingDataset";
 import { TABS } from "./config/tabs";
 import { AppHeader } from "./components/AppHeader";
 import { DatasetView } from "./components/DatasetView";
+import { ExperimentsView } from "./components/ExperimentsView";
 import { ModelSelector } from "./components/ModelSelector";
 import { ModelView } from "./components/ModelView";
 import { PredictionView } from "./components/PredictionView";
@@ -98,6 +99,8 @@ function App() {
           stats={trainingDataset.stats}
         />
       )}
+
+      {controller.activeTab === "Experimentos" && <ExperimentsView />}
 
       {controller.activeTab === "Predicción" && (
         <>

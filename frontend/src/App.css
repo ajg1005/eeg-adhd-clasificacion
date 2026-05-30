@@ -518,6 +518,15 @@ h3 {
   letter-spacing: 0;
 }
 
+.patient-table tbody tr {
+  cursor: pointer;
+}
+
+.patient-table tbody tr:hover,
+.patient-table .selected-row {
+  background: rgba(190, 124, 77, 0.14);
+}
+
 @media (max-width: 860px) {
   .section-heading-row {
     display: grid;

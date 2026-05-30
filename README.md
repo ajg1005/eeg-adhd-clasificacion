@@ -57,6 +57,14 @@ tests/        Tests básicos con pytest
 
 ## Cómo ejecutarlo
 
+Antes del primer arranque, copia `.env.example` a `.env` y define una contraseña
+para PostgreSQL:
+
+```bash
+cp .env.example .env
+# edita .env y pon tu POSTGRES_PASSWORD
+```
+
 Con Docker Compose:
 
 ```bash
@@ -65,14 +73,8 @@ docker compose up --build
 
 Backend: http://localhost:8000 · Frontend: http://localhost:5173
 
-Docker Compose levanta también PostgreSQL y el backend aplica las migraciones
-con Alembic antes de arrancar la API.
-
-En ejecución local sin Docker, aplica primero las migraciones:
-
-```bash
-alembic upgrade head
-```
+Docker Compose levanta tambien PostgreSQL. El backend crea las tablas necesarias
+al arrancar si todavia no existen.
 
 
 ## Scripts de investigación

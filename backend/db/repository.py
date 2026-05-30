@@ -5,20 +5,19 @@ from typing import Any
 
 import pandas as pd
 from sqlalchemy import select
-from sqlalchemy.orm import Session, load_only, selectinload
+from sqlalchemy.orm import Session, selectinload
 
 from backend.constants import normalize_class_to_label
 from backend.db.engine import SessionLocal
-from backend.db.models import DatasetRecord, ExperimentFoldRecord, ExperimentRecord
+from backend.db.models import Dataset, Experiment, ExperimentFold
 
 
 def save_experiment(
-    *,
     file_bytes: bytes,
     filename: str,
     dataframe: pd.DataFrame,
     result: dict[str, Any],
-) -> int:
+):
     with SessionLocal() as session:
         dataset = _get_or_create_dataset(session, file_bytes, filename, dataframe)
         experiment = _experiment_from_result(dataset.id, result)
@@ -34,36 +33,35 @@ def save_experiment(
 
 
 def list_experiments(
-    *,
     model_type: str | None = None,
     model_name: str | None = None,
     limit: int = 50,
     offset: int = 0,
-) -> list[ExperimentRecord]:
+):
     with SessionLocal() as session:
         stmt = (
-            select(ExperimentRecord)
-            .options(selectinload(ExperimentRecord.dataset).options(_dataset_summary_columns()))
-            .order_by(ExperimentRecord.created_at.desc(), ExperimentRecord.id.desc())
+            select(Experiment)
+            .options(selectinload(Experiment.dataset))
+            .order_by(Experiment.created_at.desc(), Experiment.id.desc())
             .offset(max(0, offset))
             .limit(max(1, min(limit, 200)))
         )
         if model_type:
-            stmt = stmt.where(ExperimentRecord.model_type == model_type)
+            stmt = stmt.where(Experiment.model_type == model_type)
         if model_name:
-            stmt = stmt.where(ExperimentRecord.model_name == model_name)
+            stmt = stmt.where(Experiment.model_name == model_name)
 
         return list(session.scalars(stmt).all())
 
 
-def get_experiment(experiment_id: int) -> ExperimentRecord | None:
+def get_experiment(experiment_id: int):
     with SessionLocal() as session:
         return session.get(
-            ExperimentRecord,
+            Experiment,
             experiment_id,
             options=[
-                selectinload(ExperimentRecord.dataset).options(_dataset_summary_columns()),
-                selectinload(ExperimentRecord.folds),
+                selectinload(Experiment.dataset),
+                selectinload(Experiment.fold_results),
             ],
         )
 
@@ -73,15 +71,15 @@ def _get_or_create_dataset(
     file_bytes: bytes,
     filename: str,
     dataframe: pd.DataFrame,
-) -> DatasetRecord:
+):
     dataset_hash = hashlib.sha256(file_bytes).hexdigest()
     dataset = session.scalar(
-        select(DatasetRecord).where(DatasetRecord.dataset_hash == dataset_hash)
+        select(Dataset).where(Dataset.dataset_hash == dataset_hash)
     )
     if dataset is not None:
         return dataset
 
-    dataset = DatasetRecord(
+    dataset = Dataset(
         dataset_hash=dataset_hash,
         filename=filename or "training.csv",
         rows=int(len(dataframe)),
@@ -95,9 +93,9 @@ def _get_or_create_dataset(
     return dataset
 
 
-def _experiment_from_result(dataset_id: int, result: dict[str, Any]) -> ExperimentRecord:
+def _experiment_from_result(dataset_id: int, result: dict[str, Any]):
     configuration = result.get("configuration", {})
-    return ExperimentRecord(
+    return Experiment(
         dataset_id=dataset_id,
         model_type=str(configuration.get("model_type", "")),
         model_name=str(configuration.get("model_name", "")),
@@ -116,8 +114,8 @@ def _experiment_from_result(dataset_id: int, result: dict[str, Any]) -> Experime
     )
 
 
-def _fold_from_result(experiment_id: int, fold: dict[str, Any]) -> ExperimentFoldRecord:
-    return ExperimentFoldRecord(
+def _fold_from_result(experiment_id: int, fold: dict[str, Any]):
+    return ExperimentFold(
         experiment_id=experiment_id,
         fold=int(fold.get("fold", 0)),
         accuracy=float(fold.get("accuracy", 0.0)),
@@ -125,24 +123,18 @@ def _fold_from_result(experiment_id: int, fold: dict[str, Any]) -> ExperimentFol
         precision=float(fold.get("precision", 0.0)),
         recall=float(fold.get("recall", 0.0)),
         f1_score=float(fold.get("f1_score", 0.0)),
-        n_train_subjects=_optional_int(fold.get("n_train_subjects")),
-        n_val_subjects=_optional_int(fold.get("n_val_subjects")),
-        n_test_subjects=_optional_int(fold.get("n_test_subjects")),
-        best_threshold=_optional_float(fold.get("best_threshold")),
-    )
-
-
-def _dataset_summary_columns():
-    return load_only(
-        DatasetRecord.id,
-        DatasetRecord.dataset_hash,
-        DatasetRecord.filename,
-        DatasetRecord.rows,
-        DatasetRecord.columns,
-        DatasetRecord.n_subjects,
-        DatasetRecord.class_distribution,
-        DatasetRecord.eeg_columns,
-        DatasetRecord.created_at,
+        n_train_subjects=(
+            int(fold["n_train_subjects"]) if fold.get("n_train_subjects") is not None else None
+        ),
+        n_val_subjects=(
+            int(fold["n_val_subjects"]) if fold.get("n_val_subjects") is not None else None
+        ),
+        n_test_subjects=(
+            int(fold["n_test_subjects"]) if fold.get("n_test_subjects") is not None else None
+        ),
+        best_threshold=(
+            float(fold["best_threshold"]) if fold.get("best_threshold") is not None else None
+        ),
     )
 
 
@@ -151,15 +143,3 @@ def _class_distribution(dataframe: pd.DataFrame) -> dict[str, int]:
         return {}
     labels = dataframe["Class"].map(normalize_class_to_label)
     return {str(label): int(count) for label, count in labels.value_counts(dropna=False).items()}
-
-
-def _optional_int(value: Any) -> int | None:
-    if value is None:
-        return None
-    return int(value)
-
-
-def _optional_float(value: Any) -> float | None:
-    if value is None:
-        return None
-    return float(value)
