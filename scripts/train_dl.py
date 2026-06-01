@@ -1,3 +1,11 @@
+"""Offline training pipeline for deep-learning EEG models.
+
+The script applies the preprocessing used by the DL experiments, evaluates
+the TensorFlow architectures with cross-subject folds and an inner validation
+split, tunes the classification threshold per fold and writes the metrics,
+learning curves and export configuration for the selected model.
+"""
+
 import json
 
 import keras
@@ -5,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from sklearn.utils.class_weight import compute_class_weight
 
 from constants import RANDOM_STATE
 from data_load import load_dataset
@@ -47,11 +56,13 @@ N_SPLITS = 5
 
 
 def set_seed(seed):
+    """Set the Keras/TensorFlow random seed for reproducible fold training."""
     keras.utils.set_random_seed(seed)
 
 
 # Adapta el dict estándar de metrics_dict a los nombres de columna del CSV de research.
 def compute_metrics(y_true, y_pred):
+    """Convert common classification metrics to the DL result CSV schema."""
     raw = metrics_dict(y_true, y_pred)
     return {
         "Accuracy_epoch": raw["accuracy"],
@@ -97,6 +108,7 @@ def plot_training_history(history, model_name, fold):
 
 
 def build_callbacks():
+    """Build the early-stopping and learning-rate callbacks used by DL training."""
     return [
         keras.callbacks.EarlyStopping(
             monitor="val_loss",
@@ -114,6 +126,7 @@ def build_callbacks():
 
 
 def build_summary_df(results):
+    """Aggregate per-fold DL metrics into mean and standard deviation tables."""
     results_df = pd.DataFrame(results)
     return results_df.groupby("Modelo").agg({
         "Accuracy_epoch": ["mean", "std"],
@@ -127,6 +140,7 @@ def build_summary_df(results):
 
 
 def prepare_dl_arrays(X_train, x_val, X_test, y_train, y_val, y_test):
+    """Convert split arrays to float32 tensors accepted by Keras models."""
     return (
         np.asarray(X_train).astype(np.float32),
         np.asarray(x_val).astype(np.float32),
@@ -138,6 +152,7 @@ def prepare_dl_arrays(X_train, x_val, X_test, y_train, y_val, y_test):
 
 
 def build_compiled_model(model_name, input_shape, seed):
+    """Create and compile a TensorFlow model for binary ADHD classification."""
     set_seed(seed)
 
     model = build_model(
@@ -162,7 +177,14 @@ def build_compiled_model(model_name, input_shape, seed):
 
 
 def fit_model(model_name, X_train, y_train, x_val, y_val, seed, fold):
+    """Train one DL model on a fold and persist its learning curves."""
     model = build_compiled_model(model_name, X_train.shape[1:], seed)
+
+    # Balanceamos la loss por clase a partir de y_train del fold.
+    y_train_int = y_train.astype(int)
+    classes = np.unique(y_train_int)
+    class_weights = compute_class_weight("balanced", classes=classes, y=y_train_int)
+    class_weight_dict = {int(cls): float(weight) for cls, weight in zip(classes, class_weights)}
 
     history = model.fit(
         X_train,
@@ -171,6 +193,7 @@ def fit_model(model_name, X_train, y_train, x_val, y_val, seed, fold):
         epochs=N_EPOCHS,
         batch_size=BATCH_SIZE,
         callbacks=build_callbacks(),
+        class_weight=class_weight_dict,
         verbose=1,
     )
 
@@ -190,6 +213,7 @@ def fit_model(model_name, X_train, y_train, x_val, y_val, seed, fold):
 
 
 def evaluate_model(model, X_test, y_test, threshold=0.5):
+    """Evaluate a trained DL model and return metrics plus raw predictions."""
     eval_outputs = model.evaluate(X_test, y_test, batch_size=BATCH_SIZE, verbose=0)
     y_score = model.predict(X_test, batch_size=BATCH_SIZE, verbose=0).ravel()
     y_pred = (y_score >= threshold).astype(int)
@@ -202,6 +226,7 @@ def evaluate_model(model, X_test, y_test, threshold=0.5):
 
 
 def run_single_model_fold(model_name, X_train, y_train, x_val, y_val, X_test, y_test, seed, fold):
+    """Train one model on one fold, tune the threshold on validation and test it."""
     model = fit_model(
         model_name=model_name,
         X_train=X_train,
@@ -221,6 +246,7 @@ def run_single_model_fold(model_name, X_train, y_train, x_val, y_val, X_test, y_
 
 
 def save_best_tf_outputs(summary_df, oof_predictions):
+    """Save confusion matrix and ROC figures for the best DL model."""
     best_model_name = summary_df[("F1_epoch", "mean")].idxmax()
     print(f"\nMejor modelo segun F1 medio: {best_model_name}")
 
@@ -247,6 +273,7 @@ def save_best_tf_outputs(summary_df, oof_predictions):
 
 
 def save_best_tf_config(summary_df, best_model_name, x_epochs, groups_epochs, eeg_cols):
+    """Persist the configuration required to export the selected DL model."""
     def metric_value(metric, stat):
         return float(summary_df.loc[best_model_name, (metric, stat)])
 
@@ -302,6 +329,7 @@ def save_best_tf_config(summary_df, best_model_name, x_epochs, groups_epochs, ee
 
 
 def main():
+    """Run the complete DL cross-subject experiment and save reusable artifacts."""
     print("TensorFlow version:", tf.__version__)
 
     df = load_dataset(CSV_PATH)

@@ -1,0 +1,578 @@
+\apendice{Especificación de Requisitos}
+
+\section{Introducción}
+
+\subsection{Propósito}
+
+Describir los requisitos funcionales y no funcionales para el desarrollo de una \textbf{aplicación web de clasificación de señales EEG para la detección de TDAH mediante Machine Learning y Deep Learning}.
+
+\subsection{Alcance}
+
+El sistema es una aplicación web orientada a \textbf{investigadores y profesionales del ámbito biomédico} en un contexto académico, donde el usuario puede:
+
+\begin{itemize}
+    \item Cargar un dataset EEG multipaciente en formato CSV y obtener estadísticas exploratorias (filas, columnas, pacientes únicos, distribución de clases, canales detectados).
+    \item Configurar parámetros de procesado EEG (longitud de ventana, solape, frecuencia de muestreo, bandas), del modelo y del entrenamiento, y ejecutar un entrenamiento \emph{cross-subject} de un modelo de Machine Learning clásico (Logistic Regression, RBF SVC, KNN, Random Forest, XGBoost) o de un modelo de Deep Learning (CNN 1D, CNN-LSTM, EEGNet).
+    \item Consultar el histórico de experimentos persistidos en base de datos, con sus parámetros, métricas agregadas y resultados por fold.
+    \item Obtener la clasificación final ADHD/Control de un paciente nuevo a partir de su CSV mediante inferencia con el modelo seleccionado, junto con la distribución de epochs predichas por clase.
+\end{itemize}
+
+El sistema está compuesto por una \textbf{API REST} en FastAPI, una \textbf{SPA} en React + Vite y una \textbf{base de datos PostgreSQL} para el histórico de experimentos.
+
+\subsection{Actores}
+
+El sistema tiene un único actor, el \textbf{Usuario} (investigador o profesional sanitario en contexto académico). Accede a la SPA a través del navegador sin necesidad de autenticación: cada análisis es independiente y no se almacenan datos clínicos crudos del paciente, por lo que se ha considerado innecesaria una capa de control de acceso.
+
+\subsection{Alcance del apéndice}
+
+Los requisitos descritos en este apéndice se refieren exclusivamente al \textbf{software entregado al usuario final}. Los scripts contenidos en \ruta{scripts/} (entrenamiento offline, exportación del modelo final, importancia de features) forman parte del proceso de investigación que produce el modelo exportado y, conforme a la guía oficial de TFG de la UBU, no se modelan como casos de uso del software entregado.
+
+\subsection{Aviso de uso}
+
+La aplicación tiene carácter académico y de demostración. No constituye un producto sanitario en el sentido del Reglamento (UE) 2017/745 y no debe utilizarse como herramienta de diagnóstico clínico.
+
+\section{Objetivos generales}
+
+El sistema persigue los siguientes objetivos generales:
+
+\begin{enumerate}
+    \item \textbf{Permitir al usuario explorar un dataset EEG} cargando un CSV con datos multipaciente y obtener estadísticas exploratorias.
+    \item \textbf{Permitir entrenar modelos de clasificación} ADHD / Control de forma interactiva, configurando parámetros de procesado EEG, modelo y entrenamiento.
+    \item \textbf{Permitir predecir la clase de un paciente nuevo} a partir de su CSV, utilizando un modelo previamente exportado.
+    \item \textbf{Comparar modelos de Machine Learning clásico frente a Deep Learning}, ofreciendo cinco modelos ML (Logistic Regression, RBF SVC, KNN, Random Forest, XGBoost) y tres modelos DL (CNN 1D, CNN-LSTM, EEGNet).
+    \item \textbf{Garantizar la validez metodológica} de los resultados aplicando validación cruzada \emph{cross-subject} (\texttt{StratifiedGroupKFold}) que impide la fuga de información entre pacientes.
+    \item \textbf{Mantener un histórico reproducible de los experimentos} lanzados desde la aplicación, almacenando para cada uno los parámetros utilizados, el dataset asociado y las métricas obtenidas.
+\end{enumerate}
+
+\section{Catálogo de requisitos}
+
+\subsection{Requisitos funcionales}
+
+\tablaSinColores{Catálogo de requisitos funcionales.}{p{1.5cm} p{12cm}}{2}{rf-catalogo}{
+    \textbf{ID} & \textbf{Descripción} \\
+}{
+    RF-01 & El sistema permite cargar archivos CSV con datos EEG multipaciente. \\
+    RF-02 & El sistema valida el formato del CSV (cabeceras, canales esperados, columna \texttt{ID} de sujeto y columna \texttt{Class}). \\
+    RF-03 & El sistema calcula y muestra estadísticas del dataset cargado (filas, columnas, número de pacientes únicos, distribución de clases, canales EEG detectados). \\
+    RF-04 & El sistema permite filtrar la lista de pacientes mostrada por clase (ADHD / Control). \\
+    RF-05 & El sistema ofrece un catálogo de cinco modelos de Machine Learning clásico: Logistic Regression, RBF SVC, KNN, Random Forest y XGBoost. \\
+    RF-06 & El sistema ofrece un catálogo de tres modelos de Deep Learning: CNN 1D, CNN-LSTM y EEGNet. \\
+    RF-07 & El sistema permite configurar parámetros de procesado EEG: longitud de ventana (epoch), solape, frecuencia de muestreo y bandas de frecuencia (delta, theta, alpha, beta, gamma). \\
+    RF-08 & El sistema permite configurar hiperparámetros específicos del modelo seleccionado. \\
+    RF-09 & El sistema permite configurar parámetros generales del entrenamiento (número de folds del CV, tamaño de batch, número de épocas para DL, etc.). \\
+    RF-10 & El sistema ejecuta validación cruzada \emph{cross-subject} usando \texttt{StratifiedGroupKFold}, garantizando que ningún paciente aparece simultáneamente en entrenamiento y test. \\
+    RF-11 & El sistema bloquea la navegación entre pestañas y avisa al usuario si intenta recargar la página mientras un entrenamiento está en curso. \\
+    RF-12 & Al finalizar un entrenamiento, el sistema muestra las métricas agregadas y por fold (accuracy, balanced accuracy, precision, recall, F1, matriz de confusión). \\
+    RF-13 & El sistema permite consultar la información del modelo actualmente exportado: tipo, hiperparámetros y métricas de validación. \\
+    RF-14 & El sistema muestra las figuras de evaluación del modelo exportado (matriz de confusión, curva ROC, curvas de entrenamiento DL, importancia de features cuando aplica). \\
+    RF-15 & El sistema permite seleccionar entre el mejor modelo ML exportado (\texttt{ml\_best}) y el mejor modelo DL exportado (\texttt{dl\_best}). \\
+    RF-16 & El sistema valida un CSV de paciente individual antes de ejecutar la predicción, comprobando compatibilidad con el modelo seleccionado. \\
+    RF-17 & El sistema predice la clase (ADHD / Control) de un paciente nuevo a partir de su CSV, devolviendo la decisión final y el score asociado. \\
+    RF-18 & El sistema muestra la distribución de epochs predichas por clase para el paciente analizado. \\
+    RF-19 & El sistema persiste cada entrenamiento ejecutado en la base de datos, registrando dataset asociado, modelo, parámetros utilizados y métricas obtenidas (agregadas y por fold). \\
+    RF-20 & El sistema deduplica los datasets persistidos mediante un \emph{hash} SHA-256 del contenido, evitando duplicar metadatos cuando el mismo CSV se utiliza en varios experimentos. \\
+    RF-21 & El sistema permite consultar el listado paginado de experimentos persistidos, con filtros opcionales por tipo de modelo (ML / DL) y nombre de modelo. \\
+    RF-22 & El sistema permite consultar el detalle completo de un experimento concreto, incluyendo todos sus parámetros, métricas, matriz de confusión y resultados por fold. \\
+}
+
+\subsection{Requisitos no funcionales}
+
+\tablaSinColores{Catálogo de requisitos no funcionales.}{p{1.5cm} p{3cm} p{9cm}}{3}{rnf-catalogo}{
+    \textbf{ID} & \textbf{Categoría} & \textbf{Descripción} \\
+}{
+    RNF-01 & Disponibilidad & La aplicación se despliega de forma reproducible mediante Docker Compose con servicios para backend, frontend y PostgreSQL. \\
+    RNF-02 & Portabilidad & La aplicación funciona en Windows, Linux y macOS gracias a la contenerización con Docker. \\
+    RNF-03 & Mantenibilidad & El código Python sigue PEP 8, validado automáticamente con \texttt{ruff}. El código JavaScript sigue las reglas de ESLint. \\
+    RNF-04 & Calidad & El proyecto se evalúa con SonarCloud y mantiene el Quality Gate en estado verde. \\
+    RNF-05 & Pruebas & El backend dispone de tests automatizados con \texttt{pytest}, organizados en tests unitarios y de integración. La cobertura se reporta a SonarCloud. \\
+    RNF-06 & Integración continua & Cada push y pull request sobre \texttt{main} lanza un pipeline de GitHub Actions con lint, tests y análisis estático. \\
+    RNF-07 & Rigor metodológico & La validación de modelos se realiza siempre \emph{cross-subject} mediante \texttt{StratifiedGroupKFold} para evitar fuga de información entre pacientes. \\
+    RNF-08 & Trazabilidad & Cada experimento ejecutado queda registrado en la base de datos con suficientes metadatos para reproducir el entrenamiento y comparar resultados. \\
+    RNF-09 & Documentación & El sistema dispone de README, manual de usuario y manual del programador (en anexos), y documentación interna de funciones públicas. \\
+    RNF-10 & Usabilidad & La interfaz se organiza en cinco pestañas (Modelo, Dataset, Entrenamiento, Experimentos, Predicción) con un flujo guiado de izquierda a derecha. \\
+    RNF-11 & Robustez & Los endpoints validan los datos de entrada con Pydantic y devuelven códigos HTTP semánticos: 400 (validación), 404 (no encontrado), 500 (error interno). \\
+    RNF-12 & Licencia & El sistema se distribuye bajo licencia MIT, compatible con todas sus 30 dependencias directas. \\
+    RNF-13 & Persistencia & El histórico de experimentos se almacena en PostgreSQL 16 mediante SQLAlchemy 2.0 con migraciones gestionadas por Alembic. \\
+    RNF-14 & Seguridad & El contenedor del backend ejecuta los procesos con un usuario sin privilegios. Las credenciales de la base de datos se inyectan vía variables de entorno. \\
+}
+
+\section{Especificación de requisitos}
+
+A continuación se detalla cada uno de los \textbf{17 casos de uso} del sistema. Los casos de uso se agrupan conceptualmente en las cinco pestañas funcionales de la interfaz: \emph{Modelo}, \emph{Dataset}, \emph{Entrenamiento}, \emph{Experimentos} y \emph{Predicción}.
+
+% Cuando tengas el diagrama de casos de uso renderizado, descomenta la
+% siguiente línea y asegúrate de colocar el fichero en img/diagrama_cu.png.
+%\imagen{diagrama_cu}{Diagrama general de casos de uso del sistema.}
+
+% CU-01 Consultar información del modelo activo
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-01}    & \textbf{Consultar información del modelo activo}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-13 \\
+		\textbf{Descripción}          & El usuario consulta el tipo, hiperparámetros y métricas del modelo actualmente exportado. \\
+		\textbf{Precondición}         & Existe al menos un modelo exportado en el sistema. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario accede a la pestaña ``Modelo''.
+			\item El sistema solicita la información del modelo y sus figuras al backend.
+			\item El sistema muestra los metadatos y métricas del modelo activo.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario dispone de la información detallada del modelo activo. \\
+		\textbf{Excepciones}          & Si no hay modelo exportado, el sistema muestra un aviso informativo. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-01 Consultar información del modelo activo.}
+\end{table}
+
+% CU-02 Cambiar el modelo seleccionado
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-02}    & \textbf{Cambiar el modelo seleccionado}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-15 \\
+		\textbf{Descripción}          & El usuario cambia entre el mejor modelo ML (\texttt{ml\_best}) y el mejor modelo DL (\texttt{dl\_best}). \\
+		\textbf{Precondición}         & Existen ambos modelos exportados. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario abre el selector de modelo.
+			\item El usuario elige una de las opciones disponibles.
+			\item El sistema recarga la información del modelo seleccionado.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El modelo seleccionado se aplica a las predicciones posteriores. \\
+		\textbf{Excepciones}          & Si el modelo elegido no existe, el sistema devuelve error 404 con mensaje al usuario. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-02 Cambiar el modelo seleccionado.}
+\end{table}
+
+% CU-03 Consultar figuras de evaluación del modelo
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-03}    & \textbf{Consultar figuras de evaluación del modelo}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-14 \\
+		\textbf{Descripción}          & El usuario visualiza las figuras generadas durante la evaluación del modelo (matriz de confusión, ROC, curvas de entrenamiento, importancia de features). \\
+		\textbf{Precondición}         & El modelo seleccionado tiene figuras asociadas exportadas. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El sistema recupera la lista de figuras del modelo seleccionado.
+			\item El frontend renderiza las figuras embebidas.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario observa las figuras de evaluación del modelo. \\
+		\textbf{Excepciones}          & Si no hay figuras asociadas, se muestra un mensaje vacío informativo. \\
+		\textbf{Importancia}          & Baja \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-03 Consultar figuras de evaluación del modelo.}
+\end{table}
+
+% CU-04 Cargar dataset de entrenamiento
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-04}    & \textbf{Cargar dataset de entrenamiento}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-01 \\
+		\textbf{Descripción}          & El usuario sube un CSV con datos EEG multipaciente para usarlo como dataset de entrenamiento. \\
+		\textbf{Precondición}         & El usuario dispone de un CSV en el formato esperado. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario selecciona un archivo en la pestaña ``Dataset entrenamiento''.
+			\item El frontend retiene el archivo en memoria para procesamientos posteriores.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El archivo queda disponible para análisis y entrenamiento. \\
+		\textbf{Excepciones}          & Si el archivo no es un CSV válido, el frontend rechaza la selección. \\
+		\textbf{Importancia}          & Alta \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-04 Cargar dataset de entrenamiento.}
+\end{table}
+
+% CU-05 Analizar estadísticas del dataset
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-05}    & \textbf{Analizar estadísticas del dataset}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-02, RF-03 \\
+		\textbf{Descripción}          & El usuario solicita el cálculo de estadísticas exploratorias del dataset cargado. \\
+		\textbf{Precondición}         & El usuario ha cargado un CSV mediante el CU-04. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario pulsa ``Analizar''.
+			\item El frontend envía el CSV al endpoint de análisis.
+			\item El sistema valida el CSV y devuelve número de filas, columnas, canales, sujetos únicos y distribución de clases.
+			\item El frontend renderiza las estadísticas.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario conoce las características del dataset cargado. \\
+		\textbf{Excepciones}          & Si el CSV está mal formado, el sistema responde 400 con detalle del error. \\
+		\textbf{Importancia}          & Alta \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-05 Analizar estadísticas del dataset.}
+\end{table}
+
+% CU-06 Filtrar pacientes por clase
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-06}    & \textbf{Filtrar pacientes por clase}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-04 \\
+		\textbf{Descripción}          & El usuario filtra la lista de pacientes mostrada según la clase asignada (ADHD o Control). \\
+		\textbf{Precondición}         & Las estadísticas del dataset están cargadas (CU-05 completado). \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario selecciona una clase en el filtro.
+			\item El frontend recalcula la lista visible de pacientes.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & La interfaz muestra únicamente los pacientes de la clase elegida. \\
+		\textbf{Excepciones}          & Ninguna. \\
+		\textbf{Importancia}          & Baja \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-06 Filtrar pacientes por clase.}
+\end{table}
+
+% CU-07 Configurar parámetros EEG
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-07}    & \textbf{Configurar parámetros EEG}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-07 \\
+		\textbf{Descripción}          & El usuario ajusta los parámetros de procesado de la señal EEG: longitud de ventana, solape, frecuencia de muestreo y bandas. \\
+		\textbf{Precondición}         & El usuario está en la pestaña ``Entrenamiento''. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario modifica los controles del panel de parámetros EEG.
+			\item Los valores se almacenan en el estado local del frontend hasta el lanzamiento del entrenamiento.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & La configuración EEG queda lista para el entrenamiento. \\
+		\textbf{Excepciones}          & Ninguna. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-07 Configurar parámetros EEG.}
+\end{table}
+
+% CU-08 Configurar hiperparámetros del modelo
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-08}    & \textbf{Configurar hiperparámetros del modelo}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-05, RF-06, RF-08 \\
+		\textbf{Descripción}          & El usuario elige el modelo a entrenar y ajusta sus hiperparámetros específicos. \\
+		\textbf{Precondición}         & El catálogo de modelos está cargado. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario elige el tipo de modelo (ML o DL) y el nombre del modelo.
+			\item El usuario ajusta los hiperparámetros mostrados en el panel del modelo.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & La configuración del modelo queda lista para el entrenamiento. \\
+		\textbf{Excepciones}          & Ninguna. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-08 Configurar hiperparámetros del modelo.}
+\end{table}
+
+% CU-09 Configurar parámetros de entrenamiento
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-09}    & \textbf{Configurar parámetros de entrenamiento}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-09 \\
+		\textbf{Descripción}          & El usuario ajusta los parámetros del entrenamiento (folds, batch size, épocas, etc.). \\
+		\textbf{Precondición}         & El usuario está en la pestaña ``Entrenamiento''. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario modifica los controles del panel de entrenamiento.
+			\item Los valores se almacenan en el estado local.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & La configuración del entrenamiento queda lista. \\
+		\textbf{Excepciones}          & Ninguna. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-09 Configurar parámetros de entrenamiento.}
+\end{table}
+
+% CU-10 Ejecutar entrenamiento cross-subject
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-10}    & \textbf{Ejecutar entrenamiento cross-subject}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-10, RF-11, RF-19, RF-20 \\
+		\textbf{Descripción}          & El usuario lanza un entrenamiento que aplica validación cruzada \emph{cross-subject} sobre el dataset y los parámetros seleccionados. El resultado se persiste en la base de datos. \\
+		\textbf{Precondición}         & Se han realizado los CU-04, CU-07, CU-08 y CU-09. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario pulsa ``Entrenar''.
+			\item El frontend bloquea la navegación e impide recargas.
+			\item El frontend envía la petición al backend con el CSV y los parámetros.
+			\item El sistema ejecuta \texttt{StratifiedGroupKFold} y entrena el modelo por cada fold.
+			\item El sistema persiste el experimento, los metadatos del dataset y las métricas por fold en la base de datos.
+			\item El sistema devuelve métricas agregadas y por fold al frontend.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El sistema ha generado un resultado de entrenamiento y un registro persistente en la base de datos. \\
+		\textbf{Excepciones}          & Si los parámetros son inválidos, 400. Si se produce un error durante el entrenamiento, 500 con mensaje. \\
+		\textbf{Importancia}          & Alta \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-10 Ejecutar entrenamiento cross-subject.}
+\end{table}
+
+% CU-11 Consultar resultados del entrenamiento
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-11}    & \textbf{Consultar resultados del entrenamiento}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-12 \\
+		\textbf{Descripción}          & El usuario revisa las métricas resultantes del entrenamiento ejecutado. \\
+		\textbf{Precondición}         & El entrenamiento del CU-10 ha finalizado correctamente. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El frontend muestra el panel de resultados con métricas agregadas (accuracy, balanced accuracy, precision, recall, F1, ROC-AUC), matriz de confusión y resultados por fold.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario dispone de la evaluación cuantitativa del modelo entrenado. \\
+		\textbf{Excepciones}          & Ninguna. \\
+		\textbf{Importancia}          & Alta \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-11 Consultar resultados del entrenamiento.}
+\end{table}
+
+% CU-12 Listar experimentos persistidos
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-12}    & \textbf{Listar experimentos persistidos}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-21 \\
+		\textbf{Descripción}          & El usuario consulta el listado paginado de experimentos almacenados en la base de datos. \\
+		\textbf{Precondición}         & El sistema tiene al menos un experimento registrado. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario accede a la pestaña ``Experimentos''.
+			\item El frontend solicita el listado de experimentos paginado.
+			\item El sistema devuelve los metadatos resumidos de cada experimento.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario ve la lista de experimentos disponibles. \\
+		\textbf{Excepciones}          & Si no hay experimentos registrados, la lista se muestra vacía con un mensaje informativo. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-12 Listar experimentos persistidos.}
+\end{table}
+
+% CU-13 Filtrar experimentos por modelo
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-13}    & \textbf{Filtrar experimentos por modelo}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-21 \\
+		\textbf{Descripción}          & El usuario filtra el listado de experimentos por tipo de modelo (ML/DL) o por nombre de modelo concreto. \\
+		\textbf{Precondición}         & Se está consultando el listado de experimentos (CU-12). \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario selecciona un filtro de tipo o nombre de modelo.
+			\item El frontend solicita el listado filtrado al backend.
+			\item El sistema devuelve el listado que coincide con el filtro.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario ve solo los experimentos que coinciden con el filtro. \\
+		\textbf{Excepciones}          & Ninguna. \\
+		\textbf{Importancia}          & Baja \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-13 Filtrar experimentos por modelo.}
+\end{table}
+
+% CU-14 Consultar detalle de un experimento
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-14}    & \textbf{Consultar detalle de un experimento}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-22 \\
+		\textbf{Descripción}          & El usuario consulta el detalle completo de un experimento: parámetros, métricas agregadas, matriz de confusión y resultados por fold. \\
+		\textbf{Precondición}         & El experimento existe en la base de datos. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario selecciona un experimento de la lista.
+			\item El frontend solicita el detalle del experimento.
+			\item El sistema devuelve el detalle completo del experimento.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario dispone de toda la información del experimento. \\
+		\textbf{Excepciones}          & Si el experimento no existe, el sistema devuelve 404 con mensaje. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-14 Consultar detalle de un experimento.}
+\end{table}
+
+% CU-15 Validar CSV de paciente
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-15}    & \textbf{Validar CSV de paciente}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-16 \\
+		\textbf{Descripción}          & El usuario sube el CSV de un paciente individual y el sistema valida que es compatible con el modelo seleccionado. \\
+		\textbf{Precondición}         & Existe un modelo seleccionado (CU-02). \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario selecciona el archivo en la pestaña ``Predicción''.
+			\item El frontend envía el CSV y el identificador del modelo al backend.
+			\item El sistema verifica cabeceras, canales y dimensiones.
+			\item El sistema devuelve el resultado de la validación.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario sabe si el archivo es apto para predicción. \\
+		\textbf{Excepciones}          & Si el CSV es incompatible con el modelo, 400 con detalle del error. \\
+		\textbf{Importancia}          & Alta \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-15 Validar CSV de paciente.}
+\end{table}
+
+% CU-16 Ejecutar predicción
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-16}    & \textbf{Ejecutar predicción}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-17 \\
+		\textbf{Descripción}          & El usuario solicita la predicción de la clase del paciente cuyo CSV ha sido validado. \\
+		\textbf{Precondición}         & El CU-15 ha finalizado correctamente. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El usuario pulsa ``Predecir''.
+			\item El frontend envía el CSV y el identificador del modelo al backend.
+			\item El sistema epocha la señal, ejecuta el modelo y agrega los votos por epoch.
+			\item El sistema devuelve la clase final, el score y la distribución de epochs por clase.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario obtiene la clasificación del paciente. \\
+		\textbf{Excepciones}          & Si se produce un error de procesado, 400 con detalle. \\
+		\textbf{Importancia}          & Alta \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-16 Ejecutar predicción.}
+\end{table}
+
+% CU-17 Visualizar distribución de epochs
+\begin{table}[p]
+	\centering
+	\begin{tabularx}{\linewidth}{ p{0.24\columnwidth} X }
+		\toprule
+		\textbf{CU-17}    & \textbf{Visualizar distribución de epochs}\\
+		\toprule
+		\textbf{Versión}              & 1.0 \\
+		\textbf{Autor}                & Adrián Jiménez García \\
+		\textbf{Requisitos asociados} & RF-18 \\
+		\textbf{Descripción}          & El usuario observa gráficamente cuántas ventanas (epochs) del paciente se han clasificado en cada clase, aportando contexto sobre la confianza de la decisión final. \\
+		\textbf{Precondición}         & El CU-16 ha finalizado correctamente. \\
+		\textbf{Acciones}             &
+		\begin{enumerate}
+			\def\labelenumi{\arabic{enumi}.}
+			\tightlist
+			\item El frontend recibe los datos del reparto de epochs.
+			\item El frontend renderiza la gráfica de barras con \texttt{recharts}.
+		\end{enumerate}\\
+		\textbf{Postcondición}        & El usuario interpreta el grado de unanimidad de la predicción. \\
+		\textbf{Excepciones}          & Ninguna. \\
+		\textbf{Importancia}          & Media \\
+		\bottomrule
+	\end{tabularx}
+	\caption{CU-17 Visualizar distribución de epochs.}
+\end{table}

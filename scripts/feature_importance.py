@@ -78,6 +78,7 @@ DEFAULT_TEST_SIZE = 0.2
 
 
 def parse_args():
+    """Parse CLI options for held-out permutation importance analysis."""
     parser = argparse.ArgumentParser(description="Calcula importancia de features por permutacion.")
     parser.add_argument("--test-size", type=float, default=DEFAULT_TEST_SIZE,
                         help="Proporcion de pacientes en el test held-out (default 0.2).")
@@ -95,12 +96,14 @@ def parse_args():
 
 
 def load_json(path):
+    """Load a JSON artifact, raising a clear error if it has not been exported."""
     if not path.exists():
         raise FileNotFoundError(f"No existe {path}. Ejecuta scripts/export_model.py primero.")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def stratified_subsample(X, y, sample_size):
+    """Return a stratified subset of epochs to speed up permutation importance."""
     if sample_size <= 0 or len(X) <= sample_size:
         return X.reset_index(drop=True), np.asarray(y).astype(int)
 
@@ -116,6 +119,7 @@ def stratified_subsample(X, y, sample_size):
 
 
 def aggregate_by_channel(importance_df, channels):
+    """Aggregate feature-level importances by EEG channel prefix."""
     rows = []
     for channel in channels:
         prefix = f"{channel}_"
@@ -129,6 +133,7 @@ def aggregate_by_channel(importance_df, channels):
 
 
 def main():
+    """Compute held-out permutation importance tables and figures."""
     args = parse_args()
 
     if not MODEL_PATH.exists():

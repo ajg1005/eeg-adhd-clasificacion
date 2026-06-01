@@ -1,8 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+
+def _utcnow() -> datetime:
+    # Columna DateTime sin timezone -> guardamos UTC naive para evitar warnings.
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Base(DeclarativeBase):
@@ -10,6 +15,8 @@ class Base(DeclarativeBase):
 
 
 class Dataset(Base):
+    """Uploaded EEG dataset identified by a content hash and summary metadata."""
+
     __tablename__ = "datasets"
     __table_args__ = (UniqueConstraint("dataset_hash", name="uq_datasets_hash"),)
 
@@ -21,7 +28,7 @@ class Dataset(Base):
     n_subjects: Mapped[int] = mapped_column(Integer, nullable=False)
     class_distribution: Mapped[dict[str, int]] = mapped_column(JSON, nullable=False)
     eeg_columns: Mapped[list[str]] = mapped_column(JSON, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
 
     experiments: Mapped[list["Experiment"]] = relationship(
         back_populates="dataset",
@@ -30,10 +37,12 @@ class Dataset(Base):
 
 
 class Experiment(Base):
+    """Training run persisted with configuration, aggregate metrics and reports."""
+
     __tablename__ = "experiments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
     dataset_id: Mapped[int] = mapped_column(ForeignKey("datasets.id"), nullable=False, index=True)
     model_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     model_name: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
@@ -58,6 +67,8 @@ class Experiment(Base):
 
 
 class ExperimentFold(Base):
+    """Per-fold metrics generated during cross-subject model evaluation."""
+
     __tablename__ = "experiment_folds"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

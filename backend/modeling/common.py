@@ -1,3 +1,4 @@
+from backend.constants import CLASS_TO_LABEL
 from scripts.epochs import create_epochs
 from scripts.feature_pipeline import align_feature_columns, build_features_from_config
 from scripts.preprocessing import preprocess_dataset
@@ -6,14 +7,10 @@ from scripts.validators import validate_eeg_dataframe  # noqa: F401  re-exportad
 
 
 def map_prediction_label(prediction):
-    mapping = {
-        "0": "Control",
-        "1": "ADHD",
-        0: "Control",
-        1: "ADHD",
-    }
-
-    return mapping.get(prediction, str(prediction))
+    try:
+        return CLASS_TO_LABEL[int(prediction)]
+    except (TypeError, ValueError, KeyError):
+        return str(prediction)
 
 
 def prepare_features_from_dataframe(df, metadata, feature_columns):

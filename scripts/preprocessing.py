@@ -1,3 +1,5 @@
+"""Validation and cleaning steps applied before EEG epoch generation."""
+
 import pandas as pd
 
 try:

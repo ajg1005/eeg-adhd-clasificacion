@@ -1,3 +1,5 @@
+"""Central registry of classical ML model specifications and defaults."""
+
 from typing import Any
 
 

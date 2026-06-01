@@ -1,3 +1,5 @@
+"""Temporal feature extraction for each EEG epoch and channel."""
+
 import numpy as np
 import pandas as pd
 

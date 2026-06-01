@@ -1,3 +1,5 @@
+"""Epoch segmentation utilities for subject-level EEG windows."""
+
 import numpy as np
 
 

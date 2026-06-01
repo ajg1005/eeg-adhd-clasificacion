@@ -1,3 +1,5 @@
+"""Plotting helpers for confusion matrices, ROC curves and metric bars."""
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt

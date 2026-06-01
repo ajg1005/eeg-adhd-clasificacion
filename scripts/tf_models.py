@@ -1,3 +1,5 @@
+"""TensorFlow/Keras architectures evaluated in the DL experiments."""
+
 import keras
 from keras import layers, regularizers
 

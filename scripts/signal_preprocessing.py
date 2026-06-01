@@ -1,3 +1,5 @@
+"""Signal-level preprocessing helpers for filtering and subject z-score."""
+
 import pandas as pd
 from scipy.signal import butter, filtfilt
 

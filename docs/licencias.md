@@ -27,6 +27,19 @@ redistribución (incluso comercial) siempre que se mantenga el aviso de copyrigh
 | python-multipart  | 0.0.20   | Apache 2.0                          | Sí                 |
 | xgboost           | 2.1.3    | Apache 2.0                          | Sí                 |
 | tensorflow        | 2.21.0   | Apache 2.0                          | Sí                 |
+| SQLAlchemy        | 2.0.36   | MIT                                 | Sí                 |
+| alembic           | 1.14.0   | MIT                                 | Sí                 |
+| psycopg[binary]   | 3.2.3    | LGPL-3.0-or-later                   | Sí (ver nota)      |
+
+> **Nota sobre psycopg.** psycopg 3 se distribuye bajo licencia
+> **LGPL-3.0-or-later**, una licencia *copyleft débil*. Su uso como librería
+> importada por una aplicación Python (linking dinámico) es compatible con
+> licencias permisivas como MIT, siempre que el usuario final pueda sustituir
+> la versión de psycopg utilizada. En este proyecto la librería se importa
+> como dependencia externa a través de `pip` sin que se modifique su código
+> fuente, por lo que **no se aplica el efecto copyleft** sobre el código
+> propio del TFG. El requisito práctico es mencionar el uso de psycopg y su
+> licencia en la documentación, cosa que se hace en esta tabla.
 
 ### Backend — Desarrollo (`requirements-dev.txt`)
 
@@ -61,35 +74,48 @@ redistribución (incluso comercial) siempre que se mantenga el aviso de copyrigh
 
 ## Resumen por familia de licencia
 
-| Familia de licencia | Nº de dependencias | Compatibilidad con MIT |
-|---------------------|--------------------|------------------------|
-| MIT                 | 17                 | Total                  |
-| BSD-3-Clause        | 7                  | Total                  |
-| Apache 2.0          | 3                  | Total                  |
-| **TOTAL**           | **27**             | **100% compatibles**   |
+| Familia de licencia   | Nº de dependencias | Compatibilidad con MIT  |
+|-----------------------|--------------------|-------------------------|
+| MIT                   | 19                 | Total                   |
+| BSD-3-Clause          | 7                  | Total                   |
+| Apache 2.0            | 3                  | Total                   |
+| LGPL-3.0-or-later     | 1                  | Total (uso como lib)    |
+| **TOTAL**             | **30**             | **100% compatibles**    |
 
 ## Conclusiones
 
 El proyecto se distribuye bajo licencia MIT. Se ha verificado la compatibilidad
-de las 27 dependencias utilizadas (11 de backend en producción, 4 de
+de las 30 dependencias directas utilizadas (14 de backend en producción, 4 de
 desarrollo, 3 de frontend en producción y 9 de desarrollo), comprobando que
-todas ellas se distribuyen bajo licencias permisivas (MIT, BSD-3-Clause o
-Apache 2.0). Ninguna de las dependencias está sujeta a licencias copyleft
-(como GPL o AGPL), por lo que no existen restricciones que obliguen a
-relicenciar el código fuente del proyecto.
+todas ellas son compatibles con la licencia MIT del proyecto.
 
-La elección de MIT como licencia se justifica por los siguientes motivos:
+La distribución por familias es:
+
+- **MIT, BSD-3-Clause y Apache 2.0** (29 dependencias): licencias permisivas
+  totalmente compatibles con MIT, sin restricciones adicionales más allá de
+  mantener el aviso de copyright original.
+- **LGPL-3.0-or-later** (1 dependencia, psycopg): licencia *copyleft débil*
+  compatible cuando la librería se utiliza importada sin modificarla, como
+  es el caso de este proyecto.
+
+Ninguna dependencia exige relicenciar el código propio del proyecto bajo una
+licencia copyleft fuerte (GPL, AGPL).
+
+La elección de MIT como licencia del TFG se justifica por:
 
 1. Es una licencia permisiva ampliamente reconocida en la comunidad open source.
 2. Facilita la reutilización académica y profesional del código.
 3. Es compatible con todas las dependencias seleccionadas.
+4. Es una **licencia de software** (la guía oficial de TFG de la UBU exige
+   que la licencia del proyecto sea de software, excluyendo explícitamente
+   Creative Commons).
 
 ## Notas
 
 - Esta tabla recoge únicamente las **dependencias directas** declaradas en
-  `requirements.txt`, `requirements-dev.txt` y `frontend/package.json`. No se
-  incluyen dependencias transitivas (paquetes instalados como dependencia de
-  otra dependencia).
+  `requirements.txt`, `requirements-dev.txt` y `frontend/package.json`. No
+  se incluyen dependencias transitivas (paquetes instalados como dependencia
+  de otra dependencia).
 - Para una auditoría exhaustiva incluyendo dependencias transitivas pueden
   utilizarse herramientas automatizadas como `pip-licenses` (Python) o
   `license-checker` (npm).

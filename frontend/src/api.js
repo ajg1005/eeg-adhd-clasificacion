@@ -106,7 +106,7 @@ export async function getExperiments() {
   const response = await fetch(`${API_BASE_URL}/experiments`);
 
   if (!response.ok) {
-    throw new Error("No se pudo cargar el historial de experimentos");
+    throw new Error(await readError(response, "No se pudo cargar el historial de experimentos"));
   }
 
   const data = await response.json();

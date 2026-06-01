@@ -15,12 +15,11 @@ export function ExperimentsView() {
   const [experiments, setExperiments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [selectedExperiment, setSelectedExperiment] = useState(null);
-  const [loadingList, setLoadingList] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState("");
 
   const loadExperiments = useCallback(async () => {
-    await Promise.resolve();
     setLoadingList(true);
     setError("");
 
@@ -36,9 +35,34 @@ export function ExperimentsView() {
   }, []);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(loadExperiments, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, [loadExperiments]);
+    let mounted = true;
+
+    async function loadInitialExperiments() {
+      try {
+        const items = await getExperiments();
+        if (!mounted) {
+          return;
+        }
+
+        setExperiments(items);
+        setSelectedId((current) => current ?? items[0]?.id ?? null);
+      } catch (err) {
+        if (mounted) {
+          setError(err.message);
+        }
+      } finally {
+        if (mounted) {
+          setLoadingList(false);
+        }
+      }
+    }
+
+    loadInitialExperiments();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedId) {
@@ -46,7 +70,6 @@ export function ExperimentsView() {
     }
 
     async function loadDetail() {
-      await Promise.resolve();
       setLoadingDetail(true);
       setError("");
 

@@ -1,4 +1,6 @@
-﻿import numpy as np
+﻿"""Spectral EEG feature extraction based on Welch power estimates."""
+
+import numpy as np
 import pandas as pd
 from scipy.signal import welch
 

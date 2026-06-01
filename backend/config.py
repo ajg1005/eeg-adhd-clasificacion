@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import quote
 import os
 
 
@@ -12,11 +13,11 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     pg_pass = os.getenv("POSTGRES_PASSWORD")
     if pg_pass:
-        pg_user = os.getenv("POSTGRES_USER", "eeg_app")
+        pg_user = quote(os.getenv("POSTGRES_USER", "eeg_app"), safe="")
         pg_host = os.getenv("POSTGRES_HOST", "localhost")
         pg_port = os.getenv("POSTGRES_PORT", "5432")
         pg_db = os.getenv("POSTGRES_DB", "eeg_adhd")
-        DATABASE_URL = f"postgresql+psycopg://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{pg_db}"
+        DATABASE_URL = f"postgresql+psycopg://{pg_user}:{quote(pg_pass, safe='')}@{pg_host}:{pg_port}/{pg_db}"
     else:
         DATABASE_URL = f"sqlite:///{(BASE_DIR / 'experiments.db').as_posix()}"
 

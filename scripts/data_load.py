@@ -1,3 +1,5 @@
+"""Dataset loading helpers for the offline EEG research pipeline."""
+
 from pathlib import Path
 import pandas as pd
 # Cargar el dataset 

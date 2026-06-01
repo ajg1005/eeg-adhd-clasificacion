@@ -27,8 +27,9 @@ export function useInferenceController() {
   const [loadingPrediction, setLoadingPrediction] = useState(false);
   const [modelFigures, setModelFigures] = useState([]);
 
+  // Datos estaticos del backend: solo se cargan al montar el hook.
   useEffect(() => {
-    async function loadInitialData() {
+    async function loadStaticData() {
       try {
         await getHealth();
         setApiStatus("ok");
@@ -38,19 +39,30 @@ export function useInferenceController() {
 
         const catalog = await getModelCatalog();
         setModelCatalog(catalog);
-
-        const info = await getModelInfo(selectedModelId);
-        setModelInfo(info);
-
-        const figures = await getModelFigures(selectedModelId);
-        setModelFigures(figures);
       } catch (err) {
         setApiStatus("error");
         setError(err.message);
       }
     }
 
-    loadInitialData();
+    loadStaticData();
+  }, []);
+
+  // Info y figuras del modelo: se recargan cada vez que cambia el seleccionado.
+  useEffect(() => {
+    async function loadModelData() {
+      try {
+        const info = await getModelInfo(selectedModelId);
+        setModelInfo(info);
+
+        const figures = await getModelFigures(selectedModelId);
+        setModelFigures(figures);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    loadModelData();
   }, [selectedModelId]);
 
   async function revalidateFile(modelId, fileToValidate) {

@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import clone
 from sklearn.inspection import permutation_importance
+from sklearn.utils.class_weight import compute_class_weight, compute_sample_weight
 
 from backend.constants import CLASS_TO_LABEL
 from backend.modeling.dl_factory import create_dl_model, create_early_stopping
@@ -29,6 +30,7 @@ FEATURE_IMPORTANCE_SCORING = "f1_weighted"
 
 
 def patient_results(groups: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray) -> list[dict[str, Any]]:
+    """Aggregate epoch-level predictions into per-patient training results."""
     rows = []
     result_df = pd.DataFrame({"patient_id": groups, "true": y_true, "pred": y_pred})
 
@@ -57,6 +59,7 @@ def run_ml_cross_subject_cv(
     eeg_params: dict[str, Any],
     prepared: PreparedEpochs,
 ) -> dict[str, Any]:
+    """Evaluate a machine-learning model with cross-subject validation folds."""
     features = features_for_mode(prepared.x_epochs, prepared.eeg_columns, eeg_params)
     n_splits = n_splits_for_groups(prepared.y_epochs, prepared.groups_epochs)
     cv_splits = make_group_kfold_splits(features, prepared.y_epochs, prepared.groups_epochs, n_splits=n_splits)
@@ -70,7 +73,14 @@ def run_ml_cross_subject_cv(
 
     for split_data in cv_splits:
         fitted_model = clone(base_model)
-        fitted_model.fit(split_data["X_train"], split_data["y_train"])
+        # XGBoost no soporta class_weight nativo: balanceamos via sample_weight por fold.
+        # Los demas modelos (LogReg, SVC, RF) ya llevan class_weight="balanced" en el Pipeline.
+        fit_kwargs = {}
+        if model_name == "xgboost":
+            fit_kwargs["model__sample_weight"] = compute_sample_weight(
+                "balanced", split_data["y_train"]
+            )
+        fitted_model.fit(split_data["X_train"], split_data["y_train"], **fit_kwargs)
         y_pred = fitted_model.predict(split_data["X_test"]).astype(int)
         y_true = np.asarray(split_data["y_test"]).astype(int)
         groups_test = np.asarray(split_data["groups_test"]).astype(str)
@@ -110,6 +120,7 @@ def run_dl_cross_subject_cv(
     training_params: dict[str, Any],
     prepared: PreparedEpochs,
 ) -> dict[str, Any]:
+    """Evaluate a deep-learning model with outer subject folds and inner validation."""
     n_splits = n_splits_for_groups(prepared.y_epochs, prepared.groups_epochs)
     cv_splits = make_group_kfold_splits(
         prepared.x_epochs,
@@ -149,6 +160,15 @@ def run_dl_cross_subject_cv(
                 model_params=model_params,
                 training_params=training_params,
             )
+            # Balanceamos la loss por clase a partir de y_train del fold.
+            y_train_int = y_train.astype(int)
+            classes = np.unique(y_train_int)
+            class_weights = compute_class_weight(
+                "balanced", classes=classes, y=y_train_int
+            )
+            class_weight_dict = {
+                int(cls): float(weight) for cls, weight in zip(classes, class_weights)
+            }
             model.fit(
                 x_train,
                 y_train,
@@ -156,6 +176,7 @@ def run_dl_cross_subject_cv(
                 epochs=int(training_params.get("epochs", 40)),
                 batch_size=int(training_params.get("batch_size", 32)),
                 callbacks=_dl_callbacks(training_params),
+                class_weight=class_weight_dict,
                 verbose=0,
             )
 
