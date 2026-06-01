@@ -26,6 +26,7 @@ La aplicación se organiza en cuatro pestañas:
 - **Modelo**: información del mejor modelo exportado (ML o DL), métricas de CV y figuras de evaluación.
 - **Dataset entrenamiento**: carga un CSV con varios pacientes, muestra estadísticas (filas, columnas, clases, canales) y permite filtrar la lista de pacientes por clase.
 - **Entrenamiento**: usa el dataset cargado, configura parámetros EEG/modelo/entrenamiento y lanza un entrenamiento cross-subject con resultados detallados.
+- **Experimentos**: se guarda un historico de los entrenamientos realizados,diferentes parametros e informacion del dataset.
 - **Predicción**: sube el CSV de un paciente, se valida contra el modelo seleccionado y se obtiene la clasificación final junto con la distribución de epochs.
 
 ## Tecnologías utilizadas
@@ -37,6 +38,7 @@ La aplicación se organiza en cuatro pestañas:
 - React 19 + Vite
 - Recharts
 - Docker, Docker Compose
+- Postgress
 
 ## Estructura del proyecto
 
