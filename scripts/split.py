@@ -1,4 +1,4 @@
-"""Cross-subject split utilities that prevent patient leakage."""
+"""Splits cross-subject que evitan fuga de informacion por paciente."""
 
 from sklearn.model_selection import StratifiedGroupKFold
 

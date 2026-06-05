@@ -1,4 +1,4 @@
-﻿"""Spectral EEG feature extraction based on Welch power estimates."""
+﻿"""Caracteristicas espectrales EEG via PSD de Welch."""
 
 import numpy as np
 import pandas as pd
@@ -117,7 +117,7 @@ def extract_spectral_features(
     nperseg=128,
 ):
     """
-    Extraer features espectrales por epoch y canal:
+    Extraer caracteristicas espectrales por epoch y canal:
     - Potencia absoluta por banda
     - Potencia relativa por banda
     - Entropia espectral global

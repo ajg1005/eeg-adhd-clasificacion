@@ -13,7 +13,7 @@ MODEL_CATALOG: list[dict[str, Any]] = [
         "model_id": "random_forest",
         "display_name": "Random Forest",
         "model_family": "machine_learning",
-        "description": "Ensemble de arboles robusto para features temporales y espectrales.",
+        "description": "Ensemble de arboles robusto para caracteristicas temporales y espectrales.",
         "use_case": "Modelo clasico interpretable y estable como linea base fuerte.",
         "common_parameters": [
             {"name": "n_estimators", "default": "100", "description": "Numero de arboles."},
@@ -39,7 +39,7 @@ MODEL_CATALOG: list[dict[str, Any]] = [
         "model_id": "xgboost",
         "display_name": "XGBoost",
         "model_family": "machine_learning",
-        "description": "Boosting de arboles para capturar relaciones complejas entre features.",
+        "description": "Boosting de arboles para capturar relaciones complejas entre caracteristicas.",
         "use_case": "Modelo tabular potente para comparar con Random Forest y SVC.",
         "common_parameters": [
             {"name": "n_estimators", "default": "200", "description": "Numero de arboles secuenciales."},

@@ -16,21 +16,21 @@ router = APIRouter()
 # Listar modelos disponibles
 @router.get("/models", response_model=ModelsResponse)
 def list_available_models():
-    """Return the enabled inference models exposed in the frontend selector."""
+    """Devuelve los modelos de inferencia disponibles en el selector."""
     return {"models": list_models()}
 
 
 # Listar modelos candidatos y parametros habituales de entrenamiento
 @router.get("/model/catalog", response_model=ModelCatalogResponse)
 def model_catalog():
-    """Return trainable model families and their configurable parameters."""
+    """Devuelve familias de modelos entrenables y parametros configurables."""
     return get_training_model_catalog()
 
 
 # Devolver informacion del modelo cargado
 @router.get("/model/info", response_model=ModelInfoResponse, responses=MODEL_INFO_RESPONSES)
 def model_info(model_id: str = "ml_best"):
-    """Return metadata and validation metrics for one exported model."""
+    """Devuelve metadatos y metricas de validacion de un modelo exportado."""
     try:
         return get_model_info(model_id)
     except ValueError as exc:
@@ -41,7 +41,7 @@ def model_info(model_id: str = "ml_best"):
 
 @router.get("/model/figures", response_model=FiguresResponse, responses=NOT_FOUND_RESPONSES)
 def model_figures(model_id: str = "ml_best"):
-    """Return the available diagnostic figures associated with a model."""
+    """Devuelve las figuras de diagnostico asociadas a un modelo."""
     try:
         return {"figures": get_model_figures(model_id)}
     except ValueError as exc:

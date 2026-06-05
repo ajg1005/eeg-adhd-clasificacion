@@ -1,4 +1,4 @@
-"""TensorFlow/Keras architectures evaluated in the DL experiments."""
+"""Arquitecturas TF/Keras evaluadas en los experimentos DL."""
 
 import keras
 from keras import layers, regularizers

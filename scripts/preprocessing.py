@@ -1,4 +1,4 @@
-"""Validation and cleaning steps applied before EEG epoch generation."""
+"""Validacion y limpieza del dataset antes de segmentar en epochs."""
 
 import pandas as pd
 

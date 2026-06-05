@@ -10,33 +10,33 @@ from backend.modeling.predictors import (
 
 # Listar modelos disponibles para el selector
 def list_models() -> list[dict]:
-    """Return the exported models enabled for inference."""
+    """Devuelve los modelos exportados habilitados para inferencia."""
     return list_enabled_models()
 
 
 # Devolver modelos candidatos y parametros comunes para entrenamiento
 def get_training_model_catalog() -> dict:
-    """Return trainable model families and their default parameter grids."""
+    """Devuelve familias de modelos entrenables y sus parametros habituales."""
     return get_model_catalog()
 
 
 # Devolver informacion y metricas del modelo seleccionado
 def get_model_info(model_id: str) -> dict:
-    """Return metadata, metrics and configuration for a selected model."""
+    """Devuelve metadatos, metricas y configuracion del modelo seleccionado."""
     return get_predictor(model_id).info()
 
 
 def validate_dataframe_for_model(df: pd.DataFrame, model_id: str) -> dict:
-    """Validate a DataFrame against the selected predictor configuration."""
+    """Valida un DataFrame contra la configuracion del predictor seleccionado."""
     return get_predictor(model_id).validate(df)
 
 
 # Ejecutar inferencia con el predictor elegido
 def predict_dataframe(df: pd.DataFrame, model_id: str) -> dict:
-    """Run the selected predictor on a validated DataFrame."""
+    """Ejecuta el predictor seleccionado sobre un DataFrame validado."""
     return get_predictor(model_id).predict(df)
 
 
 def get_model_figures(model_id: str) -> list[dict]:
-    """Return static figure metadata configured for a selected model."""
+    """Devuelve las figuras configuradas para el modelo seleccionado."""
     return get_model_config(model_id).get("figures", [])

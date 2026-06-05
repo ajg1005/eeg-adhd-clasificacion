@@ -1,10 +1,4 @@
-"""Offline training pipeline for classical machine-learning EEG models.
-
-The script loads the raw ADHD EEG CSV, preprocesses it, segments the signal
-into cross-subject epochs, extracts temporal and spectral features, evaluates
-the registered ML models with StratifiedGroupKFold and stores the resulting
-CSV summaries, comparison figures and best-model configuration.
-"""
+"""Entrenamiento y evaluacion CV cross-subject de los modelos ML clasicos."""
 
 import json
 import pandas as pd
@@ -150,8 +144,8 @@ def _build_best_model_config(best_model_name, summary_df, x_features, groups_epo
             "n_features": int(x_features.shape[1]),
             "n_subjects": int(len(set(groups_epochs))),
         },
-        "training_strategy": f"{N_SPLITS}-fold StratifiedGroupKFold cross-subject CV",
-        "note": "This file is used by export_model.py to train and export the final model.",
+        "training_strategy": f"CV cross-subject StratifiedGroupKFold de {N_SPLITS} folds",
+        "note": "Este archivo lo usa export_model.py para entrenar y exportar el modelo final.",
     }
 
 
@@ -179,7 +173,6 @@ def _save_best_model_figures(best_model_name, oof_predictions):
 
 
 def main():
-    """Run the full ML cross-subject experiment and save metrics, figures and config."""
     # Cargar el dataset, limpiar y preprocesar
     df = load_dataset(CSV_PATH)
     df_clean, eeg_cols = preprocess_dataset(df)

@@ -1,4 +1,4 @@
-"""Factories that build the classical ML pipelines used in experiments."""
+"""Factories de pipelines ML clasicos usados en los experimentos."""
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression

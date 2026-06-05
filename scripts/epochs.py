@@ -1,4 +1,4 @@
-"""Epoch segmentation utilities for subject-level EEG windows."""
+"""Segmentacion de ventanas EEG por sujeto."""
 
 import numpy as np
 

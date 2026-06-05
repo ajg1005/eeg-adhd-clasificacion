@@ -30,7 +30,7 @@ FEATURE_IMPORTANCE_SCORING = "f1_weighted"
 
 
 def patient_results(groups: np.ndarray, y_true: np.ndarray, y_pred: np.ndarray) -> list[dict[str, Any]]:
-    """Aggregate epoch-level predictions into per-patient training results."""
+    """Agrega predicciones por epoch en resultados por paciente."""
     rows = []
     result_df = pd.DataFrame({"patient_id": groups, "true": y_true, "pred": y_pred})
 
@@ -59,7 +59,7 @@ def run_ml_cross_subject_cv(
     eeg_params: dict[str, Any],
     prepared: PreparedEpochs,
 ) -> dict[str, Any]:
-    """Evaluate a machine-learning model with cross-subject validation folds."""
+    """Evalua un modelo ML con folds de validacion cross-subject."""
     features = features_for_mode(prepared.x_epochs, prepared.eeg_columns, eeg_params)
     n_splits = n_splits_for_groups(prepared.y_epochs, prepared.groups_epochs)
     cv_splits = make_group_kfold_splits(features, prepared.y_epochs, prepared.groups_epochs, n_splits=n_splits)
@@ -109,7 +109,7 @@ def run_ml_cross_subject_cv(
         "y_pred": np.asarray(y_pred_all, dtype=int),
         "groups": np.asarray(groups_all, dtype=str),
         "fold_results": fold_results,
-        "evaluation_mode": f"{n_splits}-fold StratifiedGroupKFold cross-subject CV",
+        "evaluation_mode": f"CV cross-subject StratifiedGroupKFold de {n_splits} folds",
         "feature_importance": feature_importance,
     }
 
@@ -120,7 +120,7 @@ def run_dl_cross_subject_cv(
     training_params: dict[str, Any],
     prepared: PreparedEpochs,
 ) -> dict[str, Any]:
-    """Evaluate a deep-learning model with outer subject folds and inner validation."""
+    """Evalua un modelo DL con folds externos por sujeto y validacion interna."""
     n_splits = n_splits_for_groups(prepared.y_epochs, prepared.groups_epochs)
     cv_splits = make_group_kfold_splits(
         prepared.x_epochs,
@@ -205,7 +205,10 @@ def run_dl_cross_subject_cv(
         "y_pred": np.asarray(y_pred_all, dtype=int),
         "groups": np.asarray(groups_all, dtype=str),
         "fold_results": fold_results,
-        "evaluation_mode": f"{n_splits}-fold StratifiedGroupKFold cross-subject CV with inner validation",
+        "evaluation_mode": (
+            f"CV cross-subject StratifiedGroupKFold de {n_splits} folds "
+            "con validacion interna"
+        ),
     }
 
 
@@ -224,7 +227,7 @@ def _safe_feature_importance_for_fold(
             "scoring": FEATURE_IMPORTANCE_SCORING,
             "n_repeats": FEATURE_IMPORTANCE_N_REPEATS,
             "evaluated_epochs": 0,
-            "source": f"fold {fold} test set sin solape de pacientes",
+            "source": f"fold {fold}, test sin solape de pacientes",
             "top_features": [],
             "by_channel": [],
             "error": str(exc),
@@ -263,7 +266,7 @@ def _feature_importance_for_fold(
         "scoring": FEATURE_IMPORTANCE_SCORING,
         "n_repeats": FEATURE_IMPORTANCE_N_REPEATS,
         "evaluated_epochs": int(len(x_eval)),
-        "source": f"fold {fold} test set sin solape de pacientes",
+        "source": f"fold {fold}, test sin solape de pacientes",
         "top_features": _importance_rows(importance_df, FEATURE_IMPORTANCE_TOP_FEATURES),
         "by_channel": _importance_rows(
             _aggregate_importance_by_channel(importance_df, eeg_columns),

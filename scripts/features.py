@@ -1,4 +1,4 @@
-"""Temporal feature extraction for each EEG epoch and channel."""
+"""Caracteristicas temporales por epoch y canal EEG."""
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ def extract_epoch_features(x_epochs, channel_names):
     # Diccionario por ventana 
     rows = []
 
-    # Iterar por epoch guardar las features
+    # Iterar por epoch y guardar las caracteristicas
     for epoch in x_epochs:
         
         row = {}
@@ -47,7 +47,7 @@ def extract_epoch_features(x_epochs, channel_names):
             energy_val = np.sum(signal ** 2)
             rms_val = np.sqrt(np.mean(signal ** 2))
 
-            # Guardar features en diccionario con nombres
+            # Guardar caracteristicas en diccionario con nombres
             row[f"{ch}_mean"] = mean_val
             row[f"{ch}_median"] = median_val
             row[f"{ch}_std"] = std_val

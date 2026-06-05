@@ -1,4 +1,4 @@
-"""Central registry of classical ML model specifications and defaults."""
+"""Registro central de modelos ML clasicos y sus defaults."""
 
 from typing import Any
 

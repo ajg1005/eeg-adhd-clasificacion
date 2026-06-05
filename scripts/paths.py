@@ -1,5 +1,3 @@
-"""Filesystem paths shared by training, export and analysis scripts."""
-
 from pathlib import Path
 
 

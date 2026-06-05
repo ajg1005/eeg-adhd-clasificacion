@@ -21,7 +21,7 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
         "model_id": "ml_best",
         "display_name": "Mejor modelo ML",
         "model_family": "machine_learning",
-        "description": "Modelo clásico basado en features temporales y espectrales.",
+        "description": "Modelo clásico basado en caracteristicas temporales y espectrales.",
         "feature_mode": None,
         "enabled": True,
         "figures": [

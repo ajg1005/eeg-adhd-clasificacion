@@ -84,4 +84,4 @@ al arrancar si todavia no existen.
 - `python scripts/train_ml.py`: entrena y evalúa los modelos ML con CV cross-subject.
 - `python scripts/train_dl.py`: entrena y evalúa los modelos DL con CV cross-subject.
 - `python scripts/export_model.py` y `export_model_dl.py`: exportan el modelo final seleccionado.
-- `python scripts/feature_importance.py`: importancia de features con permutation_importance sobre test held-out cross-subject.
+- `python scripts/feature_importance.py`: importancia de características con permutation_importance sobre test separado cross-subject.

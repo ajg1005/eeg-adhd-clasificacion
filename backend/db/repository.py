@@ -18,7 +18,7 @@ def save_experiment(
     dataframe: pd.DataFrame,
     result: dict[str, Any],
 ):
-    """Persist a training result, its dataset fingerprint and fold metrics."""
+    """Guarda un resultado de entrenamiento, su dataset y sus metricas por fold."""
     with SessionLocal() as session:
         dataset = _get_or_create_dataset(session, file_bytes, filename, dataframe)
         experiment = _experiment_from_result(dataset.id, result)
@@ -39,7 +39,7 @@ def list_experiments(
     limit: int = 50,
     offset: int = 0,
 ):
-    """Return stored experiments ordered from newest to oldest."""
+    """Devuelve los experimentos guardados del mas reciente al mas antiguo."""
     with SessionLocal() as session:
         stmt = (
             select(Experiment)
@@ -57,7 +57,7 @@ def list_experiments(
 
 
 def get_experiment(experiment_id: int):
-    """Return one experiment with eager-loaded dataset and fold relationships."""
+    """Devuelve un experimento con su dataset y resultados por fold."""
     with SessionLocal() as session:
         return session.get(
             Experiment,

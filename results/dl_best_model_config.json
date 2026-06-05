@@ -57,6 +57,6 @@
             19
         ]
     },
-    "training_strategy": "5-fold StratifiedGroupKFold cross-subject CV with inner subject-level validation",
-    "note": "This file is used by export_model_dl.py to train and export the final DL model."
+    "training_strategy": "CV cross-subject StratifiedGroupKFold de 5 folds con validacion interna por sujeto",
+    "note": "Este archivo lo usa export_model_dl.py para entrenar y exportar el modelo DL final."
 }

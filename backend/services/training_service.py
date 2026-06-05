@@ -57,12 +57,12 @@ TRAINING_PARAMS_BY_TYPE = {
 
 
 def get_dataset_stats(file_bytes: bytes, preview_rows: int = 5) -> dict[str, Any]:
-    """Return validation-oriented statistics for an uploaded training CSV."""
+    """Devuelve estadisticas de validacion de un CSV de entrenamiento."""
     return _get_dataset_stats(file_bytes, preview_rows)
 
 
 def get_training_options() -> dict[str, Any]:
-    """Return the supported model, EEG and training parameter options."""
+    """Devuelve modelos y parametros de EEG/entrenamiento soportados."""
     return {
         "default_model_type": DEFAULT_MODEL_TYPE,
         "default_models": DEFAULT_MODELS,
@@ -100,7 +100,7 @@ def run_training(
     model_params: dict[str, Any] | None = None,
     training_params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Execute cross-subject training, persist the experiment and return metrics."""
+    """Ejecuta entrenamiento cross-subject, guarda el experimento y devuelve metricas."""
     started_at = time.perf_counter()
     eeg_params = _merge_default_eeg_params(model_type, eeg_params or {})
     model_params = model_params or {}

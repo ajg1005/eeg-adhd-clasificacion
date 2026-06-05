@@ -1,4 +1,4 @@
-"""Pipeline comun para construir y alinear features EEG."""
+"""Pipeline comun para construir y alinear caracteristicas EEG."""
 from __future__ import annotations
 
 from typing import Any, Iterable
@@ -79,7 +79,7 @@ def align_feature_columns(x_features: pd.DataFrame, feature_columns: Iterable[st
 
     if missing_features:
         preview = ", ".join(missing_features[:10])
-        raise ValueError(f"Faltan features esperadas por el modelo: {preview}")
+        raise ValueError(f"Faltan caracteristicas esperadas por el modelo: {preview}")
 
     return x_features.loc[:, expected_columns]
 

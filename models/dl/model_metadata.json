@@ -39,5 +39,5 @@
         512,
         19
     ],
-    "training_strategy": "Final DL model trained using the model selected by cross-subject cross-validation in train_dl.py."
+    "training_strategy": "Modelo DL final entrenado usando el modelo seleccionado mediante validacion cruzada cross-subject en train_dl.py."
 }

@@ -15,7 +15,7 @@ class Base(DeclarativeBase):
 
 
 class Dataset(Base):
-    """Uploaded EEG dataset identified by a content hash and summary metadata."""
+    """Dataset EEG subido, identificado por hash y metadatos resumidos."""
 
     __tablename__ = "datasets"
     __table_args__ = (UniqueConstraint("dataset_hash", name="uq_datasets_hash"),)
@@ -37,7 +37,7 @@ class Dataset(Base):
 
 
 class Experiment(Base):
-    """Training run persisted with configuration, aggregate metrics and reports."""
+    """Entrenamiento guardado con configuracion, metricas agregadas e informes."""
 
     __tablename__ = "experiments"
 
@@ -67,7 +67,7 @@ class Experiment(Base):
 
 
 class ExperimentFold(Base):
-    """Per-fold metrics generated during cross-subject model evaluation."""
+    """Metricas por fold generadas durante la evaluacion cross-subject."""
 
     __tablename__ = "experiment_folds"
 

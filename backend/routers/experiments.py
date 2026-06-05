@@ -17,7 +17,7 @@ def experiments_list(
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
-    """Return paginated training experiments, optionally filtered by model."""
+    """Devuelve experimentos paginados, opcionalmente filtrados por modelo."""
     return {
         "experiments": list_experiments(
             model_type=model_type,
@@ -34,7 +34,7 @@ def experiments_list(
     responses=NOT_FOUND_RESPONSES,
 )
 def experiment_detail(experiment_id: int):
-    """Return one stored experiment with dataset metadata and fold results."""
+    """Devuelve un experimento guardado con dataset y resultados por fold."""
     experiment = get_experiment(experiment_id)
     if experiment is None:
         raise HTTPException(status_code=404, detail="Experimento no encontrado.")

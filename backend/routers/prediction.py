@@ -17,7 +17,7 @@ async def validate_file(
     file: Annotated[UploadFile, File(...)],
     model_id: str = "ml_best",
 ):
-    """Validate an uploaded CSV against the requirements of a selected model."""
+    """Valida un CSV subido contra los requisitos del modelo seleccionado."""
     try:
         df = read_csv_upload(file)
         validation = validate_dataframe_for_model(df, model_id)
@@ -39,7 +39,7 @@ async def predict(
     file: Annotated[UploadFile, File(...)],
     model_id: str = "ml_best",
 ):
-    """Run inference on an uploaded EEG CSV using the selected exported model."""
+    """Ejecuta inferencia sobre un CSV EEG con el modelo exportado seleccionado."""
     try:
         df = read_csv_upload(file)
         return predict_dataframe(df, model_id)

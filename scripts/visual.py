@@ -1,4 +1,4 @@
-"""Plotting helpers for confusion matrices, ROC curves and metric bars."""
+"""Funciones de visualizacion (matrices de confusion, ROC, comparativas)."""
 
 from pathlib import Path
 

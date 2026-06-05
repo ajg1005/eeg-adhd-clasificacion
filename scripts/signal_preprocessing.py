@@ -1,4 +1,4 @@
-"""Signal-level preprocessing helpers for filtering and subject z-score."""
+"""Filtrado pasabanda y z-score por sujeto sobre la senal continua."""
 
 import pandas as pd
 from scipy.signal import butter, filtfilt
@@ -20,7 +20,7 @@ def apply_basic_filtering(
     highcut: float = 50.0,
 ) -> pd.DataFrame:
     """
-    Aplica filtrado pasabanda sobre la seÃ±al continua de cada sujeto.
+    Aplica filtrado pasabanda sobre la senal continua de cada sujeto.
     """
     df_filtered = df.copy()
 
@@ -46,7 +46,7 @@ def zscore_per_subject(
     subject_col: str = "ID",
 ) -> pd.DataFrame:
     """
-    Normaliza la señal continua de cada sujeto, canal a canal.
+    Normaliza la senal continua de cada sujeto, canal a canal.
     """
     df_out = df.copy()
 

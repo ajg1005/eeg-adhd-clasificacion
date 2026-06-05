@@ -33,13 +33,13 @@ def _json_dict(raw_value: str | None) -> dict[str, Any]:
 
 @router.get("/options", response_model=TrainingOptionsResponse)
 def training_options():
-    """Return model, EEG and training options accepted by the training form."""
+    """Devuelve las opciones aceptadas por el formulario de entrenamiento."""
     return get_training_options()
 
 
 @router.post("/dataset/stats", response_model=TrainingDatasetStatsResponse, responses=BAD_REQUEST_RESPONSES)
 async def training_dataset_stats(file: Annotated[UploadFile, File(...)]):
-    """Read an uploaded training CSV and return preview statistics."""
+    """Lee un CSV de entrenamiento y devuelve estadisticas de vista previa."""
     try:
         return get_dataset_stats(await file.read())
     except ValueError as exc:
@@ -55,7 +55,7 @@ async def training_run(
     model_params: Annotated[str | None, Form()] = None,
     training_params: Annotated[str | None, Form()] = None,
 ):
-    """Train and evaluate a model from an uploaded dataset and form parameters."""
+    """Entrena y evalua un modelo desde un dataset y parametros de formulario."""
     try:
         return run_training(
             file_bytes=await file.read(),
