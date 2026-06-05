@@ -50,5 +50,5 @@ def test_align_feature_columns_preserves_expected_order():
 def test_align_feature_columns_reports_missing_features():
     features = pd.DataFrame({"a": [1]})
 
-    with pytest.raises(ValueError, match="Faltan features"):
+    with pytest.raises(ValueError, match="Faltan caracteristicas"):
         align_feature_columns(features, ["a", "missing"])
