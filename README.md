@@ -38,7 +38,8 @@ La aplicación se organiza en cuatro pestañas:
 - React 19 + Vite
 - Recharts
 - Docker, Docker Compose
-- Postgress
+- PostgreSQL
+- Alembic (migraciones de esquema)
 
 ## Estructura del proyecto
 
@@ -59,15 +60,20 @@ tests/        Tests básicos con pytest
 
 ## Cómo ejecutarlo
 
-Antes del primer arranque, copia `.env.example` a `.env` y define una contraseña
-para PostgreSQL:
+El proyecto está pensado para ejecutarse **siempre con Docker Compose**, que es
+quien levanta PostgreSQL y aplica las migraciones de Alembic antes de arrancar
+la API. Ejecutar `uvicorn backend.main:app` a pelo no creará el esquema de la
+base de datos.
+
+Antes del primer arranque, copia `.env.example` a `.env` y define una
+contraseña para PostgreSQL:
 
 ```bash
 cp .env.example .env
 # edita .env y pon tu POSTGRES_PASSWORD
 ```
 
-Con Docker Compose:
+Después, levanta el stack:
 
 ```bash
 docker compose up --build
@@ -75,8 +81,9 @@ docker compose up --build
 
 Backend: http://localhost:8000 · Frontend: http://localhost:5173
 
-Docker Compose levanta tambien PostgreSQL. El backend crea las tablas necesarias
-al arrancar si todavia no existen.
+`docker compose` aplica `alembic upgrade head` antes de arrancar el backend, de
+modo que las tablas (`datasets`, `experiments`, `experiment_folds`) quedan
+creadas tras la primera ejecución.
 
 
 ## Scripts de investigación

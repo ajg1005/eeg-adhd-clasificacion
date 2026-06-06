@@ -5,6 +5,7 @@ from typing import Any
 
 import pandas as pd
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from backend.constants import normalize_class_to_label
@@ -76,11 +77,12 @@ def _get_or_create_dataset(
     dataframe: pd.DataFrame,
 ):
     dataset_hash = hashlib.sha256(file_bytes).hexdigest()
-    dataset = session.scalar(
+
+    existing = session.scalar(
         select(Dataset).where(Dataset.dataset_hash == dataset_hash)
     )
-    if dataset is not None:
-        return dataset
+    if existing is not None:
+        return existing
 
     dataset = Dataset(
         dataset_hash=dataset_hash,
@@ -92,7 +94,15 @@ def _get_or_create_dataset(
         eeg_columns=[column for column in dataframe.columns if column not in {"Class", "ID"}],
     )
     session.add(dataset)
-    session.flush()
+    try:
+        session.flush()
+    except IntegrityError:
+        # Otra peticion concurrente ya insertó el mismo dataset (mismo hash).
+        # Hacemos rollback del savepoint implicito y devolvemos el ganador.
+        session.rollback()
+        return session.scalar(
+            select(Dataset).where(Dataset.dataset_hash == dataset_hash)
+        )
     return dataset
 
 

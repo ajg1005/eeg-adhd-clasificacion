@@ -61,7 +61,9 @@ class FeatureImportanceResponse(BaseModel):
 
 
 class TrainingRunResponse(FlexibleSchema):
-    experiment_id: int
+    # experiment_id es None si la persistencia en BD fallo; las metricas siguen siendo validas.
+    experiment_id: int | None = None
+    persisted: bool = True
     accuracy: float
     precision: float
     recall: float

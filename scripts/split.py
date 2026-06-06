@@ -43,6 +43,17 @@ def make_group_shuffle_split(
         .reset_index()
     )
 
+    # Validacion previa: con muy pocos sujetos por clase, train_test_split con
+    # stratify lanza un error críptico de sklearn. Damos un mensaje útil.
+    min_per_class = int(subject_labels["label"].value_counts().min())
+    test_share = test_size if isinstance(test_size, float) else test_size / max(1, len(subject_labels))
+    if min_per_class < 2 or int(round(min_per_class * test_share)) < 1:
+        raise ValueError(
+            "No hay sujetos suficientes por clase para hacer un split cross-subject "
+            f"estratificado (mínimo por clase = {min_per_class}, test_size = {test_size}). "
+            "Sube un dataset con al menos 2 pacientes de cada clase."
+        )
+
     train_groups, test_groups = train_test_split(
         subject_labels["group"],
         test_size=test_size,
