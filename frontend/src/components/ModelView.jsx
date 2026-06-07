@@ -95,7 +95,7 @@ export function ModelView({
                 <strong>{modelInfo.model_name}</strong>
               </div>
               <div>
-                <span>Features</span>
+                <span>Características</span>
                 <strong>{modelInfo.feature_mode}</strong>
               </div>
               <div>
@@ -103,15 +103,15 @@ export function ModelView({
                 <strong>{modelInfo.sfreq} Hz</strong>
               </div>
               <div>
-                <span>Epoch size</span>
+                <span>Tamaño epoch</span>
                 <strong>{modelInfo.epoch_size}</strong>
               </div>
               <div>
-                <span>Step size</span>
+                <span>Paso epoch</span>
                 <strong>{modelInfo.step_size}</strong>
               </div>
               <div>
-                <span>N features</span>
+                <span>Nº características</span>
                 <strong>{modelInfo.n_features ?? "N/A"}</strong>
               </div>
             </div>

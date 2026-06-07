@@ -3,8 +3,7 @@ from typing import Any
 from scripts.ml_model_registry import ML_MODEL_OPTIONS, merged_ml_params
 
 
-# Wrapper UI: valida que el modelo esta expuesto en la UI, mezcla los defaults
-# del registro compartido con los params del usuario y delega en scripts.pipeline.
+# Valida el modelo solicitado y aplica sus parametros por defecto.
 def create_ml_model(model_name: str, params: dict[str, Any] | None = None):
     from scripts.pipeline import create_ml_model as _build_ml_model
 

@@ -21,12 +21,11 @@ Outputs:
 - Figuras/feature_importance_by_channel.png : importancia agregada por canal.
 
 Ejemplos:
-- python scripts/feature_importance.py --dry-run
-- python scripts/feature_importance.py --test-sample-size 100 --n-repeats 3
+- python -m scripts.feature_importance --dry-run
+- python -m scripts.feature_importance --test-sample-size 100 --n-repeats 3
 """
 import argparse
 import json
-import sys
 
 import joblib
 import matplotlib
@@ -40,37 +39,20 @@ from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split
 
 
-try:
-    from scripts.constants import RANDOM_STATE
-    from scripts.paths import (
-        CSV_PATH,
-        FIGURES_DIR,
-        ML_FEATURE_COLUMNS_PATH as FEATURE_COLUMNS_PATH,
-        ML_METADATA_PATH as METADATA_PATH,
-        ML_MODEL_PATH as MODEL_PATH,
-        RESULTS_DIR,
-        SCRIPTS_DIR,
-    )
-except ModuleNotFoundError:
-    from constants import RANDOM_STATE
-    from paths import (
-        CSV_PATH,
-        FIGURES_DIR,
-        ML_FEATURE_COLUMNS_PATH as FEATURE_COLUMNS_PATH,
-        ML_METADATA_PATH as METADATA_PATH,
-        ML_MODEL_PATH as MODEL_PATH,
-        RESULTS_DIR,
-        SCRIPTS_DIR,
-    )
-
-if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
-
-from data_load import load_dataset  # noqa: E402
-from epochs import create_epochs  # noqa: E402
-from feature_pipeline import align_feature_columns, build_features_from_config  # noqa: E402
-from preprocessing import preprocess_dataset  # noqa: E402
-from split import make_group_shuffle_split  # noqa: E402
+from scripts.constants import RANDOM_STATE
+from scripts.data_load import load_dataset
+from scripts.epochs import create_epochs
+from scripts.feature_pipeline import align_feature_columns, build_features_from_config
+from scripts.paths import (
+    CSV_PATH,
+    FIGURES_DIR,
+    ML_FEATURE_COLUMNS_PATH as FEATURE_COLUMNS_PATH,
+    ML_METADATA_PATH as METADATA_PATH,
+    ML_MODEL_PATH as MODEL_PATH,
+    RESULTS_DIR,
+)
+from scripts.preprocessing import preprocess_dataset
+from scripts.split import make_group_shuffle_split
 
 DEFAULT_TEST_SAMPLE_SIZE = 0  # 0 = usar todo el test set
 DEFAULT_N_REPEATS = 10
@@ -96,7 +78,7 @@ def parse_args():
 
 def load_json(path):
     if not path.exists():
-        raise FileNotFoundError(f"No existe {path}. Ejecuta scripts/export_model.py primero.")
+        raise FileNotFoundError(f"No existe {path}. Ejecuta python -m scripts.export_model primero.")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -132,7 +114,7 @@ def main():
     args = parse_args()
 
     if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"No existe {MODEL_PATH}. Ejecuta scripts/export_model.py primero.")
+        raise FileNotFoundError(f"No existe {MODEL_PATH}. Ejecuta python -m scripts.export_model primero.")
 
     print("Cargando modelo, metadata y dataset...")
     pipeline = joblib.load(MODEL_PATH)

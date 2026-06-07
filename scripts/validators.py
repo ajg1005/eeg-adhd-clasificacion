@@ -10,10 +10,7 @@ from typing import Iterable
 
 import pandas as pd
 
-try:
-    from scripts.constants import REQUIRED_EEG_COLUMNS, normalize_class_to_int
-except ModuleNotFoundError:
-    from constants import REQUIRED_EEG_COLUMNS, normalize_class_to_int
+from scripts.constants import REQUIRED_EEG_COLUMNS, normalize_class_to_int
 
 
 # Comprueba que el DataFrame contiene los canales EEG esperados y que son numéricos.

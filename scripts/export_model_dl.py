@@ -7,11 +7,11 @@ import numpy as np
 import tensorflow as tf
 from sklearn.metrics import accuracy_score, balanced_accuracy_score, f1_score
 
-from constants import RANDOM_STATE
-from data_load import load_dataset
-from epochs import create_epochs
-from preprocessing import preprocess_dataset
-from paths import (
+from scripts.constants import RANDOM_STATE
+from scripts.data_load import load_dataset
+from scripts.epochs import create_epochs
+from scripts.preprocessing import preprocess_dataset
+from scripts.paths import (
     CSV_PATH,
     DL_BEST_CONFIG_PATH as CONFIG_PATH,
     DL_METADATA_PATH as METADATA_PATH,
@@ -19,9 +19,9 @@ from paths import (
     DL_MODEL_PATH as MODEL_PATH,
     DL_MODELS_DIR as MODELS_DIR,
 )
-from signal_preprocessing import apply_basic_filtering, zscore_per_subject
-from split import make_group_shuffle_split
-from tf_models import build_model
+from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
+from scripts.split import make_group_shuffle_split
+from scripts.tf_models import build_model
 
 
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
@@ -30,7 +30,7 @@ MODELS_DIR.mkdir(parents=True, exist_ok=True)
 def load_config():
     if not CONFIG_PATH.exists():
         raise FileNotFoundError(
-            f"No existe {CONFIG_PATH}. Ejecuta primero scripts/train_dl.py."
+            f"No existe {CONFIG_PATH}. Ejecuta primero python -m scripts.train_dl."
         )
 
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:

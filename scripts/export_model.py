@@ -4,11 +4,11 @@ import json
 import joblib
 from sklearn.base import clone
 
-from data_load import load_dataset
-from epochs import create_epochs
-from feature_pipeline import build_features_from_config
-from pipeline import get_models
-from paths import (
+from scripts.data_load import load_dataset
+from scripts.epochs import create_epochs
+from scripts.feature_pipeline import build_features_from_config
+from scripts.pipeline import get_models
+from scripts.paths import (
     CSV_PATH,
     ML_BEST_CONFIG_PATH as CONFIG_PATH,
     ML_FEATURE_COLUMNS_PATH as FEATURE_COLUMNS_PATH,
@@ -16,7 +16,7 @@ from paths import (
     ML_MODEL_PATH as MODEL_PATH,
     ML_MODELS_DIR as MODELS_DIR,
 )
-from preprocessing import preprocess_dataset
+from scripts.preprocessing import preprocess_dataset
 
 
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
@@ -25,7 +25,7 @@ MODELS_DIR.mkdir(parents=True, exist_ok=True)
 def load_config():
     if not CONFIG_PATH.exists():
         raise FileNotFoundError(
-            f"No existe {CONFIG_PATH}. Ejecuta primero train_ml.py."
+            f"No existe {CONFIG_PATH}. Ejecuta primero python -m scripts.train_ml."
         )
 
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:

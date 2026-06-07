@@ -9,22 +9,22 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.utils.class_weight import compute_class_weight
 
-from constants import RANDOM_STATE
-from data_load import load_dataset
-from epochs import create_epochs
-from evaluation import find_best_threshold, metrics_dict
-from paths import (
+from scripts.constants import RANDOM_STATE
+from scripts.data_load import load_dataset
+from scripts.epochs import create_epochs
+from scripts.evaluation import find_best_threshold, metrics_dict
+from scripts.paths import (
     CSV_PATH,
     DL_BEST_CONFIG_PATH,
     FIGURES_DIR,
     RESULTS_DIR,
     TRAINING_CURVES_DIR,
 )
-from preprocessing import preprocess_dataset
-from signal_preprocessing import apply_basic_filtering, zscore_per_subject
-from split import make_group_kfold_splits, make_group_shuffle_split
-from tf_models import build_model
-from visual import plot_confusion_matrix, plot_roc_curve
+from scripts.preprocessing import preprocess_dataset
+from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
+from scripts.split import make_group_kfold_splits, make_group_shuffle_split
+from scripts.tf_models import build_model
+from scripts.visual import plot_confusion_matrix, plot_roc_curve
 
 
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)

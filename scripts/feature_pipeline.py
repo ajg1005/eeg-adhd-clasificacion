@@ -5,12 +5,8 @@ from typing import Any, Iterable
 
 import pandas as pd
 
-try:
-    from scripts.features import extract_epoch_features
-    from scripts.spectral_features import extract_spectral_features
-except ModuleNotFoundError:  # Permite ejecutar scripts/*.py directamente.
-    from features import extract_epoch_features
-    from spectral_features import extract_spectral_features
+from scripts.features import extract_epoch_features
+from scripts.spectral_features import extract_spectral_features
 
 
 FEATURE_MODE_ALIASES = {

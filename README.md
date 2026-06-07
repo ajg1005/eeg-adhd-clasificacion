@@ -19,6 +19,22 @@ El backend está desarrollado con FastAPI y el frontend con React. Toda la evalu
 
 El sistema tiene carácter académico y no debe utilizarse como herramienta de diagnóstico clínico.
 
+## Flujo del sistema
+
+```text
+CSV EEG -> validación de columnas y pacientes -> preprocesado -> segmentación en epochs
+        -> extracción de características o ventanas crudas -> entrenamiento/evaluación
+        -> exportación del modelo -> predicción por epochs -> agregación por paciente
+```
+
+En los modelos clásicos de Machine Learning se utilizan características temporales y espectrales extraídas por canal y ventana EEG. En los modelos de Deep Learning se emplean directamente las ventanas crudas de señal, con filtrado y normalización por sujeto.
+
+## Metodología de evaluación
+
+La evaluación se realiza a nivel de paciente mediante validación **cross-subject**. Esto significa que las ventanas de un mismo paciente no aparecen simultáneamente en entrenamiento y test, reduciendo el riesgo de fuga de información entre epochs del mismo sujeto.
+
+Para los modelos ML se usa validación cruzada con `StratifiedGroupKFold`. Para los modelos DL se emplean folds externos por sujeto y una validación interna también separada por sujeto para ajustar el umbral de clasificación.
+
 ## Interfaz
 
 La aplicación se organiza en cuatro pestañas:
@@ -88,7 +104,22 @@ creadas tras la primera ejecución.
 
 ## Scripts de investigación
 
-- `python scripts/train_ml.py`: entrena y evalúa los modelos ML con CV cross-subject.
-- `python scripts/train_dl.py`: entrena y evalúa los modelos DL con CV cross-subject.
-- `python scripts/export_model.py` y `export_model_dl.py`: exportan el modelo final seleccionado.
-- `python scripts/feature_importance.py`: importancia de características con permutation_importance sobre test separado cross-subject.
+- `python -m scripts.train_ml`: entrena y evalúa los modelos ML con CV cross-subject.
+- `python -m scripts.train_dl`: entrena y evalúa los modelos DL con CV cross-subject.
+- `python -m scripts.export_model` y `python -m scripts.export_model_dl`: exportan el modelo final seleccionado.
+- `python -m scripts.feature_importance`: importancia de características con permutation_importance sobre test separado cross-subject.
+
+## Tests
+
+Los tests unitarios e integración comprueban validación de datos, segmentación, extracción de características, particiones cross-subject, servicios de entrenamiento y endpoints principales de la API.
+
+```bash
+pytest
+```
+
+## Limitaciones
+
+- El sistema es un prototipo académico y no está validado para uso clínico.
+- Los resultados dependen del dataset utilizado y deberían contrastarse con validación externa.
+- Las predicciones se calculan por epochs y se agregan a nivel de paciente, por lo que ambas métricas deben interpretarse con cautela.
+- Los modelos DL pueden ser sensibles al tamaño del dataset, al preprocesado y a la variabilidad entre sujetos.

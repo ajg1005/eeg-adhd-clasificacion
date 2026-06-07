@@ -5,15 +5,15 @@ import pandas as pd
 from sklearn.base import clone
 from sklearn.utils.class_weight import compute_sample_weight
 
-from data_load import load_dataset
-from epochs import create_epochs
-from evaluation import metrics_dict
-from feature_pipeline import build_features_from_epochs
-from pipeline import get_models
-from paths import CSV_PATH, FIGURES_DIR, ML_BEST_CONFIG_PATH, RESULTS_DIR
-from preprocessing import preprocess_dataset
-from split import make_group_kfold_splits
-from visual import (
+from scripts.data_load import load_dataset
+from scripts.epochs import create_epochs
+from scripts.evaluation import metrics_dict
+from scripts.feature_pipeline import build_features_from_epochs
+from scripts.pipeline import get_models
+from scripts.paths import CSV_PATH, FIGURES_DIR, ML_BEST_CONFIG_PATH, RESULTS_DIR
+from scripts.preprocessing import preprocess_dataset
+from scripts.split import make_group_kfold_splits
+from scripts.visual import (
     plot_confusion_matrix,
     plot_model_metric_bar,
     plot_roc_curve,

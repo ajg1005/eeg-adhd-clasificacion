@@ -9,9 +9,6 @@ from sklearn.metrics import classification_report, confusion_matrix
 from backend.modeling.dl_factory import DL_MODEL_OPTIONS
 from backend.modeling.model_factory import ML_MODEL_OPTIONS
 from backend.db.repository import save_experiment
-
-
-logger = logging.getLogger(__name__)
 from backend.services.training_data import (
     get_dataset_stats as _get_dataset_stats,
     prepare_epochs,
@@ -24,6 +21,9 @@ from backend.services.training_runners import (
     run_dl_cross_subject_cv,
     run_ml_cross_subject_cv,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_EEG_PARAMS = {
@@ -143,9 +143,7 @@ def run_training(
         },
         "training_time_seconds": round(time.perf_counter() - started_at, 3),
     }
-    # No queremos perder un entrenamiento que ha tardado minutos solo porque la
-    # base de datos falle. Si la persistencia falla, registramos y devolvemos
-    # las metricas igualmente con experiment_id=None.
+    # Si falla la BD, se devuelven las metricas igualmente.
     try:
         result["experiment_id"] = save_experiment(
             file_bytes=file_bytes,

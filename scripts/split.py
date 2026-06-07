@@ -1,16 +1,10 @@
 """Splits cross-subject que evitan fuga de informacion por paciente."""
 
-from sklearn.model_selection import StratifiedGroupKFold
-
-
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedGroupKFold, train_test_split
 
-try:
-    from scripts.constants import RANDOM_STATE
-except ModuleNotFoundError:
-    from constants import RANDOM_STATE
+from scripts.constants import RANDOM_STATE
 
 
 def make_group_shuffle_split(
@@ -43,8 +37,7 @@ def make_group_shuffle_split(
         .reset_index()
     )
 
-    # Validacion previa: con muy pocos sujetos por clase, train_test_split con
-    # stratify lanza un error críptico de sklearn. Damos un mensaje útil.
+    # Validar que el split estratificado pueda incluir ambas clases en test.
     min_per_class = int(subject_labels["label"].value_counts().min())
     test_share = test_size if isinstance(test_size, float) else test_size / max(1, len(subject_labels))
     if min_per_class < 2 or int(round(min_per_class * test_share)) < 1:
@@ -87,9 +80,6 @@ def make_group_shuffle_split(
 
     return X_train, X_test, y_train, y_test, groups_train, groups_test
 
-
-
-#stratified probar
 def make_group_kfold_splits(
     X,
     y,
@@ -138,4 +128,3 @@ def make_group_kfold_splits(
         })
 
     return splits
-#LOSO Leave one out

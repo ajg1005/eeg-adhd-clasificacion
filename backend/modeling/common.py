@@ -3,7 +3,7 @@ from scripts.epochs import create_epochs
 from scripts.feature_pipeline import align_feature_columns, build_features_from_config
 from scripts.preprocessing import preprocess_dataset
 from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
-from scripts.validators import validate_eeg_dataframe  # noqa: F401  re-exportado por compat
+from scripts.validators import validate_eeg_dataframe  # noqa: F401
 
 
 def map_prediction_label(prediction):

@@ -21,11 +21,11 @@ DL_MODEL_PATH = MODELS_DIR / "dl" / "final_model.keras"
 # Decoradores convenientes para tests que necesitan los modelos exportados.
 requires_ml_model = pytest.mark.skipif(
     not ML_MODEL_PATH.exists(),
-    reason=f"Falta {ML_MODEL_PATH}. Ejecuta scripts/export_model.py.",
+    reason=f"Falta {ML_MODEL_PATH}. Ejecuta python -m scripts.export_model.",
 )
 requires_dl_model = pytest.mark.skipif(
     not DL_MODEL_PATH.exists(),
-    reason=f"Falta {DL_MODEL_PATH}. Ejecuta scripts/export_model_dl.py.",
+    reason=f"Falta {DL_MODEL_PATH}. Ejecuta python -m scripts.export_model_dl.",
 )
 
 

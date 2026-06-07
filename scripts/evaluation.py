@@ -3,7 +3,7 @@
 Centraliza las metricas de clasificacion binaria y la busqueda de threshold
 optimo. Ambas funciones se usan en:
 
-- scripts/train_dl.py y scripts/train_ml.py (CV en research).
+- scripts.train_dl y scripts.train_ml (CV en research).
 - backend/services/training_runners.py (entrenamiento interactivo desde la UI).
 """
 import numpy as np

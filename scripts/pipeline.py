@@ -8,12 +8,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
 
-try:
-    from scripts.constants import RANDOM_STATE
-    from scripts.ml_model_registry import ALL_MODEL_NAMES, merged_ml_params
-except ModuleNotFoundError:
-    from constants import RANDOM_STATE
-    from ml_model_registry import ALL_MODEL_NAMES, merged_ml_params
+from scripts.constants import RANDOM_STATE
+from scripts.ml_model_registry import ALL_MODEL_NAMES, merged_ml_params
 
 
 # Construye los modelos ML usando los defaults del registro compartido.

@@ -16,7 +16,7 @@ from scripts.epochs import create_epochs
 from scripts.feature_pipeline import build_features_from_epochs
 from scripts.preprocessing import preprocess_dataset
 from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
-from scripts.validators import validate_training_dataframe  # noqa: F401  re-exportado por compat
+from scripts.validators import validate_training_dataframe  # noqa: F401
 
 
 @dataclass

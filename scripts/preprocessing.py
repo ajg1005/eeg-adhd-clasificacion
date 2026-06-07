@@ -2,10 +2,7 @@
 
 import pandas as pd
 
-try:
-    from scripts.constants import normalize_class_to_int
-except ModuleNotFoundError:
-    from constants import normalize_class_to_int
+from scripts.constants import normalize_class_to_int
 
 
 def preprocess_dataset(

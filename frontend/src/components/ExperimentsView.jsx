@@ -98,7 +98,7 @@ export function ExperimentsView() {
         <div className="section-heading-row">
           <div>
             <h2>Experimentos guardados</h2>
-            <p className="muted">Primer listado sencillo de los entrenamientos que se han guardado en la base de datos.</p>
+            <p className="muted">Historial de entrenamientos persistidos en la base de datos.</p>
           </div>
           <button
             className="primary-button compact-button"
@@ -112,7 +112,7 @@ export function ExperimentsView() {
 
         {experiments.length === 0 ? (
           <p className="muted">
-            {loadingList ? "Cargando experimentos..." : "Todavia no hay experimentos guardados."}
+            {loadingList ? "Cargando experimentos..." : "Todavía no hay experimentos guardados."}
           </p>
         ) : (
           <div className="patient-table-wrap">
@@ -187,7 +187,7 @@ export function ExperimentsView() {
                 {selectedExperiment.dataset.filename} - {selectedExperiment.dataset.rows} filas - {selectedExperiment.dataset.n_subjects} pacientes
               </p>
 
-              <h3>Configuracion</h3>
+              <h3>Configuración</h3>
               <pre className="training-log">
                 {JSON.stringify(
                   {

@@ -81,6 +81,11 @@ export function TrainingResultsPanel({
       {result.configuration?.evaluation_mode && (
         <p className="muted">Evaluación: {result.configuration.evaluation_mode}</p>
       )}
+      {result.persisted === false && (
+        <div className="alert alert-error">
+          El entrenamiento ha finalizado, pero no se ha podido guardar en la base de datos.
+        </div>
+      )}
 
       <div className="metric-grid metrics-wide training-result-grid">
         <div>
@@ -107,7 +112,7 @@ export function TrainingResultsPanel({
 
       <div className="training-result-columns">
         <div>
-          <h3>Confusion matrix</h3>
+          <h3>Matriz de confusión</h3>
           <table className="patient-table compact-table">
             <tbody>
               {result.confusion_matrix.map((row, index) => (
@@ -121,7 +126,7 @@ export function TrainingResultsPanel({
           </table>
         </div>
         <div>
-          <h3>Classification report</h3>
+          <h3>Informe de clasificación</h3>
           <pre className="training-log">
             {JSON.stringify(result.classification_report, null, 2)}
           </pre>
@@ -132,7 +137,7 @@ export function TrainingResultsPanel({
         <div className="feature-importance-block">
           <div className="section-heading-row">
             <div>
-              <h3>Importancia de features</h3>
+              <h3>Importancia de características</h3>
               <p className="muted">
                 {featureImportance.method} sobre {featureImportance.source}
               </p>
@@ -149,7 +154,7 @@ export function TrainingResultsPanel({
             <div className="feature-importance-grid">
               <ImportanceList
                 rows={featureImportance.top_features || []}
-                title="Top features"
+                title="Características principales"
               />
               <ImportanceList
                 rows={featureImportance.by_channel || []}
@@ -180,13 +185,13 @@ export function TrainingResultsPanel({
         <table className="patient-table">
           <thead>
             <tr>
-              <th>patient_id</th>
-              <th>true_label</th>
-              <th>predicted_label</th>
-              <th>n_epochs</th>
+              <th>Paciente</th>
+              <th>Clase real</th>
+              <th>Clase predicha</th>
+              <th>Epochs</th>
               <th>control_%</th>
               <th>adhd_%</th>
-              <th>correct</th>
+              <th>Correcto</th>
             </tr>
           </thead>
           <tbody>
@@ -236,6 +241,7 @@ TrainingResultsPanel.propTypes = {
       source: PropTypes.string,
       top_features: PropTypes.arrayOf(importanceRowShape),
     }),
+    persisted: PropTypes.bool,
     precision: PropTypes.number.isRequired,
     recall: PropTypes.number.isRequired,
     training_time_seconds: PropTypes.number.isRequired,
