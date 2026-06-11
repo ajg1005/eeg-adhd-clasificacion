@@ -1,6 +1,11 @@
 import PropTypes from "prop-types";
 
 import { fileShape, modelOptionShape } from "../../propTypes";
+import {
+  modelParamLabel,
+  optionValueLabel,
+  trainingParamLabel,
+} from "../../utils/trainingLabels";
 
 function selectValue(value) {
   return value === null || value === undefined ? "none" : String(value);
@@ -56,7 +61,7 @@ export function TrainingModelPanel({
 
         {Object.entries(currentModelParameters).map(([name, values]) => (
           <label key={name}>
-            {name}
+            {modelParamLabel(name)}
             <select
               onChange={(event) => onModelParamChange(name, event.target.value)}
               value={selectValue(modelParams[name])}
@@ -66,7 +71,7 @@ export function TrainingModelPanel({
                   key={String(value)}
                   value={value === null ? "none" : String(value)}
                 >
-                  {value === null ? "none" : String(value)}
+                  {optionValueLabel(value)}
                 </option>
               ))}
             </select>
@@ -76,11 +81,11 @@ export function TrainingModelPanel({
 
       {visibleTrainingParams.length > 0 && (
         <>
-          <h3>Entrenamiento</h3>
+          <h3>Optimización</h3>
           <div className="controls-row">
             {visibleTrainingParams.map(([name, values]) => (
               <label key={name}>
-                {name}
+                {trainingParamLabel(name)}
                 <select
                   onChange={(event) =>
                     onTrainingParamChange(name, event.target.value)
@@ -89,7 +94,7 @@ export function TrainingModelPanel({
                 >
                   {values.map((value) => (
                     <option key={String(value)} value={String(value)}>
-                      {String(value)}
+                      {optionValueLabel(value)}
                     </option>
                   ))}
                 </select>

@@ -1,6 +1,61 @@
 import PropTypes from "prop-types";
 
 import { patientResultShape } from "../../propTypes";
+import {
+  REPORT_COLUMNS,
+  evaluationModeLabel,
+  methodLabel,
+  reportColumnLabel,
+  reportRowLabel,
+} from "../../utils/trainingLabels";
+
+function formatReportCell(column, value) {
+  if (value === undefined || value === null) {
+    return "—";
+  }
+  // El soporte es un recuento de muestras; el resto son métricas en [0, 1].
+  return column === "support" ? String(value) : Number(value).toFixed(3);
+}
+
+function ClassificationReportTable({ report }) {
+  const rows = Object.entries(report).filter(
+    ([, value]) => value !== null && typeof value === "object",
+  );
+  const accuracy = typeof report.accuracy === "number" ? report.accuracy : null;
+
+  return (
+    <table className="patient-table compact-table">
+      <thead>
+        <tr>
+          <th>Clase</th>
+          {REPORT_COLUMNS.map((column) => (
+            <th key={column}>{reportColumnLabel(column)}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([name, metrics]) => (
+          <tr key={name}>
+            <td>{reportRowLabel(name)}</td>
+            {REPORT_COLUMNS.map((column) => (
+              <td key={column}>{formatReportCell(column, metrics[column])}</td>
+            ))}
+          </tr>
+        ))}
+        {accuracy !== null && (
+          <tr>
+            <td>{reportRowLabel("accuracy")}</td>
+            <td colSpan={REPORT_COLUMNS.length}>{accuracy.toFixed(3)}</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+ClassificationReportTable.propTypes = {
+  report: PropTypes.object.isRequired,
+};
 
 const importanceRowShape = PropTypes.shape({
   feature: PropTypes.string.isRequired,
@@ -79,7 +134,9 @@ export function TrainingResultsPanel({
     <div className="panel training-section">
       <h2>Resultados del entrenamiento</h2>
       {result.configuration?.evaluation_mode && (
-        <p className="muted">Evaluación: {result.configuration.evaluation_mode}</p>
+        <p className="muted">
+          Evaluación: {evaluationModeLabel(result.configuration.evaluation_mode)}
+        </p>
       )}
       {result.persisted === false && (
         <div className="alert alert-error">
@@ -89,15 +146,15 @@ export function TrainingResultsPanel({
 
       <div className="metric-grid metrics-wide training-result-grid">
         <div>
-          <span>Accuracy</span>
+          <span>Exactitud</span>
           <strong>{result.accuracy.toFixed(3)}</strong>
         </div>
         <div>
-          <span>Precision</span>
+          <span>Precisión</span>
           <strong>{result.precision.toFixed(3)}</strong>
         </div>
         <div>
-          <span>Recall</span>
+          <span>Sensibilidad</span>
           <strong>{result.recall.toFixed(3)}</strong>
         </div>
         <div>
@@ -105,7 +162,7 @@ export function TrainingResultsPanel({
           <strong>{result.f1_score.toFixed(3)}</strong>
         </div>
         <div>
-          <span>Balanced</span>
+          <span>Exactitud balanceada</span>
           <strong>{result.balanced_accuracy.toFixed(3)}</strong>
         </div>
       </div>
@@ -127,9 +184,7 @@ export function TrainingResultsPanel({
         </div>
         <div>
           <h3>Informe de clasificación</h3>
-          <pre className="training-log">
-            {JSON.stringify(result.classification_report, null, 2)}
-          </pre>
+          <ClassificationReportTable report={result.classification_report} />
         </div>
       </div>
 
@@ -139,12 +194,12 @@ export function TrainingResultsPanel({
             <div>
               <h3>Importancia de características</h3>
               <p className="muted">
-                {featureImportance.method} sobre {featureImportance.source}
+                {methodLabel(featureImportance.method)} sobre {featureImportance.source}
               </p>
             </div>
             <div className="importance-meta">
-              <span>{featureImportance.scoring}</span>
-              <span>{featureImportance.evaluated_epochs} epochs</span>
+              <span>{methodLabel(featureImportance.scoring)}</span>
+              <span>{featureImportance.evaluated_epochs} ventanas evaluadas</span>
             </div>
           </div>
 
@@ -188,9 +243,9 @@ export function TrainingResultsPanel({
               <th>Paciente</th>
               <th>Clase real</th>
               <th>Clase predicha</th>
-              <th>Epochs</th>
-              <th>control_%</th>
-              <th>adhd_%</th>
+              <th>Ventanas</th>
+              <th>Control (%)</th>
+              <th>TDAH (%)</th>
               <th>Correcto</th>
             </tr>
           </thead>

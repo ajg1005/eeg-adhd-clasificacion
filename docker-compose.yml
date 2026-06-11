@@ -36,12 +36,12 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        # La URL del backend se inyecta en build time (estaticos de Vite).
+        # Es la URL que ve el navegador del usuario, no la red interna de Docker.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
     ports:
-      - "5173:5173"
-    environment:
-      # URL del backend tal y como la ve el navegador del usuario.
-      # Vite la inyecta en import.meta.env.VITE_API_BASE_URL al arrancar.
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://127.0.0.1:8000}
+      - "5173:80"
     depends_on:
       - backend
     restart: unless-stopped

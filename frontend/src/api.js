@@ -53,7 +53,7 @@ export async function getTrainingOptions() {
   const response = await fetch(`${API_BASE_URL}/training/options`);
 
   if (!response.ok) {
-    throw new Error("No se pudieron cargar los parametros de entrenamiento");
+    throw new Error("No se pudieron cargar los parámetros de entrenamiento");
   }
 
   return response.json();
