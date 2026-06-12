@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useInferenceController } from "./hooks/useInferenceController";
 import { useTrainingDataset } from "./hooks/useTrainingDataset";
@@ -14,6 +15,7 @@ import { TrainingView } from "./components/TrainingView";
 import "./App.css";
 
 function App() {
+  const { t } = useTranslation();
   const controller = useInferenceController();
   const trainingDataset = useTrainingDataset();
   const [trainingInProgress, setTrainingInProgress] = useState(false);
@@ -53,13 +55,13 @@ function App() {
 
       {trainingInProgress && (
         <div className="alert alert-warning">
-          Entrenamiento en curso. Espera a que termine antes de cambiar de pestaña o recargar.
+          {t("app.trainingInProgress")}
         </div>
       )}
 
       {controller.error && <div className="alert alert-error">{controller.error}</div>}
 
-      {controller.activeTab === "Modelo" && (
+      {controller.activeTab === "model" && (
         <>
           <ModelSelector
             modelInfo={controller.modelInfo}
@@ -77,7 +79,7 @@ function App() {
         </>
       )}
 
-      {controller.activeTab === "Dataset entrenamiento" && (
+      {controller.activeTab === "dataset" && (
         <DatasetView
           classFilter={trainingDataset.classFilter}
           error={trainingDataset.error}
@@ -92,7 +94,7 @@ function App() {
         />
       )}
 
-      {controller.activeTab === "Entrenamiento" && (
+      {controller.activeTab === "training" && (
         <TrainingView
           file={trainingDataset.file}
           onTrainingStateChange={setTrainingInProgress}
@@ -100,9 +102,9 @@ function App() {
         />
       )}
 
-      {controller.activeTab === "Experimentos" && <ExperimentsView />}
+      {controller.activeTab === "experiments" && <ExperimentsView />}
 
-      {controller.activeTab === "Predicción" && (
+      {controller.activeTab === "prediction" && (
         <>
           <ModelSelector
             modelInfo={controller.modelInfo}

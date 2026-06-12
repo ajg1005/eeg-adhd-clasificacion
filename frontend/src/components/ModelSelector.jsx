@@ -1,12 +1,15 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import { modelInfoShape } from "../propTypes";
 
 export function ModelSelector({ modelInfo, models, onModelChange, selectedModelId }) {
+  const { t } = useTranslation();
+
   return (
     <section className="model-selector panel">
       <label>
-        Modelo de inferencia
+        {t("model.selector")}
         <select value={selectedModelId} onChange={onModelChange}>
           {models.map((model) => (
             <option key={model.model_id} value={model.model_id}>

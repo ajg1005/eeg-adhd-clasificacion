@@ -1,1 +1,1 @@
-export const TABS = ["Modelo", "Dataset entrenamiento", "Entrenamiento", "Experimentos", "Predicción"];
+export const TABS = ["model", "dataset", "training", "experiments", "prediction"];

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
+import { Trans, useTranslation } from "react-i18next";
 
 import { getTrainingOptions, runTraining } from "../api";
 import { TrainingEegParamsPanel } from "./training/TrainingEegParamsPanel";
@@ -29,6 +30,7 @@ function modelDefaults(options, modelType, modelName) {
 }
 
 export function TrainingView({ file, onTrainingStateChange, stats }) {
+  const { t } = useTranslation();
   const [options, setOptions] = useState(null);
   const [modelType, setModelType] = useState("ml");
   const [modelName, setModelName] = useState("");
@@ -118,7 +120,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
 
   async function handleRunTraining() {
     if (!file) {
-      setError("Sube primero un CSV en la pestaña 'Dataset entrenamiento'.");
+      setError(t("training.missingFile"));
       return;
     }
 
@@ -151,7 +153,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
       {!file && (
         <div className="panel">
           <p className="muted">
-            Antes de entrenar, sube un CSV en la pestaña <strong>Dataset entrenamiento</strong>.
+            {t("training.uploadFirst")} <strong>{t("tabs.dataset")}</strong>.
           </p>
         </div>
       )}
@@ -159,30 +161,33 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
       {file && !stats && (
         <div className="panel">
           <p className="muted">
-            Has cargado <strong>{file.name}</strong> pero todavía no has analizado el dataset.
-            Vuelve a <strong>Dataset entrenamiento</strong> y pulsa "Analizar dataset".
+            <Trans
+              i18nKey="training.datasetNotAnalyzed"
+              values={{ file: file.name }}
+              components={{ strong: <strong /> }}
+            />
           </p>
         </div>
       )}
 
       {file && stats && (
         <div className="panel">
-          <h3>Dataset cargado</h3>
+          <h3>{t("training.datasetLoaded")}</h3>
           <div className="metric-grid training-metrics-row">
             <div>
-              <span>Archivo</span>
+              <span>{t("training.file")}</span>
               <strong>{file.name}</strong>
             </div>
             <div>
-              <span>Pacientes</span>
+              <span>{t("common.patients")}</span>
               <strong>{stats.n_patients}</strong>
             </div>
             <div>
-              <span>Filas</span>
+              <span>{t("common.rows")}</span>
               <strong>{stats.rows}</strong>
             </div>
             <div>
-              <span>Canales EEG</span>
+              <span>{t("dataset.eegChannels")}</span>
               <strong>{stats.eeg_columns.length}</strong>
             </div>
           </div>

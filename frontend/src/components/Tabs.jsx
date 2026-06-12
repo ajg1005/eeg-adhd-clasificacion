@@ -1,6 +1,9 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 export function Tabs({ activeTab, disabled = false, onTabChange, tabs }) {
+  const { t } = useTranslation();
+
   return (
     <nav className="tabs">
       {tabs.map((tab) => (
@@ -11,7 +14,7 @@ export function Tabs({ activeTab, disabled = false, onTabChange, tabs }) {
           onClick={() => onTabChange(tab)}
           type="button"
         >
-          {tab}
+          {t(`tabs.${tab}`)}
         </button>
       ))}
     </nav>

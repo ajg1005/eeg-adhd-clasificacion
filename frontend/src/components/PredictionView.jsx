@@ -8,6 +8,7 @@ import {
   YAxis,
 } from "recharts";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import { fileShape, modelInfoShape } from "../propTypes";
 import { formatPercent } from "../utils/formatters";
@@ -24,13 +25,15 @@ export function PredictionView({
   predictionChartData,
   validation,
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="grid-layout">
       <div className="panel">
-        <h2>Archivo del paciente</h2>
+        <h2>{t("prediction.patientFile")}</h2>
 
         <label className="file-drop">
-          <span>Seleccionar CSV</span>
+          <span>{t("prediction.selectCsv")}</span>
           <input type="file" accept=".csv" onChange={onFileChange} />
         </label>
 
@@ -41,17 +44,20 @@ export function PredictionView({
           </div>
         )}
 
-        {loadingValidation && <p>Validando archivo...</p>}
+        {loadingValidation && <p>{t("prediction.validating")}</p>}
 
         {validation && (
           <p className="ok-text">
-            CSV valido · {validation.rows} filas · {validation.available_channels.length} canales
+            {t("prediction.validCsv", {
+              channels: validation.available_channels.length,
+              rows: validation.rows,
+            })}
           </p>
         )}
 
         {modelInfo && validation && (
           <div className="channel-validation">
-            <p className="muted">Canales esperados por el modelo:</p>
+            <p className="muted">{t("prediction.expectedChannels")}</p>
             <div className="channel-list">
               {modelInfo.channels.map((channel) => (
                 <span
@@ -75,32 +81,34 @@ export function PredictionView({
           onClick={onPredict}
           type="button"
         >
-          {loadingPrediction ? "Procesando..." : "Ejecutar predicción"}
+          {loadingPrediction ? t("prediction.processing") : t("prediction.run")}
         </button>
       </div>
 
       <div className="panel">
-        <h2>Resultado</h2>
+        <h2>{t("prediction.result")}</h2>
 
         {prediction ? (
           <>
             <div className="result-main">
               <div>
-                <span>Clasificación</span>
+                <span>{t("prediction.classification")}</span>
                 <strong>{prediction.prediction_label}</strong>
               </div>
               <div>
-                <span>Confianza</span>
+                <span>{t("prediction.confidence")}</span>
                 <strong>{formatPercent(decisionScore)}</strong>
               </div>
             </div>
 
             <p className="muted">
-              Se han analizado <strong>{prediction.n_epochs}</strong> ventanas de la señal
-              con el modelo <strong>{prediction.model_name || modelInfo?.model_name}</strong>.
+              {t("prediction.summary", {
+                epochs: prediction.n_epochs,
+                model: prediction.model_name || modelInfo?.model_name,
+              })}
             </p>
 
-            <h3>Distribución por ventana</h3>
+            <h3>{t("prediction.windowDistribution")}</h3>
             <div className="chart-box">
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={predictionChartData}>
@@ -114,7 +122,7 @@ export function PredictionView({
             </div>
           </>
         ) : (
-          <p className="muted">Todavía no hay predicción ejecutada.</p>
+          <p className="muted">{t("prediction.empty")}</p>
         )}
       </div>
     </section>

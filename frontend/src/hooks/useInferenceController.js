@@ -13,7 +13,7 @@ import {
 // Controlador del flujo de inferencia: seleccion de modelo, validacion del CSV
 // del paciente y prediccion.
 export function useInferenceController() {
-  const [activeTab, setActiveTab] = useState("Modelo");
+  const [activeTab, setActiveTab] = useState("model");
   const [apiStatus, setApiStatus] = useState("checking");
   const [models, setModels] = useState([]);
   const [selectedModelId, setSelectedModelId] = useState("ml_best");

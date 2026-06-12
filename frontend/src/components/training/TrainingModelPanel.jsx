@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import { fileShape, modelOptionShape } from "../../propTypes";
 import {
@@ -27,9 +28,11 @@ export function TrainingModelPanel({
   trainingParams,
   visibleTrainingParams,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="panel training-section">
-      <h2>Modelo</h2>
+      <h2>{t("common.model")}</h2>
       <div className="segmented-control">
         <button
           className={modelType === "ml" ? "active" : ""}
@@ -49,7 +52,7 @@ export function TrainingModelPanel({
 
       <div className="controls-row">
         <label>
-          Modelo
+          {t("common.model")}
           <select value={modelName} onChange={onModelNameChange}>
             {Object.entries(currentModels).map(([key, model]) => (
               <option key={key} value={key}>
@@ -61,7 +64,7 @@ export function TrainingModelPanel({
 
         {Object.entries(currentModelParameters).map(([name, values]) => (
           <label key={name}>
-            {modelParamLabel(name)}
+            {modelParamLabel(t, name)}
             <select
               onChange={(event) => onModelParamChange(name, event.target.value)}
               value={selectValue(modelParams[name])}
@@ -71,7 +74,7 @@ export function TrainingModelPanel({
                   key={String(value)}
                   value={value === null ? "none" : String(value)}
                 >
-                  {optionValueLabel(value)}
+                  {optionValueLabel(t, value)}
                 </option>
               ))}
             </select>
@@ -81,11 +84,11 @@ export function TrainingModelPanel({
 
       {visibleTrainingParams.length > 0 && (
         <>
-          <h3>Optimización</h3>
+          <h3>{t("training.optimization")}</h3>
           <div className="controls-row">
             {visibleTrainingParams.map(([name, values]) => (
               <label key={name}>
-                {trainingParamLabel(name)}
+                {trainingParamLabel(t, name)}
                 <select
                   onChange={(event) =>
                     onTrainingParamChange(name, event.target.value)
@@ -94,7 +97,7 @@ export function TrainingModelPanel({
                 >
                   {values.map((value) => (
                     <option key={String(value)} value={String(value)}>
-                      {optionValueLabel(value)}
+                      {optionValueLabel(t, value)}
                     </option>
                   ))}
                 </select>
@@ -110,7 +113,7 @@ export function TrainingModelPanel({
         onClick={onRunTraining}
         type="button"
       >
-        {loadingTraining ? "Entrenando..." : "Entrenar modelo"}
+        {loadingTraining ? t("training.training") : t("training.train")}
       </button>
     </div>
   );

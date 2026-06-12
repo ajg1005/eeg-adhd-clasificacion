@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import { datasetStatsShape, fileShape } from "../propTypes";
-
 
 function filterPatients(patients, classFilter, maxPatients) {
   if (!patients) {
@@ -16,7 +16,6 @@ function filterPatients(patients, classFilter, maxPatients) {
   return filtered.slice(0, maxPatients);
 }
 
-
 export function DatasetView({
   classFilter,
   error,
@@ -29,6 +28,7 @@ export function DatasetView({
   maxPatients,
   stats,
 }) {
+  const { t } = useTranslation();
   const filteredPatients = useMemo(
     () => filterPatients(stats?.patients, classFilter, maxPatients),
     [stats, classFilter, maxPatients],
@@ -41,11 +41,8 @@ export function DatasetView({
       <div className="panel">
         <div className="section-heading-row">
           <div>
-            <h2>Dataset de entrenamiento</h2>
-            <p className="muted">
-              Carga un CSV con varios pacientes y revisa las estadísticas antes
-              de pasar a la pestaña de entrenamiento.
-            </p>
+            <h2>{t("dataset.title")}</h2>
+            <p className="muted">{t("dataset.description")}</p>
           </div>
           <button
             className="primary-button compact-button"
@@ -53,32 +50,32 @@ export function DatasetView({
             onClick={handleAnalyzeDataset}
             type="button"
           >
-            {loadingStats ? "Analizando..." : "Analizar dataset"}
+            {loadingStats ? t("dataset.analyzing") : t("dataset.analyze")}
           </button>
         </div>
 
         <label className="file-drop">
           <input accept=".csv" onChange={handleFileChange} type="file" />
-          {file ? file.name : "Seleccionar CSV EEG"}
+          {file ? file.name : t("dataset.selectCsv")}
         </label>
 
         {stats && (
           <>
             <div className="metric-grid dataset-summary-grid training-metrics-row">
               <div>
-                <span>Filas</span>
+                <span>{t("common.rows")}</span>
                 <strong>{stats.rows}</strong>
               </div>
               <div>
-                <span>Columnas</span>
+                <span>{t("common.columns")}</span>
                 <strong>{stats.columns}</strong>
               </div>
               <div>
-                <span>Pacientes</span>
+                <span>{t("common.patients")}</span>
                 <strong>{stats.n_patients}</strong>
               </div>
               <div>
-                <span>Canales EEG</span>
+                <span>{t("dataset.eegChannels")}</span>
                 <strong>{stats.eeg_columns.length}</strong>
               </div>
             </div>
@@ -94,7 +91,9 @@ export function DatasetView({
 
             {stats.missing_required_columns.length > 0 && (
               <div className="alert alert-error">
-                Faltan columnas: {stats.missing_required_columns.join(", ")}
+                {t("dataset.missingColumns", {
+                  columns: stats.missing_required_columns.join(", "),
+                })}
               </div>
             )}
           </>
@@ -104,18 +103,18 @@ export function DatasetView({
       {stats && (
         <div className="panel">
           <div className="section-heading-row">
-            <h3>Pacientes</h3>
+            <h3>{t("common.patients")}</h3>
             <div className="controls-row compact-controls">
               <label>
-                Clase
+                {t("dataset.filterClass")}
                 <select value={classFilter} onChange={handleClassFilterChange}>
-                  <option value="all">Todos</option>
+                  <option value="all">{t("dataset.all")}</option>
                   <option value="adhd">TDAH</option>
                   <option value="control">Control</option>
                 </select>
               </label>
               <label>
-                Pacientes
+                {t("common.patients")}
                 <input
                   max="100"
                   min="1"
@@ -133,9 +132,9 @@ export function DatasetView({
               <table className="patient-table">
                 <thead>
                   <tr>
-                    <th>Paciente</th>
-                    <th>Clase</th>
-                    <th>Filas</th>
+                    <th>{t("common.patient")}</th>
+                    <th>{t("common.class")}</th>
+                    <th>{t("common.rows")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -150,7 +149,7 @@ export function DatasetView({
               </table>
             </div>
           ) : (
-            <p className="muted">No hay pacientes para el filtro seleccionado.</p>
+            <p className="muted">{t("dataset.noPatients")}</p>
           )}
         </div>
       )}

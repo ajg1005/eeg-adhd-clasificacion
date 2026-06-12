@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { getExperimentDetail, getExperiments } from "../api";
 import { formatMetric } from "../utils/formatters";
 
-function formatDate(value) {
+function formatDate(value, language) {
   if (!value) {
     return "N/A";
   }
 
-  return new Date(value).toLocaleString("es-ES");
+  return new Date(value).toLocaleString(language === "en" ? "en-US" : "es-ES");
 }
 
 export function ExperimentsView() {
+  const { i18n, t } = useTranslation();
   const [experiments, setExperiments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [selectedExperiment, setSelectedExperiment] = useState(null);
@@ -97,8 +99,8 @@ export function ExperimentsView() {
       <div className="panel">
         <div className="section-heading-row">
           <div>
-            <h2>Experimentos guardados</h2>
-            <p className="muted">Historial de entrenamientos persistidos en la base de datos.</p>
+            <h2>{t("experiments.title")}</h2>
+            <p className="muted">{t("experiments.description")}</p>
           </div>
           <button
             className="primary-button compact-button"
@@ -106,13 +108,13 @@ export function ExperimentsView() {
             onClick={loadExperiments}
             type="button"
           >
-            {loadingList ? "Cargando..." : "Refrescar"}
+            {loadingList ? t("common.loading") : t("common.refresh")}
           </button>
         </div>
 
         {experiments.length === 0 ? (
           <p className="muted">
-            {loadingList ? "Cargando experimentos..." : "Todavía no hay experimentos guardados."}
+            {loadingList ? t("experiments.loadingList") : t("experiments.empty")}
           </p>
         ) : (
           <div className="patient-table-wrap">
@@ -120,11 +122,11 @@ export function ExperimentsView() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Fecha</th>
-                  <th>Modelo</th>
-                  <th>Dataset</th>
+                  <th>{t("experiments.date")}</th>
+                  <th>{t("common.model")}</th>
+                  <th>{t("common.dataset")}</th>
                   <th>F1</th>
-                  <th>Balanced</th>
+                  <th>{t("metrics.balanced")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,7 +137,7 @@ export function ExperimentsView() {
                     onClick={() => setSelectedId(experiment.id)}
                   >
                     <td>#{experiment.id}</td>
-                    <td>{formatDate(experiment.created_at)}</td>
+                    <td>{formatDate(experiment.created_at, i18n.resolvedLanguage)}</td>
                     <td>{experiment.model_type} / {experiment.model_name}</td>
                     <td>{experiment.dataset.filename}</td>
                     <td>{formatMetric(experiment.f1_score)}</td>
@@ -151,25 +153,29 @@ export function ExperimentsView() {
       {(selectedSummary || loadingDetail) && (
         <div className="panel">
           <div className="section-heading-row">
-            <h2>Detalle</h2>
-            {selectedId && <span className="importance-meta">Experimento #{selectedId}</span>}
+            <h2>{t("experiments.detail")}</h2>
+            {selectedId && (
+              <span className="importance-meta">
+                {t("experiments.experiment", { id: selectedId })}
+              </span>
+            )}
           </div>
 
-          {loadingDetail && <p className="muted">Cargando detalle...</p>}
+          {loadingDetail && <p className="muted">{t("experiments.loadingDetail")}</p>}
 
           {selectedExperiment && (
             <>
               <div className="metric-grid metrics-wide">
                 <div>
-                  <span>Accuracy</span>
+                  <span>{t("metrics.accuracy")}</span>
                   <strong>{formatMetric(selectedExperiment.accuracy)}</strong>
                 </div>
                 <div>
-                  <span>Precision</span>
+                  <span>{t("metrics.precision")}</span>
                   <strong>{formatMetric(selectedExperiment.precision)}</strong>
                 </div>
                 <div>
-                  <span>Recall</span>
+                  <span>{t("metrics.recall")}</span>
                   <strong>{formatMetric(selectedExperiment.recall)}</strong>
                 </div>
                 <div>
@@ -177,17 +183,19 @@ export function ExperimentsView() {
                   <strong>{formatMetric(selectedExperiment.f1_score)}</strong>
                 </div>
                 <div>
-                  <span>Tiempo</span>
+                  <span>{t("common.time")}</span>
                   <strong>{selectedExperiment.training_time_seconds.toFixed(2)}s</strong>
                 </div>
               </div>
 
-              <h3>Dataset</h3>
+              <h3>{t("common.dataset")}</h3>
               <p className="muted">
-                {selectedExperiment.dataset.filename} - {selectedExperiment.dataset.rows} filas - {selectedExperiment.dataset.n_subjects} pacientes
+                {selectedExperiment.dataset.filename} - {selectedExperiment.dataset.rows}{" "}
+                {t("common.rows").toLowerCase()} - {selectedExperiment.dataset.n_subjects}{" "}
+                {t("common.patients").toLowerCase()}
               </p>
 
-              <h3>Configuración</h3>
+              <h3>{t("common.configuration")}</h3>
               <pre className="training-log">
                 {JSON.stringify(
                   {

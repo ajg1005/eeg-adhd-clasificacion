@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 import {
   optionValueLabel,
@@ -11,6 +12,7 @@ export function TrainingEegParamsPanel({
   onEegParamChange,
   options,
 }) {
+  const { t } = useTranslation();
   const visibleParamNames = options?.eeg_params_by_type?.[modelType]
     || Object.keys(options?.eeg_params || {});
   const visibleParams = Object.entries(options?.eeg_params || {}).filter(([name]) =>
@@ -19,23 +21,23 @@ export function TrainingEegParamsPanel({
 
   return (
     <div className="panel training-section">
-      <h2>Parámetros de entrenamiento</h2>
+      <h2>{t("training.paramsTitle")}</h2>
       <p className="muted">
         {modelType === "ml"
-          ? "Configuración para segmentar la señal y extraer características antes de entrenar el modelo clásico."
-          : "Configuración para preparar las ventanas de señal antes de entrenar el modelo de deep learning."}
+          ? t("training.mlParamsDescription")
+          : t("training.dlParamsDescription")}
       </p>
       <div className="controls-row">
         {visibleParams.map(([name, values]) => (
           <label key={name}>
-            {signalParamLabel(name)}
+            {signalParamLabel(t, name)}
             <select
               onChange={(event) => onEegParamChange(name, event.target.value)}
               value={String(eegParams[name])}
             >
               {values.map((value) => (
                 <option key={String(value)} value={String(value)}>
-                  {optionValueLabel(value)}
+                  {optionValueLabel(t, value)}
                 </option>
               ))}
             </select>
