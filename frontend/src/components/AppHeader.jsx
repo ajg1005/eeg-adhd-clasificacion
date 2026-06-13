@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { BrainCircuit } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function AppHeader({ apiStatus }) {
@@ -7,7 +8,12 @@ export function AppHeader({ apiStatus }) {
   return (
     <header className="app-header">
       <div>
-        <p className="eyebrow">EEG ADHD Classifier</p>
+        <div className="brand-mark">
+          <span className="brand-icon" aria-hidden="true">
+            <BrainCircuit size={20} strokeWidth={2.4} />
+          </span>
+          <p className="eyebrow">EEG ADHD Classifier</p>
+        </div>
         <h1>{t("app.title")}</h1>
         <p className="subtitle">{t("app.subtitle")}</p>
       </div>

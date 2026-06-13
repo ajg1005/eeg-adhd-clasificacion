@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   getHealth,
-  getModelCatalog,
   getModelFigures,
   getModelInfo,
   getModels,
@@ -13,12 +12,11 @@ import {
 // Controlador del flujo de inferencia: seleccion de modelo, validacion del CSV
 // del paciente y prediccion.
 export function useInferenceController() {
-  const [activeTab, setActiveTab] = useState("model");
+  const [activeTab, setActiveTab] = useState("dataset");
   const [apiStatus, setApiStatus] = useState("checking");
   const [models, setModels] = useState([]);
   const [selectedModelId, setSelectedModelId] = useState("ml_best");
   const [modelInfo, setModelInfo] = useState(null);
-  const [modelCatalog, setModelCatalog] = useState(null);
   const [file, setFile] = useState(null);
   const [validation, setValidation] = useState(null);
   const [prediction, setPrediction] = useState(null);
@@ -36,9 +34,6 @@ export function useInferenceController() {
 
         const availableModels = await getModels();
         setModels(availableModels);
-
-        const catalog = await getModelCatalog();
-        setModelCatalog(catalog);
       } catch (err) {
         setApiStatus("error");
         setError(err.message);
@@ -124,20 +119,6 @@ export function useInferenceController() {
 
   const metrics = modelInfo?.metrics?.cv_metrics || modelInfo?.metrics;
 
-  const predictionChartData = useMemo(() => {
-    if (!prediction) {
-      return [];
-    }
-
-    return Object.entries(prediction.epoch_percentage_by_class).map(
-      ([label, percentage]) => ({
-        clase: label,
-        porcentaje: Number((percentage * 100).toFixed(2)),
-        epochs: prediction.epoch_count_by_class[label] || 0,
-      })
-    );
-  }, [prediction]);
-
   const decisionScore = prediction
     ? prediction.decision_score ?? prediction.confidence
     : null;
@@ -172,12 +153,10 @@ export function useInferenceController() {
     loadingValidation,
     metrics,
     metricsChartData,
-    modelCatalog,
     modelFigures,
     modelInfo,
     models,
     prediction,
-    predictionChartData,
     selectedModelId,
     setActiveTab,
     validation,

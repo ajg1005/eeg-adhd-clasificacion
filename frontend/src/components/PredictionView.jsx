@@ -1,17 +1,73 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
 import { fileShape, modelInfoShape } from "../propTypes";
 import { formatPercent } from "../utils/formatters";
+
+function classWindowCount(prediction, label) {
+  return prediction?.epoch_count_by_class?.[label] || 0;
+}
+
+function classWindowPercentage(prediction, label) {
+  if (!prediction?.n_epochs) {
+    return 0;
+  }
+
+  return (classWindowCount(prediction, label) / prediction.n_epochs) * 100;
+}
+
+function PredictionDistribution({ prediction }) {
+  const { t } = useTranslation();
+  const classes = [
+    {
+      className: "control",
+      count: classWindowCount(prediction, "Control"),
+      label: t("prediction.controlLabel"),
+      percentage: classWindowPercentage(prediction, "Control"),
+    },
+    {
+      className: "adhd",
+      count: classWindowCount(prediction, "ADHD"),
+      label: t("prediction.adhdLabel"),
+      percentage: classWindowPercentage(prediction, "ADHD"),
+    },
+  ];
+
+  return (
+    <div className="prediction-distribution">
+      <h3>{t("prediction.distributionTitle")}</h3>
+      <p className="muted">{t("prediction.distributionDescription")}</p>
+
+      <div
+        aria-label={t("prediction.distributionTitle")}
+        className="distribution-bar"
+        role="img"
+      >
+        {classes.map((item) => (
+          <span
+            className={`distribution-segment ${item.className}`}
+            key={item.className}
+            style={{ width: `${item.percentage}%` }}
+            title={`${item.label}: ${formatPercent(item.percentage / 100)}`}
+          />
+        ))}
+      </div>
+
+      <div className="distribution-legend">
+        {classes.map((item) => (
+          <div className="distribution-legend-row" key={item.className}>
+            <span className={`legend-dot ${item.className}`} />
+            <span className="distribution-label">{item.label}</span>
+            <strong>
+              {item.count}/{prediction.n_epochs}
+            </strong>
+            <span>{formatPercent(item.percentage / 100)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function PredictionView({
   decisionScore,
@@ -22,7 +78,6 @@ export function PredictionView({
   onFileChange,
   onPredict,
   prediction,
-  predictionChartData,
   validation,
 }) {
   const { t } = useTranslation();
@@ -96,8 +151,20 @@ export function PredictionView({
                 <strong>{prediction.prediction_label}</strong>
               </div>
               <div>
-                <span>{t("prediction.confidence")}</span>
+                <span>{t("prediction.meanConfidence")}</span>
                 <strong>{formatPercent(decisionScore)}</strong>
+              </div>
+              <div>
+                <span>{t("prediction.controlWindows")}</span>
+                <strong>
+                  {classWindowCount(prediction, "Control")}/{prediction.n_epochs}
+                </strong>
+              </div>
+              <div>
+                <span>{t("prediction.adhdWindows")}</span>
+                <strong>
+                  {classWindowCount(prediction, "ADHD")}/{prediction.n_epochs}
+                </strong>
               </div>
             </div>
 
@@ -108,18 +175,7 @@ export function PredictionView({
               })}
             </p>
 
-            <h3>{t("prediction.windowDistribution")}</h3>
-            <div className="chart-box">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={predictionChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="clase" />
-                  <YAxis domain={[0, 100]} unit="%" />
-                  <Tooltip />
-                  <Bar dataKey="porcentaje" fill="#be7c4d" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <PredictionDistribution prediction={prediction} />
           </>
         ) : (
           <p className="muted">{t("prediction.empty")}</p>
@@ -138,18 +194,20 @@ PredictionView.propTypes = {
   onFileChange: PropTypes.func.isRequired,
   onPredict: PropTypes.func.isRequired,
   prediction: PropTypes.shape({
+    epoch_count_by_class: PropTypes.objectOf(PropTypes.number),
     model_name: PropTypes.string,
     n_epochs: PropTypes.number.isRequired,
     prediction_label: PropTypes.string.isRequired,
   }),
-  predictionChartData: PropTypes.arrayOf(
-    PropTypes.shape({
-      clase: PropTypes.string.isRequired,
-      porcentaje: PropTypes.number.isRequired,
-    }),
-  ).isRequired,
   validation: PropTypes.shape({
     available_channels: PropTypes.arrayOf(PropTypes.string).isRequired,
     rows: PropTypes.number.isRequired,
   }),
+};
+
+PredictionDistribution.propTypes = {
+  prediction: PropTypes.shape({
+    epoch_count_by_class: PropTypes.objectOf(PropTypes.number),
+    n_epochs: PropTypes.number.isRequired,
+  }).isRequired,
 };

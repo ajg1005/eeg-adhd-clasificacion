@@ -7,7 +7,11 @@
     "trainingInProgress": "Entrenamiento en curso. Espera a que termine antes de cambiar de pestaña o recargar."
   },
   "tabs": {
-    "model": "Modelo",
+    "groups": {
+      "training": "Entrenamiento",
+      "inference": "Inferencia"
+    },
+    "model": "Modelo de inferencia",
     "dataset": "Dataset entrenamiento",
     "training": "Entrenamiento",
     "experiments": "Experimentos",
@@ -43,7 +47,7 @@
   },
   "model": {
     "selector": "Modelo de inferencia",
-    "trained": "Modelo entrenado",
+    "trained": "Modelo de inferencia seleccionado",
     "features": "Características",
     "frequency": "Frecuencia",
     "epochSize": "Tamaño de ventana",
@@ -72,8 +76,14 @@
     "result": "Resultado",
     "classification": "Clasificación",
     "confidence": "Confianza",
+    "meanConfidence": "Confianza media",
+    "controlWindows": "Ventanas Control",
+    "adhdWindows": "Ventanas TDAH",
+    "distributionTitle": "Distribución de ventanas predichas",
+    "distributionDescription": "La clase final se obtiene por voto mayoritario de las ventanas temporales analizadas.",
+    "controlLabel": "Control",
+    "adhdLabel": "TDAH",
     "summary": "Se han analizado {{epochs}} ventanas de la señal con el modelo {{model}}.",
-    "windowDistribution": "Distribución por ventana",
     "empty": "Todavía no hay predicción ejecutada."
   },
   "experiments": {

@@ -7,7 +7,11 @@
     "trainingInProgress": "Training in progress. Wait until it finishes before changing tabs or reloading."
   },
   "tabs": {
-    "model": "Model",
+    "groups": {
+      "training": "Training",
+      "inference": "Inference"
+    },
+    "model": "Inference model",
     "dataset": "Training dataset",
     "training": "Training",
     "experiments": "Experiments",
@@ -43,7 +47,7 @@
   },
   "model": {
     "selector": "Inference model",
-    "trained": "Trained model",
+    "trained": "Selected inference model",
     "features": "Features",
     "frequency": "Frequency",
     "epochSize": "Window size",
@@ -72,8 +76,14 @@
     "result": "Result",
     "classification": "Classification",
     "confidence": "Confidence",
+    "meanConfidence": "Mean confidence",
+    "controlWindows": "Control windows",
+    "adhdWindows": "ADHD windows",
+    "distributionTitle": "Predicted window distribution",
+    "distributionDescription": "The final class is obtained by majority vote across the analyzed temporal windows.",
+    "controlLabel": "Control",
+    "adhdLabel": "ADHD",
     "summary": "{{epochs}} signal windows were analyzed with model {{model}}.",
-    "windowDistribution": "Window distribution",
     "empty": "No prediction has been run yet."
   },
   "experiments": {

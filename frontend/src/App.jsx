@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { useInferenceController } from "./hooks/useInferenceController";
 import { useTrainingDataset } from "./hooks/useTrainingDataset";
-import { TABS } from "./config/tabs";
+import { TAB_GROUPS } from "./config/tabs";
 import { AppHeader } from "./components/AppHeader";
 import { DatasetView } from "./components/DatasetView";
 import { ExperimentsView } from "./components/ExperimentsView";
@@ -50,7 +50,7 @@ function App() {
         activeTab={controller.activeTab}
         disabled={trainingInProgress}
         onTabChange={handleTabChange}
-        tabs={TABS}
+        tabGroups={TAB_GROUPS}
       />
 
       {trainingInProgress && (
@@ -72,7 +72,6 @@ function App() {
           <ModelView
             metrics={controller.metrics}
             metricsChartData={controller.metricsChartData}
-            modelCatalog={controller.modelCatalog}
             modelFigures={controller.modelFigures}
             modelInfo={controller.modelInfo}
           />
@@ -121,7 +120,6 @@ function App() {
             onFileChange={controller.handleFileChange}
             onPredict={controller.handlePrediction}
             prediction={controller.prediction}
-            predictionChartData={controller.predictionChartData}
             validation={controller.validation}
           />
         </>

@@ -171,22 +171,16 @@ class MLPredictor:
             feature_columns=feature_columns,
         )
         epoch_predictions = model.predict(x_features)
+        epoch_probabilities = None
 
         if hasattr(model, "predict_proba"):
             probabilities = model.predict_proba(x_features)
-            class_labels = list(model.classes_)
-            mean_probabilities = probabilities.mean(axis=0)
-            best_idx = int(np.argmax(mean_probabilities))
-            final_prediction = class_labels[best_idx]
-            confidence = float(mean_probabilities[best_idx])
-        else:
-            values, counts = np.unique(epoch_predictions, return_counts=True)
-            best_idx = int(np.argmax(counts))
-            final_prediction = values[best_idx]
-            confidence = float(counts[best_idx] / len(epoch_predictions))
+            epoch_probabilities = probabilities
 
         # Predicción final agregando todas las epochs del archivo.
         unique_preds, pred_counts = np.unique(epoch_predictions, return_counts=True)
+        best_idx = int(np.argmax(pred_counts))
+        final_prediction = unique_preds[best_idx]
         epoch_count_by_class = {
             map_prediction_label(label): int(count)
             for label, count in zip(unique_preds, pred_counts)
@@ -196,6 +190,22 @@ class MLPredictor:
             for label, count in zip(unique_preds, pred_counts)
         }
         prediction_label = map_prediction_label(final_prediction)
+
+        final_label_confidences = []
+        if epoch_probabilities is not None:
+            class_labels = list(model.classes_)
+            for index, prediction in enumerate(epoch_predictions):
+                if map_prediction_label(prediction) != prediction_label:
+                    continue
+                class_index = class_labels.index(prediction)
+                final_label_confidences.append(
+                    float(epoch_probabilities[index][class_index])
+                )
+        confidence = (
+            float(np.mean(final_label_confidences))
+            if final_label_confidences
+            else epoch_percentage_by_class.get(prediction_label, 0.0)
+        )
 
         return {
             "model_id": self.model_config["model_id"],
@@ -278,13 +288,12 @@ class DLPredictor:
         threshold = float(metadata.get("threshold", 0.5))
         epoch_scores = model.predict(x_epochs, batch_size=32, verbose=0).ravel()
         epoch_predictions = (epoch_scores >= threshold).astype(int)
-        mean_score = float(np.mean(epoch_scores))
 
-        # Predicción DL agregando la probabilidad media de las epochs.
-        final_prediction = int(mean_score >= threshold)
-        confidence = mean_score if final_prediction == 1 else 1.0 - mean_score
+        # Predicción final por voto mayoritario de las ventanas temporales.
 
         unique_preds, pred_counts = np.unique(epoch_predictions, return_counts=True)
+        best_idx = int(np.argmax(pred_counts))
+        final_prediction = int(unique_preds[best_idx])
         epoch_count_by_class = {
             map_prediction_label(int(label)): int(count)
             for label, count in zip(unique_preds, pred_counts)
@@ -294,6 +303,17 @@ class DLPredictor:
             for label, count in zip(unique_preds, pred_counts)
         }
         prediction_label = map_prediction_label(final_prediction)
+
+        final_label_confidences = [
+            float(score) if int(prediction) == 1 else 1.0 - float(score)
+            for score, prediction in zip(epoch_scores, epoch_predictions)
+            if map_prediction_label(int(prediction)) == prediction_label
+        ]
+        confidence = (
+            float(np.mean(final_label_confidences))
+            if final_label_confidences
+            else epoch_percentage_by_class.get(prediction_label, 0.0)
+        )
 
         return {
             "model_id": self.model_config["model_id"],
