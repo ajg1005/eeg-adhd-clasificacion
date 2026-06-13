@@ -107,6 +107,14 @@ def validate_dataframe(df: pd.DataFrame, expected_channels: list[str]) -> dict[s
 
 
 class MLPredictor:
+    """Encapsula la carga e inferencia del mejor modelo ML exportado.
+
+    Lee `final_model.joblib`, sus feature_columns y los metadatos guardados
+    cuando se entreno. Sirve el `info()` para la pestaña Modelo, el
+    `validate()` para comprobar el CSV antes de predecir y el `predict()`
+    que devuelve la clase final agregando los votos por epoch.
+    """
+
     def __init__(self, model_config: dict[str, Any]):
         self.model_config = model_config
         self.model_dir = MODELS_DIR / "ml"
@@ -139,9 +147,19 @@ class MLPredictor:
         return model, feature_columns, metadata, metrics
 
     def load_artifacts(self):
+        """Atajo de lectura del modelo cargado en memoria.
+
+        Existe para que los tests puedan monkeypatchear este metodo y forzar
+        artefactos de prueba sin tocar `cached_property`.
+        """
         return self.artifacts
 
     def info(self) -> dict[str, Any]:
+        """Devuelve los metadatos y metricas del modelo activo.
+
+        Pintar el panel de info en el frontend sin tener que abrir el modelo,
+        solo leer los JSON guardados al exportar.
+        """
         _, feature_columns, metadata, metrics = self.load_artifacts()
 
         return {
@@ -160,10 +178,23 @@ class MLPredictor:
         }
 
     def validate(self, df: pd.DataFrame) -> dict[str, Any]:
+        """Comprueba que el CSV trae los canales que espera este modelo.
+
+        Devuelve cuantos hay, cuales faltan y si las columnas Class/ID estan
+        presentes. El frontend usa esto para avisar al usuario antes de
+        ejecutar la prediccion.
+        """
         _, _, metadata, _ = self.load_artifacts()
         return validate_dataframe(df, metadata.get("channels", []))
 
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
+        """Predice la clase del paciente a partir de su CSV.
+
+        Extrae features de cada epoch, las pasa por el modelo y agrega los
+        votos: la clase mayoritaria gana. La confianza se calcula promediando
+        las probabilidades de los epochs que votaron a la clase ganadora; si
+        el modelo no expone predict_proba se cae al porcentaje de epochs.
+        """
         model, feature_columns, metadata, metrics = self.load_artifacts()
         x_features, _, _, _ = prepare_features_from_dataframe(
             df=df,
@@ -228,6 +259,14 @@ class MLPredictor:
 
 
 class DLPredictor:
+    """Encapsula la carga e inferencia del mejor modelo DL exportado.
+
+    A diferencia del ML, los modelos Keras pesan mas y reconstruirlos en cada
+    request es caro, por eso se cachean en memoria. Predict trabaja sobre
+    epochs crudas (no sobre features) y usa el threshold optimo aprendido en
+    validacion en vez del 0.5 por defecto.
+    """
+
     def __init__(self, model_config: dict[str, Any]):
         self.model_config = model_config
         self.model_dir = MODELS_DIR / "dl"
@@ -257,9 +296,16 @@ class DLPredictor:
         return model, metadata, metrics
 
     def load_artifacts(self):
+        """Atajo de lectura del modelo DL cargado (analogo al ML)."""
         return self.artifacts
 
     def info(self) -> dict[str, Any]:
+        """Devuelve los metadatos y metricas del modelo DL activo.
+
+        Misma intencion que en MLPredictor: alimentar la pestaña Modelo. La
+        diferencia es que aqui no hay feature_columns porque DL trabaja con
+        la señal cruda.
+        """
         _, metadata, metrics = self.load_artifacts()
 
         return {
@@ -278,10 +324,22 @@ class DLPredictor:
         }
 
     def validate(self, df: pd.DataFrame) -> dict[str, Any]:
+        """Comprueba que el CSV trae los canales que espera el modelo DL.
+
+        Mismo contrato que en MLPredictor para que el frontend pueda llamar
+        sin distinguir.
+        """
         _, metadata, _ = self.load_artifacts()
         return validate_dataframe(df, metadata.get("channels", []))
 
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
+        """Predice la clase del paciente con el modelo DL.
+
+        Epocha la señal, normaliza por sujeto, pasa cada epoch por la red y
+        aplica el threshold optimo guardado. La clase final sale por voto
+        mayoritario y la confianza promedia los scores de los epochs que
+        votaron a la clase ganadora.
+        """
         model, metadata, metrics = self.load_artifacts()
         x_epochs, _, _ = prepare_dl_epochs_from_dataframe(df=df, metadata=metadata)
 

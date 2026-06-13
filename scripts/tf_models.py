@@ -52,6 +52,13 @@ def build_eegnet(input_shape, dropout=0.5):
 
 
 def build_cnn_1d(input_shape, filters=16, dropout=0.5, dense_units=32):
+    """CNN-1D progresiva pensada para clasificar epochs EEG cortos.
+
+    Tres bloques convolucionales con filtros crecientes (16, 32, 64) seguidos
+    de pooling, batch norm y dropout. Termina con global average pooling +
+    dense + sigmoid. Diseñada para capturar patrones locales en la señal sin
+    explotar en parametros.
+    """
     inputs = keras.Input(shape=input_shape)
     x = layers.Conv1D(filters, kernel_size=7, padding="same", activation="relu")(inputs)
     x = layers.BatchNormalization()(x)
@@ -75,6 +82,12 @@ def build_cnn_1d(input_shape, filters=16, dropout=0.5, dense_units=32):
 
 
 def build_cnn_lstm(input_shape, filters=16, dropout=0.5, lstm_units=32, dense_units=32):
+    """Hibrido CNN + LSTM bidireccional para capturar tambien la temporalidad.
+
+    Dos bloques Conv1D para sacar features locales y un BiLSTM encima para
+    modelar la dependencia temporal en ambas direcciones. La idea es ver si
+    la informacion secuencial mejora respecto a la CNN-1D pura.
+    """
     inputs = keras.Input(shape=input_shape)
     x = layers.Conv1D(filters, kernel_size=5, padding="same", activation="relu")(inputs)
     x = layers.BatchNormalization()(x)
@@ -95,6 +108,12 @@ def build_cnn_lstm(input_shape, filters=16, dropout=0.5, lstm_units=32, dense_un
 
 
 def build_model(model_name, input_shape, **kwargs):
+    """Factoria de redes DL: devuelve la arquitectura segun el nombre.
+
+    Centraliza el dispatch para que el resto del codigo no tenga que conocer
+    cada `build_*`. Si se añade una arquitectura nueva, solo hay que
+    registrarla aqui.
+    """
     if model_name == "eegnet":
         return build_eegnet(input_shape=input_shape, **kwargs)
     if model_name == "cnn_1d":

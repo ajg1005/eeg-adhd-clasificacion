@@ -10,16 +10,6 @@ def test_models_endpoint_lists_enabled_models(client):
     assert {"ml_best", "dl_best"}.issubset(model_ids)
 
 
-# comprueba que /model/catalog agrupa los modelos por familia (ml/dl)
-def test_model_catalog_endpoint_groups_training_models(client):
-    response = client.get("/model/catalog")
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["machine_learning"]
-    assert data["deep_learning"]
-
-
 # comprueba que /model/info devuelve metadatos del modelo seleccionado
 @requires_ml_model
 def test_model_info_endpoint_returns_metadata(client):

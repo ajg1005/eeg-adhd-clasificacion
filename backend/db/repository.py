@@ -19,7 +19,12 @@ def save_experiment(
     dataframe: pd.DataFrame,
     result: dict[str, Any],
 ):
-    """Guarda un resultado de entrenamiento, su dataset y sus metricas por fold."""
+    """Guarda en BD un experimento completo con sus folds.
+
+    Si el CSV ya existia (mismo hash SHA-256) reutiliza la fila de Dataset
+    en vez de duplicarla. Devuelve el ID del experimento recien creado para
+    que el endpoint lo pueda incluir en la respuesta al frontend.
+    """
     with SessionLocal() as session:
         dataset = _get_or_create_dataset(session, file_bytes, filename, dataframe)
         experiment = _experiment_from_result(dataset.id, result)
@@ -40,7 +45,12 @@ def list_experiments(
     limit: int = 50,
     offset: int = 0,
 ):
-    """Devuelve los experimentos guardados del mas reciente al mas antiguo."""
+    """Devuelve los experimentos guardados del mas reciente al mas antiguo.
+
+    Acepta filtros opcionales por tipo de modelo (ml/dl) y por nombre. La
+    pestaña de Experimentos usa esto para paginar y filtrar. Eager-carga el
+    dataset asociado para no provocar N+1 queries al pintar la tabla.
+    """
     with SessionLocal() as session:
         stmt = (
             select(Experiment)
@@ -58,7 +68,12 @@ def list_experiments(
 
 
 def get_experiment(experiment_id: int):
-    """Devuelve un experimento con su dataset y resultados por fold."""
+    """Devuelve un experimento concreto con su dataset y todos sus folds.
+
+    Eager-carga las relaciones (dataset y fold_results) para que la respuesta
+    del endpoint de detalle no haga consultas adicionales. Si el ID no existe
+    devuelve None y el router lo traduce a 404.
+    """
     with SessionLocal() as session:
         return session.get(
             Experiment,

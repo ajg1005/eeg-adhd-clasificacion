@@ -10,7 +10,6 @@ from backend.schemas.health import HealthResponse
 from backend.schemas.models import (
     FigureItem,
     FiguresResponse,
-    ModelCatalogResponse,
     ModelInfoResponse,
     ModelRegistryItem,
     ModelsResponse,
@@ -38,7 +37,6 @@ __all__ = [
     "FiguresResponse",
     "FlexibleSchema",
     "HealthResponse",
-    "ModelCatalogResponse",
     "ModelInfoResponse",
     "ModelRegistryItem",
     "ModelsResponse",

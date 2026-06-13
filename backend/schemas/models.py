@@ -17,11 +17,6 @@ class ModelsResponse(BaseModel):
     models: list[ModelRegistryItem]
 
 
-class ModelCatalogResponse(FlexibleSchema):
-    machine_learning: list[dict[str, Any]]
-    deep_learning: list[dict[str, Any]]
-
-
 class ModelInfoResponse(FlexibleSchema):
     model_id: str
     display_name: str

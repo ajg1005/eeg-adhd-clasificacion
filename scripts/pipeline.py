@@ -14,6 +14,13 @@ from scripts.ml_model_registry import ALL_MODEL_NAMES, merged_ml_params
 
 # Construye los modelos ML usando los defaults del registro compartido.
 def create_ml_model(model_name, params=None):
+    """Crea el Pipeline sklearn del modelo ML solicitado.
+
+    Cada modelo envuelve el clasificador con un StandardScaler para que el
+    fit/transform del escalado sea parte del cross-validation y no haya
+    leakage entre folds. Los defaults vienen del registro central
+    `ml_model_registry` y se sobrescriben con `params` si llega algo.
+    """
     params = merged_ml_params(model_name, params)
 
     if model_name == "logistic_regression":

@@ -1,18 +1,7 @@
 import pandas as pd
 
-from backend.modeling.model_catalog import get_model_catalog
 from backend.modeling.model_factory import create_ml_model
 from backend.services.training_service import get_dataset_stats, get_training_options
-
-
-# comprueba que el catalogo agrupa modelos ML y DL y todos tienen parametros descritos
-def test_get_model_catalog_groups_ml_and_dl_models():
-    catalog = get_model_catalog()
-
-    assert len(catalog["machine_learning"]) >= 3
-    assert len(catalog["deep_learning"]) >= 2
-    assert all(model["common_parameters"] for model in catalog["machine_learning"])
-    assert all(model["common_parameters"] for model in catalog["deep_learning"])
 
 
 # comprueba que las opciones de entrenamiento exponen los modelos UI esperados

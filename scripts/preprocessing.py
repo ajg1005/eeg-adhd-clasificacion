@@ -10,6 +10,12 @@ def preprocess_dataset(
     subject_col: str = "ID",
     label_col: str = "Class",
 ) -> tuple[pd.DataFrame, list[str]]:
+    """Limpia el dataset y deja la columna de clase en formato 0/1.
+
+    Tira las filas sin ID ni Class, normaliza las etiquetas (acepta ADHD,
+    tdah, control, healthy, 0, 1...) y separa las columnas EEG. Si encuentra
+    una etiqueta que no sabe interpretar lanza ValueError antes de seguir.
+    """
     df = df.copy()
 
     # Comprobar columnas obligatorias.

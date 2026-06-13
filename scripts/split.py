@@ -14,6 +14,13 @@ def make_group_shuffle_split(
     test_size=0.2,
     random_state=RANDOM_STATE,
 ):
+    """Split estratificado por clase pero garantizando que un sujeto va entero.
+
+    Estratifica a nivel de paciente (no de epoch) para mantener proporcion
+    ADHD/Control y, a la vez, asegurar que un mismo sujeto no aparece en
+    train y test. Lo uso para sacar el split interno de validacion dentro
+    de cada fold cuando entreno DL.
+    """
     y_array = np.asarray(y)
     groups_array = np.asarray(groups)
 
@@ -86,6 +93,13 @@ def make_group_kfold_splits(
     groups,
     n_splits=5,
 ):
+    """Genera los folds de la validacion cruzada cross-subject.
+
+    Usa StratifiedGroupKFold para que ningun paciente aparezca a la vez en
+    train y test (evita el leakage tipico de EEG donde el modelo memoriza
+    al sujeto) y al mismo tiempo mantiene proporcion de clases en cada fold.
+    Es el corazon de la evaluacion rigurosa del proyecto.
+    """
     splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
     splits = []
 

@@ -37,17 +37,6 @@ export async function getModels() {
   return data.models;
 }
 
-export async function getModelCatalog() {
-  // Cargar modelos candidatos y parámetros habituales de entrenamiento.
-  const response = await fetch(`${API_BASE_URL}/model/catalog`);
-
-  if (!response.ok) {
-    throw new Error("No se pudo cargar el catálogo de modelos");
-  }
-
-  return response.json();
-}
-
 export async function getTrainingOptions() {
   // Cargar parámetros de red y entrenamiento.
   const response = await fetch(`${API_BASE_URL}/training/options`);

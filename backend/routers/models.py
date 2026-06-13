@@ -1,11 +1,10 @@
 ﻿from fastapi import APIRouter, HTTPException
 
 from backend.routers.responses import MODEL_INFO_RESPONSES, NOT_FOUND_RESPONSES
-from backend.schemas import FiguresResponse, ModelCatalogResponse, ModelInfoResponse, ModelsResponse
+from backend.schemas import FiguresResponse, ModelInfoResponse, ModelsResponse
 from backend.services.model_service import (
     get_model_figures,
     get_model_info,
-    get_training_model_catalog,
     list_models,
 )
 
@@ -18,13 +17,6 @@ router = APIRouter()
 def list_available_models():
     """Devuelve los modelos de inferencia disponibles en el selector."""
     return {"models": list_models()}
-
-
-# Listar modelos candidatos y parametros habituales de entrenamiento
-@router.get("/model/catalog", response_model=ModelCatalogResponse)
-def model_catalog():
-    """Devuelve familias de modelos entrenables y parametros configurables."""
-    return get_training_model_catalog()
 
 
 # Devolver informacion del modelo cargado

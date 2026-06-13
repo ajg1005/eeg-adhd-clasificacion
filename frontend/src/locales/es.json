@@ -56,14 +56,7 @@
     "loadingInfo": "Cargando información del modelo...",
     "cvMetrics": "Métricas CV",
     "noMetrics": "No hay métricas disponibles.",
-    "catalogTitle": "Modelos y parámetros habituales",
-    "catalogDescription": "Catálogo de modelos candidatos para entrenamiento y comparación.",
-    "mlModels": "Modelos clásicos de Machine Learning",
-    "dlModels": "Modelos de Deep Learning",
-    "figures": "Figuras del modelo",
-    "parameter": "Parámetro",
-    "commonValue": "Valor común",
-    "usage": "Uso"
+    "figures": "Figuras del modelo"
   },
   "prediction": {
     "patientFile": "Archivo del paciente",

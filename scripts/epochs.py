@@ -11,6 +11,13 @@ def create_epochs(
     epoch_size=128,
     step_size=64,
 ):
+    """Trocea la señal de cada sujeto en ventanas (epochs) deslizantes.
+
+    Recorre cada paciente por separado para que ninguna ventana mezcle señal
+    de dos sujetos. Devuelve tres arrays paralelos: las epochs (n, ventana,
+    canales), la etiqueta heredada del sujeto y el array de grupos que
+    necesita StratifiedGroupKFold para separar por paciente.
+    """
     x_epochs = []
     y_epochs = []
     groups_epochs = []

@@ -5,6 +5,12 @@ import pandas as pd
 
 
 def extract_epoch_features(x_epochs, channel_names):
+    """Extrae caracteristicas estadisticas temporales por canal y epoch.
+
+    Por cada epoch saca 12 medidas por canal (mean, median, std, var, min,
+    max, range, q25, q75, iqr, energy, rms). Con 19 canales 10-20 salen 228
+    features por epoch. Son la entrada de los modelos ML clasicos.
+    """
 
     # Comprobar dimensiones
     if x_epochs.ndim != 3:

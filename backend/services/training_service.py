@@ -61,12 +61,22 @@ TRAINING_PARAMS_BY_TYPE = {
 
 
 def get_dataset_stats(file_bytes: bytes, preview_rows: int = 5) -> dict[str, Any]:
-    """Devuelve estadisticas de validacion de un CSV de entrenamiento."""
+    """Calcula estadisticas exploratorias del CSV de entrenamiento.
+
+    Devuelve filas, columnas, sujetos unicos, canales detectados y
+    distribucion de clases. Lo usa la pestaña Dataset antes de lanzar
+    un entrenamiento para que el usuario vea con que esta trabajando.
+    """
     return _get_dataset_stats(file_bytes, preview_rows)
 
 
 def get_training_options() -> dict[str, Any]:
-    """Devuelve modelos y parametros de EEG/entrenamiento soportados."""
+    """Devuelve los modelos disponibles y los rangos de parametros validos.
+
+    Lo consume el frontend para construir los desplegables y validar los
+    valores antes de mandar el entrenamiento. Centralizar aqui los rangos
+    evita duplicar listas en JS.
+    """
     return {
         "default_model_type": DEFAULT_MODEL_TYPE,
         "default_models": DEFAULT_MODELS,
@@ -104,7 +114,13 @@ def run_training(
     model_params: dict[str, Any] | None = None,
     training_params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Ejecuta entrenamiento cross-subject, guarda el experimento y devuelve metricas."""
+    """Lanza un entrenamiento cross-subject completo y persiste el experimento.
+
+    Lee el CSV, lo valida, aplica StratifiedGroupKFold para no mezclar pacientes
+    entre folds, entrena el modelo elegido (ML o DL) y agrega las metricas. Al
+    terminar guarda el experimento en BD; si la BD falla se devuelven igualmente
+    las metricas para que el usuario no pierda el resultado.
+    """
     started_at = time.perf_counter()
     eeg_params = _merge_default_eeg_params(model_type, eeg_params or {})
     model_params = model_params or {}
