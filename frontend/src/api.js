@@ -49,29 +49,55 @@ export async function getTrainingOptions() {
 }
 
 
+export async function getSavedTrainingDatasets() {
+  const response = await fetch(`${API_BASE_URL}/training/datasets`);
 
-export async function getDatasetStats(file) {
-  // Analizar estructura del CSV para la pantalla de entrenamiento.
+  if (!response.ok) {
+    throw new Error(await readError(response, "No se pudieron cargar los datasets guardados"));
+  }
+
+  const data = await response.json();
+  return data.datasets;
+}
+
+
+export async function uploadTrainingDataset(file) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/training/dataset/stats`, {
+  const response = await fetch(`${API_BASE_URL}/training/datasets`, {
     method: "POST",
     body: formData,
   });
 
   if (!response.ok) {
-    throw new Error(await readError(response, "No se pudo analizar el dataset"));
+    throw new Error(await readError(response, "No se pudo guardar el dataset"));
   }
 
   return response.json();
 }
 
 
+export async function getSavedTrainingDatasetStats(datasetId) {
+  const response = await fetch(`${API_BASE_URL}/training/datasets/${datasetId}/stats`);
+
+  if (!response.ok) {
+    throw new Error(await readError(response, "No se pudo analizar el dataset guardado"));
+  }
+
+  return response.json();
+}
+
+
+
 export async function runTraining(file, payload) {
   // Entrenar un modelo interactivo con los parámetros elegidos en la vista.
   const formData = new FormData();
-  formData.append("file", file);
+  if (payload.datasetId) {
+    formData.append("dataset_id", String(payload.datasetId));
+  } else if (file) {
+    formData.append("file", file);
+  }
   formData.append("model_type", payload.modelType);
   formData.append("model_name", payload.modelName);
   formData.append("eeg_params", JSON.stringify(payload.eegParams || {}));

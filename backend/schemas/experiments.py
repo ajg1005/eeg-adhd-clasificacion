@@ -8,6 +8,9 @@ class ExperimentDatasetResponse(OrmSchema):
     id: int
     dataset_hash: str
     filename: str
+    original_filename: str | None = None
+    storage_path: str | None = None
+    file_size_bytes: int | None = None
     rows: int
     columns: int
     n_subjects: int

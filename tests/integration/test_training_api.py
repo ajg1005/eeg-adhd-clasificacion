@@ -32,6 +32,26 @@ def test_training_dataset_stats_reports_missing_columns(client, post_csv, invali
     assert "Fp1" in response.json()["missing_required_columns"]
 
 
+def test_training_dataset_upload_lists_saved_dataset(client, post_csv, valid_eeg_dataset_csv_path):
+    upload_response = post_csv(client, valid_eeg_dataset_csv_path, "/training/datasets")
+
+    assert upload_response.status_code == 200
+    uploaded = upload_response.json()
+    assert uploaded["filename"] == valid_eeg_dataset_csv_path.name
+    assert uploaded["reusable"] is True
+
+    list_response = client.get("/training/datasets")
+    assert list_response.status_code == 200
+    assert any(
+        dataset["id"] == uploaded["id"]
+        for dataset in list_response.json()["datasets"]
+    )
+
+    stats_response = client.get(f"/training/datasets/{uploaded['id']}/stats")
+    assert stats_response.status_code == 200
+    assert stats_response.json()["n_patients"] == 4
+
+
 # comprueba que /training/run entrena un modelo ML y devuelve metricas + importancia
 def test_training_run_ml_returns_metrics_and_feature_importance(client, eeg_dataframe_factory):
     rows = eeg_dataframe_factory(samples_per_patient=32)

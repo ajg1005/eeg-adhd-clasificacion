@@ -15,6 +15,7 @@ function selectValue(value) {
 export function TrainingModelPanel({
   currentModelParameters,
   currentModels,
+  datasetSelected,
   file,
   loadingTraining,
   modelName,
@@ -109,7 +110,7 @@ export function TrainingModelPanel({
 
       <button
         className="primary-button"
-        disabled={!file || loadingTraining}
+        disabled={(!file && !datasetSelected) || loadingTraining}
         onClick={onRunTraining}
         type="button"
       >
@@ -122,6 +123,7 @@ export function TrainingModelPanel({
 TrainingModelPanel.propTypes = {
   currentModelParameters: PropTypes.object.isRequired,
   currentModels: PropTypes.objectOf(modelOptionShape).isRequired,
+  datasetSelected: PropTypes.bool,
   file: fileShape,
   loadingTraining: PropTypes.bool.isRequired,
   modelName: PropTypes.string.isRequired,

@@ -87,8 +87,12 @@ function App() {
           handleClassFilterChange={trainingDataset.handleClassFilterChange}
           handleFileChange={trainingDataset.handleFileChange}
           handleMaxPatientsChange={trainingDataset.handleMaxPatientsChange}
+          handleSavedDatasetChange={trainingDataset.handleSavedDatasetChange}
+          loadingDatasets={trainingDataset.loadingDatasets}
           loadingStats={trainingDataset.loadingStats}
           maxPatients={trainingDataset.maxPatients}
+          savedDatasets={trainingDataset.savedDatasets}
+          selectedDataset={trainingDataset.selectedDataset}
           stats={trainingDataset.stats}
         />
       )}
@@ -97,6 +101,7 @@ function App() {
         <TrainingView
           file={trainingDataset.file}
           onTrainingStateChange={setTrainingInProgress}
+          selectedDataset={trainingDataset.selectedDataset}
           stats={trainingDataset.stats}
         />
       )}

@@ -27,6 +27,7 @@ services:
       POSTGRES_HOST: db
     volumes:
       - ./results:/app/results
+      - dataset_uploads:/app/data/uploads/datasets
     depends_on:
       db:
         condition: service_healthy
@@ -48,3 +49,4 @@ services:
 
 volumes:
   postgres_data:
+  dataset_uploads:

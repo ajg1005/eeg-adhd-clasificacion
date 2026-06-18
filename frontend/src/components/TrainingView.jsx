@@ -29,7 +29,7 @@ function modelDefaults(options, modelType, modelName) {
   return options?.model_types?.[modelType]?.models?.[modelName]?.default_params || {};
 }
 
-export function TrainingView({ file, onTrainingStateChange, stats }) {
+export function TrainingView({ file, onTrainingStateChange, selectedDataset, stats }) {
   const { t } = useTranslation();
   const [options, setOptions] = useState(null);
   const [modelType, setModelType] = useState("ml");
@@ -119,7 +119,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
   }
 
   async function handleRunTraining() {
-    if (!file) {
+    if (!file && !selectedDataset) {
       setError(t("training.missingFile"));
       return;
     }
@@ -131,6 +131,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
 
     try {
       const trainingResult = await runTraining(file, {
+        datasetId: selectedDataset?.id,
         modelType,
         modelName,
         eegParams,
@@ -150,7 +151,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
     <section className="training-layout interactive-training">
       {error && <div className="alert alert-error">{error}</div>}
 
-      {!file && (
+      {!file && !selectedDataset && (
         <div className="panel">
           <p className="muted">
             {t("training.uploadFirst")} <strong>{t("tabs.dataset")}</strong>.
@@ -158,25 +159,25 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
         </div>
       )}
 
-      {file && !stats && (
+      {(file || selectedDataset) && !stats && (
         <div className="panel">
           <p className="muted">
             <Trans
               i18nKey="training.datasetNotAnalyzed"
-              values={{ file: file.name }}
+              values={{ file: file?.name || selectedDataset?.filename }}
               components={{ strong: <strong /> }}
             />
           </p>
         </div>
       )}
 
-      {file && stats && (
+      {(file || selectedDataset) && stats && (
         <div className="panel">
           <h3>{t("training.datasetLoaded")}</h3>
           <div className="metric-grid training-metrics-row">
             <div>
               <span>{t("training.file")}</span>
-              <strong>{file.name}</strong>
+              <strong>{file?.name || selectedDataset?.filename}</strong>
             </div>
             <div>
               <span>{t("common.patients")}</span>
@@ -204,6 +205,7 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
       <TrainingModelPanel
         currentModelParameters={currentModelParameters}
         currentModels={currentModels}
+        datasetSelected={Boolean(selectedDataset)}
         file={file}
         loadingTraining={loadingTraining}
         modelName={modelName}
@@ -233,5 +235,9 @@ export function TrainingView({ file, onTrainingStateChange, stats }) {
 TrainingView.propTypes = {
   file: fileShape,
   onTrainingStateChange: PropTypes.func,
+  selectedDataset: PropTypes.shape({
+    filename: PropTypes.string.isRequired,
+    id: PropTypes.number.isRequired,
+  }),
   stats: datasetStatsShape,
 };

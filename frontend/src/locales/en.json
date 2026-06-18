@@ -39,6 +39,8 @@
     "analyze": "Analyze dataset",
     "analyzing": "Analyzing...",
     "selectCsv": "Select EEG CSV",
+    "savedDatasets": "Saved datasets",
+    "newDataset": "Upload new dataset",
     "eegChannels": "EEG channels",
     "missingColumns": "Missing columns: {{columns}}",
     "filterClass": "Class",

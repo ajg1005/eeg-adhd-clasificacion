@@ -24,8 +24,12 @@ export function DatasetView({
   handleClassFilterChange,
   handleFileChange,
   handleMaxPatientsChange,
+  handleSavedDatasetChange,
+  loadingDatasets,
   loadingStats,
   maxPatients,
+  savedDatasets,
+  selectedDataset,
   stats,
 }) {
   const { t } = useTranslation();
@@ -46,7 +50,7 @@ export function DatasetView({
           </div>
           <button
             className="primary-button compact-button"
-            disabled={!file || loadingStats}
+            disabled={(!file && !selectedDataset) || loadingStats}
             onClick={handleAnalyzeDataset}
             type="button"
           >
@@ -54,9 +58,29 @@ export function DatasetView({
           </button>
         </div>
 
+        {savedDatasets.length > 0 && (
+          <div className="controls-row">
+            <label>
+              {t("dataset.savedDatasets")}
+              <select
+                disabled={loadingDatasets || loadingStats}
+                value={selectedDataset?.id || ""}
+                onChange={handleSavedDatasetChange}
+              >
+                <option value="">{t("dataset.newDataset")}</option>
+                {savedDatasets.map((dataset) => (
+                  <option disabled={!dataset.reusable} key={dataset.id} value={dataset.id}>
+                    {dataset.filename} · {dataset.n_subjects} {t("common.patients")}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+
         <label className="file-drop">
           <input accept=".csv" onChange={handleFileChange} type="file" />
-          {file ? file.name : t("dataset.selectCsv")}
+          {file?.name || selectedDataset?.filename || t("dataset.selectCsv")}
         </label>
 
         {stats && (
@@ -165,7 +189,21 @@ DatasetView.propTypes = {
   handleClassFilterChange: PropTypes.func.isRequired,
   handleFileChange: PropTypes.func.isRequired,
   handleMaxPatientsChange: PropTypes.func.isRequired,
+  handleSavedDatasetChange: PropTypes.func.isRequired,
+  loadingDatasets: PropTypes.bool.isRequired,
   loadingStats: PropTypes.bool.isRequired,
   maxPatients: PropTypes.number.isRequired,
+  savedDatasets: PropTypes.arrayOf(
+    PropTypes.shape({
+      filename: PropTypes.string.isRequired,
+      id: PropTypes.number.isRequired,
+      n_subjects: PropTypes.number.isRequired,
+      reusable: PropTypes.bool,
+    }),
+  ).isRequired,
+  selectedDataset: PropTypes.shape({
+    filename: PropTypes.string.isRequired,
+    id: PropTypes.number.isRequired,
+  }),
   stats: datasetStatsShape,
 };
