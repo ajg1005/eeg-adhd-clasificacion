@@ -46,11 +46,15 @@ select {
 }
 
 .app-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 24px;
   align-items: flex-start;
   margin-bottom: 22px;
+}
+
+.header-copy {
+  max-width: 1080px;
 }
 
 .brand-mark {
@@ -82,11 +86,11 @@ select {
 }
 
 h1 {
-  max-width: 960px;
+  max-width: 1080px;
   margin: 0;
   color: var(--ink);
-  font-size: clamp(2.15rem, 4vw, 4rem);
-  line-height: 1.04;
+  font-size: clamp(1.85rem, 2.6vw, 2.85rem);
+  line-height: 1.12;
   letter-spacing: 0;
 }
 
@@ -104,8 +108,8 @@ h3 {
 }
 
 .subtitle {
-  max-width: 760px;
-  margin: 16px 0 0;
+  max-width: 940px;
+  margin: 14px 0 0;
   color: var(--silver);
   font-size: 1.05rem;
   line-height: 1.6;
@@ -691,6 +695,23 @@ h3 {
 .patient-table tbody tr:hover,
 .patient-table .selected-row {
   background: rgba(190, 124, 77, 0.14);
+}
+
+.patient-table .best-row {
+  box-shadow: inset 3px 0 0 var(--golden-chestnut);
+}
+
+.best-row-badge {
+  display: inline-block;
+  margin-left: 8px;
+  border: 1px solid rgba(190, 124, 77, 0.62);
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: rgba(190, 124, 77, 0.18);
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 900;
+  vertical-align: middle;
 }
 
 @media (max-width: 860px) {

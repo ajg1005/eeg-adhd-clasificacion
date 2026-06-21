@@ -1,7 +1,7 @@
 {
   "app": {
-    "title": "Experimental support tool for ADHD analysis using EEG",
-    "subtitle": "Application for validating EEG signals, visualizing channels and running inference with the best deep learning or machine learning model.",
+    "title": "EEG classifier for ADHD analysis support",
+    "subtitle": "Load EEG datasets, train models, review saved experiments and run predictions on patient CSV files.",
     "language": "Language",
     "api": "API",
     "trainingInProgress": "Training in progress. Wait until it finishes before changing tabs or reloading."
@@ -89,7 +89,8 @@
     "date": "Date",
     "detail": "Detail",
     "experiment": "Experiment #{{id}}",
-    "loadingDetail": "Loading detail..."
+    "loadingDetail": "Loading detail...",
+    "bestBadge": "Best"
   },
   "metrics": {
     "accuracy": "Accuracy",

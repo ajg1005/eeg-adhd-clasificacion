@@ -92,6 +92,18 @@ export function ExperimentsView() {
     [experiments, selectedId],
   );
 
+  const bestExperiment = useMemo(() => {
+    if (experiments.length === 0) {
+      return null;
+    }
+
+    return experiments.reduce((best, experiment) => {
+      const bestScore = Number(best.f1_score ?? -1);
+      const currentScore = Number(experiment.f1_score ?? -1);
+      return currentScore > bestScore ? experiment : best;
+    }, experiments[0]);
+  }, [experiments]);
+
   return (
     <section className="training-layout">
       {error && <div className="alert alert-error">{error}</div>}
@@ -130,20 +142,35 @@ export function ExperimentsView() {
                 </tr>
               </thead>
               <tbody>
-                {experiments.map((experiment) => (
-                  <tr
-                    className={experiment.id === selectedId ? "selected-row" : ""}
-                    key={experiment.id}
-                    onClick={() => setSelectedId(experiment.id)}
-                  >
-                    <td>#{experiment.id}</td>
-                    <td>{formatDate(experiment.created_at, i18n.resolvedLanguage)}</td>
-                    <td>{experiment.model_type} / {experiment.model_name}</td>
-                    <td>{experiment.dataset.filename}</td>
-                    <td>{formatMetric(experiment.f1_score)}</td>
-                    <td>{formatMetric(experiment.balanced_accuracy)}</td>
-                  </tr>
-                ))}
+                {experiments.map((experiment) => {
+                  const isBestExperiment = experiment.id === bestExperiment?.id;
+                  const rowClasses = [
+                    experiment.id === selectedId ? "selected-row" : "",
+                    isBestExperiment ? "best-row" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
+
+                  return (
+                    <tr
+                      className={rowClasses}
+                      key={experiment.id}
+                      onClick={() => setSelectedId(experiment.id)}
+                    >
+                      <td>
+                        #{experiment.id}
+                        {isBestExperiment && (
+                          <span className="best-row-badge">{t("experiments.bestBadge")}</span>
+                        )}
+                      </td>
+                      <td>{formatDate(experiment.created_at, i18n.resolvedLanguage)}</td>
+                      <td>{experiment.model_type} / {experiment.model_name}</td>
+                      <td>{experiment.dataset.filename}</td>
+                      <td>{formatMetric(experiment.f1_score)}</td>
+                      <td>{formatMetric(experiment.balanced_accuracy)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

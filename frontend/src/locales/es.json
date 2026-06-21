@@ -1,7 +1,7 @@
 {
   "app": {
-    "title": "Herramienta experimental de apoyo al análisis de TDAH mediante EEG",
-    "subtitle": "Aplicación para validar señales EEG, visualizar canales y ejecutar inferencia con el mejor modelo de deep learning o machine learning.",
+    "title": "Clasificador EEG para apoyo al análisis de TDAH",
+    "subtitle": "Carga datasets EEG, entrena modelos, consulta experimentos guardados y ejecuta predicciones sobre archivos CSV de pacientes.",
     "language": "Idioma",
     "api": "API",
     "trainingInProgress": "Entrenamiento en curso. Espera a que termine antes de cambiar de pestaña o recargar."
@@ -89,7 +89,8 @@
     "date": "Fecha",
     "detail": "Detalle",
     "experiment": "Experimento #{{id}}",
-    "loadingDetail": "Cargando detalle..."
+    "loadingDetail": "Cargando detalle...",
+    "bestBadge": "Mejor"
   },
   "metrics": {
     "accuracy": "Exactitud",

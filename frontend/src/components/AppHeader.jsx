@@ -7,7 +7,7 @@ export function AppHeader({ apiStatus }) {
 
   return (
     <header className="app-header">
-      <div>
+      <div className="header-copy">
         <div className="brand-mark">
           <span className="brand-icon" aria-hidden="true">
             <BrainCircuit size={20} strokeWidth={2.4} />
