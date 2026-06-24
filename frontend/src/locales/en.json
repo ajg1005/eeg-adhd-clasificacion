@@ -4,6 +4,7 @@
     "subtitle": "Load EEG datasets, train models, review saved experiments and run predictions on patient CSV files.",
     "language": "Language",
     "api": "API",
+    "serverUnavailable": "Cannot connect to the server",
     "trainingInProgress": "Training in progress. Wait until it finishes before changing tabs or reloading."
   },
   "tabs": {

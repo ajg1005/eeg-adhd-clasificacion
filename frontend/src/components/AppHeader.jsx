@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 export function AppHeader({ apiStatus }) {
   const { i18n, t } = useTranslation();
+  const showApiError = apiStatus === "error";
 
   return (
     <header className="app-header">
@@ -29,9 +30,11 @@ export function AppHeader({ apiStatus }) {
             <option value="en">EN</option>
           </select>
         </label>
-        <div className={`api-pill api-pill-${apiStatus}`}>
-          {t("app.api")}: {apiStatus === "ok" ? "online" : apiStatus}
-        </div>
+        {showApiError && (
+          <div className="api-pill api-pill-error">
+            {t("app.serverUnavailable")}
+          </div>
+        )}
       </div>
     </header>
   );

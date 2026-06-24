@@ -4,6 +4,7 @@
     "subtitle": "Carga datasets EEG, entrena modelos, consulta experimentos guardados y ejecuta predicciones sobre archivos CSV de pacientes.",
     "language": "Idioma",
     "api": "API",
+    "serverUnavailable": "No se puede conectar con el servidor",
     "trainingInProgress": "Entrenamiento en curso. Espera a que termine antes de cambiar de pestaña o recargar."
   },
   "tabs": {
