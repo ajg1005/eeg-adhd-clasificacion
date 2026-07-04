@@ -79,6 +79,8 @@ def test_training_run_ml_returns_metrics_and_feature_importance(client, eeg_data
     data = response.json()
     assert 0.0 <= data["accuracy"] <= 1.0
     assert data["experiment_id"] > 0
+    assert data["model_saved"] is True
+    assert data["trained_model_id"] > 0
     assert data["patient_results"]
     assert data["feature_importance"]["method"] == "permutation_importance"
     assert data["feature_importance"]["top_features"]
