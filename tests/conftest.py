@@ -9,8 +9,10 @@ from fastapi.testclient import TestClient
 PROJECT_DIR = Path(__file__).resolve().parents[1]
 TEST_DATABASE_PATH = Path(tempfile.gettempdir()) / f"eeg_adhd_tests_{uuid.uuid4().hex}.db"
 TEST_DATASETS_DIR = Path(tempfile.gettempdir()) / f"eeg_adhd_test_datasets_{uuid.uuid4().hex}"
+TEST_TRAINED_MODELS_DIR = Path(tempfile.gettempdir()) / f"eeg_adhd_test_models_{uuid.uuid4().hex}"
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DATABASE_PATH.as_posix()}"
 os.environ["DATASETS_DIR"] = TEST_DATASETS_DIR.as_posix()
+os.environ["TRAINED_MODELS_DIR"] = TEST_TRAINED_MODELS_DIR.as_posix()
 
 TESTS_DIR = Path(__file__).resolve().parent
 FIXTURES_DIR = TESTS_DIR / "fixtures"

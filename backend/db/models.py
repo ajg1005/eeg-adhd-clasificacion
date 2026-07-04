@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -63,11 +63,47 @@ class Experiment(Base):
     classification_report: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
     dataset: Mapped[Dataset] = relationship(back_populates="experiments")
+    trained_model: Mapped["TrainedModel | None"] = relationship(
+        back_populates="experiment",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
     fold_results: Mapped[list["ExperimentFold"]] = relationship(
         back_populates="experiment",
         cascade="all, delete-orphan",
     )
 
+class TrainedModel(Base):
+    """Artefacto final entrenado y registrado para un experimento."""
+
+    __tablename__ = "trained_models"
+    # Nombre explicito para que coincida con la migracion y evitar diffs fantasma
+    # al hacer autogenerate en Alembic.
+    __table_args__ = (
+        UniqueConstraint("experiment_id", name="uq_trained_models_experiment_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+    experiment_id: Mapped[int] = mapped_column(
+        ForeignKey("experiments.id"),
+        nullable=False,
+        index=True,
+    )
+    model_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    model_name: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    model_family: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    artifact_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    feature_columns_path: Mapped[str | None] = mapped_column(String(500))
+    n_features: Mapped[int | None] = mapped_column(Integer)
+    n_epochs_training: Mapped[int] = mapped_column(Integer, nullable=False)
+    n_subjects_training: Mapped[int] = mapped_column(Integer, nullable=False)
+    file_size_bytes: Mapped[int | None] = mapped_column(Integer)
+    threshold: Mapped[float | None] = mapped_column(Float)
+    model_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    is_selected: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    experiment: Mapped[Experiment] = relationship(back_populates="trained_model")
 
 class ExperimentFold(Base):
     """Metricas por fold generadas durante la evaluacion cross-subject."""

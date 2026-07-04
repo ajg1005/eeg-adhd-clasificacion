@@ -73,6 +73,7 @@ def run_ml_cross_subject_cv(
 
     for split_data in cv_splits:
         fitted_model = clone(base_model)
+        _force_single_thread(fitted_model)
         # XGBoost no soporta class_weight nativo: balanceamos via sample_weight por fold.
         # Los demas modelos (LogReg, SVC, RF) ya llevan class_weight="balanced" en el Pipeline.
         fit_kwargs = {}
@@ -211,6 +212,10 @@ def run_dl_cross_subject_cv(
         ),
     }
 
+
+def _force_single_thread(model) -> None:
+    if "model__n_jobs" in model.get_params():
+        model.set_params(model__n_jobs=1)
 
 def _safe_feature_importance_for_fold(
     model,

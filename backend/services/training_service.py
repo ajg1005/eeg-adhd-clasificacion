@@ -13,7 +13,9 @@ from backend.db.repository import (
     load_dataset_file,
     save_dataset,
     save_experiment,
+    save_trained_model,
 )
+from backend.services.model_persistence import persist_final_model
 from backend.services.training_data import (
     get_dataset_stats as _get_dataset_stats,
     prepare_epochs,
@@ -182,6 +184,8 @@ def run_training(
             "evaluation_mode": evaluation["evaluation_mode"],
         },
         "training_time_seconds": round(time.perf_counter() - started_at, 3),
+        "trained_model_id": None,
+        "model_saved": False,
     }
     # Si falla la BD, se devuelven las metricas igualmente.
     try:
@@ -197,6 +201,25 @@ def run_training(
         result["persisted"] = False
     else:
         result["persisted"] = True
+        try:
+            model_record = persist_final_model(
+                experiment_id=result["experiment_id"],
+                model_type=model_type,
+                model_name=model_name,
+                eeg_params=eeg_params,
+                model_params=model_params,
+                training_params=training_params,
+                prepared=prepared,
+            )
+            result["trained_model_id"] = save_trained_model(
+                experiment_id=result["experiment_id"],
+                record=model_record,
+            )
+            result["model_saved"] = True
+        except Exception:
+            logger.exception("No se pudo persistir el modelo final; se devuelven las metricas igualmente.")
+            result["trained_model_id"] = None
+            result["model_saved"] = False
     return result
 
 
