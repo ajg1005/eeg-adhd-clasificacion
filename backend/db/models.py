@@ -77,13 +77,17 @@ class TrainedModel(Base):
     """Artefacto final entrenado y registrado para un experimento."""
 
     __tablename__ = "trained_models"
+    # Nombre explicito para que coincida con la migracion y evitar diffs fantasma
+    # al hacer autogenerate en Alembic.
+    __table_args__ = (
+        UniqueConstraint("experiment_id", name="uq_trained_models_experiment_id"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
     experiment_id: Mapped[int] = mapped_column(
         ForeignKey("experiments.id"),
         nullable=False,
-        unique=True,
         index=True,
     )
     model_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
