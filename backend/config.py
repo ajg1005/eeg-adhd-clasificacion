@@ -22,7 +22,9 @@ if not DATABASE_URL:
         pg_db = os.getenv("POSTGRES_DB", "eeg_adhd")
         DATABASE_URL = f"postgresql+psycopg://{pg_user}:{quote(pg_pass, safe='')}@{pg_host}:{pg_port}/{pg_db}"
     else:
-        DATABASE_URL = f"sqlite:///{(BASE_DIR / 'experiments.db').as_posix()}"
+        raise RuntimeError(
+            "Configura DATABASE_URL o las variables POSTGRES_* en .env para usar PostgreSQL."
+        )
 
 
 CORS_ORIGINS = [
