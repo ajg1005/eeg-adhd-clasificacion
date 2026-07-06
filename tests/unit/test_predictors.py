@@ -1,9 +1,16 @@
+from types import SimpleNamespace
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from backend.modeling import predictors
-from backend.modeling.predictors import DLPredictor, MLPredictor, get_model_config
+from backend.modeling.predictors import (
+    DLPredictor,
+    MLPredictor,
+    get_model_config,
+    get_predictor,
+)
 
 
 class FakeMLModel:
@@ -75,9 +82,70 @@ def _dl_predictor(monkeypatch):
     return predictor
 
 
+def _trained_model_record(tmp_path, *, model_family="machine_learning"):
+    artifact_path = tmp_path / "model.joblib"
+    feature_columns_path = tmp_path / "feature_columns.json"
+    artifact_path.write_bytes(b"fake-model")
+    feature_columns_path.write_text("[]", encoding="utf-8")
+    return SimpleNamespace(
+        id=7,
+        experiment_id=3,
+        model_name="random_forest",
+        model_family=model_family,
+        artifact_path=str(artifact_path),
+        feature_columns_path=str(feature_columns_path),
+        threshold=None,
+        model_metadata={"model_name": "random_forest", "feature_mode": "combined"},
+    )
+
+
 def test_get_model_config_rejects_unknown_model():
     with pytest.raises(ValueError, match="Modelo no encontrado"):
         get_model_config("missing")
+
+
+def test_get_model_config_resolves_registered_trained_model(monkeypatch, tmp_path):
+    record = _trained_model_record(tmp_path)
+    monkeypatch.setattr(
+        predictors,
+        "get_trained_model",
+        lambda trained_model_id: record if trained_model_id == 7 else None,
+    )
+
+    config = get_model_config("trained_model_7")
+
+    assert config["model_id"] == "trained_model_7"
+    assert config["display_name"] == "random_forest - experimento #3"
+    assert config["model_family"] == "machine_learning"
+    assert config["feature_mode"] == "combined"
+    assert config["artifact_path"] == tmp_path / "model.joblib"
+    assert config["enabled"] is True
+
+
+def test_get_predictor_creates_predictor_for_registered_ml_model(monkeypatch, tmp_path):
+    record = _trained_model_record(tmp_path)
+    monkeypatch.setattr(
+        predictors,
+        "get_trained_model",
+        lambda trained_model_id: record if trained_model_id == 7 else None,
+    )
+
+    get_predictor.cache_clear()
+    try:
+        predictor = get_predictor("trained_model_7")
+    finally:
+        get_predictor.cache_clear()
+
+    assert isinstance(predictor, MLPredictor)
+    assert predictor.model_path == tmp_path / "model.joblib"
+    assert predictor.feature_columns_path == tmp_path / "feature_columns.json"
+
+
+def test_get_model_config_rejects_missing_registered_model(monkeypatch):
+    monkeypatch.setattr(predictors, "get_trained_model", lambda trained_model_id: None)
+
+    with pytest.raises(ValueError, match="Modelo no encontrado"):
+        get_model_config("trained_model_999")
 
 
 def test_ml_predictor_info_uses_artifact_metadata(monkeypatch):

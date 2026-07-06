@@ -1,13 +1,114 @@
+import pandas as pd
+
+from backend.db.repository import save_experiment, save_trained_model
 from tests.conftest import requires_ml_model
 
 
-# comprueba que /models lista los modelos habilitados (ml_best y dl_best)
-def test_models_endpoint_lists_enabled_models(client):
+def _save_training_experiment(eeg_dataframe_factory, model_name="random_forest"):
+    df = pd.DataFrame(eeg_dataframe_factory(samples_per_patient=16))
+    file_bytes = df.to_csv(index=False).encode("utf-8")
+    result = {
+        "accuracy": 0.8,
+        "balanced_accuracy": 0.79,
+        "precision": 0.78,
+        "recall": 0.81,
+        "f1_score": 0.79,
+        "training_time_seconds": 0.2,
+        "confusion_matrix": [[3, 1], [1, 3]],
+        "classification_report": {},
+        "fold_results": [],
+        "configuration": {
+            "model_type": "ml",
+            "model_name": model_name,
+            "evaluation_mode": "cross_subject",
+            "eeg_params": {"epoch_size": 1920, "step_size": 960},
+            "model_params": {},
+            "training_params": {},
+        },
+    }
+    return save_experiment(file_bytes, "training.csv", df, result)
+
+
+def _register_trained_model(
+    experiment_id,
+    tmp_path,
+    *,
+    model_name="random_forest",
+    create_artifact=True,
+):
+    model_dir = tmp_path / f"trained-model-{experiment_id}"
+    model_dir.mkdir()
+    artifact_path = model_dir / "model.joblib"
+    feature_columns_path = model_dir / "feature_columns.json"
+
+    if create_artifact:
+        artifact_path.write_bytes(b"fake-model")
+        feature_columns_path.write_text("[]", encoding="utf-8")
+
+    return save_trained_model(
+        experiment_id,
+        {
+            "model_type": "ml",
+            "model_name": model_name,
+            "model_family": "machine_learning",
+            "artifact_path": str(artifact_path),
+            "feature_columns_path": str(feature_columns_path),
+            "n_features": 0,
+            "n_epochs_training": 8,
+            "n_subjects_training": 4,
+            "file_size_bytes": artifact_path.stat().st_size if artifact_path.exists() else None,
+            "threshold": None,
+            "model_metadata": {"model_name": model_name},
+            "is_selected": False,
+        },
+    )
+
+
+# comprueba que /models lista los modelos base y los registrados tras entrenar
+def test_models_endpoint_lists_static_and_registered_trained_models(
+    client,
+    eeg_dataframe_factory,
+    tmp_path,
+):
+    experiment_id = _save_training_experiment(eeg_dataframe_factory)
+    trained_model_id = _register_trained_model(experiment_id, tmp_path)
+
     response = client.get("/models")
 
     assert response.status_code == 200
-    model_ids = {model["model_id"] for model in response.json()["models"]}
-    assert {"ml_best", "dl_best"}.issubset(model_ids)
+    models = {model["model_id"]: model for model in response.json()["models"]}
+    item = models[f"trained_model_{trained_model_id}"]
+
+    assert models["ml_best"]["display_name"] == "Mejor modelo ML"
+    assert models["dl_best"]["display_name"] == "Mejor modelo Deep Learning"
+    assert item["display_name"] == f"random_forest - experimento #{experiment_id}"
+    assert item["model_family"] == "machine_learning"
+    assert item["description"] == "Modelo entrenado desde la aplicacion"
+    assert item["enabled"] is True
+
+
+# comprueba que un registro sin artefacto disponible queda deshabilitado
+def test_models_endpoint_marks_missing_artifact_as_disabled(
+    client,
+    eeg_dataframe_factory,
+    tmp_path,
+):
+    experiment_id = _save_training_experiment(eeg_dataframe_factory, model_name="xgboost")
+    trained_model_id = _register_trained_model(
+        experiment_id,
+        tmp_path,
+        model_name="xgboost",
+        create_artifact=False,
+    )
+
+    response = client.get("/models")
+
+    assert response.status_code == 200
+    models = {model["model_id"]: model for model in response.json()["models"]}
+    item = models[f"trained_model_{trained_model_id}"]
+
+    assert item["display_name"] == f"xgboost - experimento #{experiment_id}"
+    assert item["enabled"] is False
 
 
 # comprueba que /model/info devuelve metadatos del modelo seleccionado
