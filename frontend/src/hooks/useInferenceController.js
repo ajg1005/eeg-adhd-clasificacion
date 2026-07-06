@@ -25,15 +25,27 @@ export function useInferenceController() {
   const [loadingPrediction, setLoadingPrediction] = useState(false);
   const [modelFigures, setModelFigures] = useState([]);
 
-  // Datos estaticos del backend: solo se cargan al montar el hook.
+  async function refreshModels(preferredModelId = null) {
+    const availableModels = await getModels();
+    setModels(availableModels);
+
+    if (
+      preferredModelId &&
+      availableModels.some((model) => model.model_id === preferredModelId)
+    ) {
+      setSelectedModelId(preferredModelId);
+    }
+
+    return availableModels;
+  }
+
+  // Datos estaticos del backend: se cargan al montar el hook.
   useEffect(() => {
     async function loadStaticData() {
       try {
         await getHealth();
         setApiStatus("ok");
-
-        const availableModels = await getModels();
-        setModels(availableModels);
+        await refreshModels();
       } catch (err) {
         setApiStatus("error");
         setError(err.message);
@@ -157,6 +169,7 @@ export function useInferenceController() {
     modelInfo,
     models,
     prediction,
+    refreshModels,
     selectedModelId,
     setActiveTab,
     validation,

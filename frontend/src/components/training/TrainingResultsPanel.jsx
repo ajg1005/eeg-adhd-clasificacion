@@ -147,6 +147,16 @@ export function TrainingResultsPanel({
       {result.persisted === false && (
         <div className="alert alert-error">{t("training.persistError")}</div>
       )}
+      {result.persisted !== false && result.model_saved === false && (
+        <div className="alert alert-warning">{t("training.modelSaveWarning")}</div>
+      )}
+      {result.model_saved && result.trained_model_id && (
+        <div className="alert alert-success">
+          {t("training.modelSaved", {
+            modelId: `trained_model_${result.trained_model_id}`,
+          })}
+        </div>
+      )}
 
       <div className="metric-grid metrics-wide training-result-grid">
         <div>
@@ -311,9 +321,11 @@ TrainingResultsPanel.propTypes = {
       source: PropTypes.string,
       top_features: PropTypes.arrayOf(importanceRowShape),
     }),
+    model_saved: PropTypes.bool,
     persisted: PropTypes.bool,
     precision: PropTypes.number.isRequired,
     recall: PropTypes.number.isRequired,
+    trained_model_id: PropTypes.number,
     training_time_seconds: PropTypes.number.isRequired,
   }),
 };

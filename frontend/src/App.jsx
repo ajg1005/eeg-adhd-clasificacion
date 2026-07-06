@@ -42,6 +42,14 @@ function App() {
     controller.setActiveTab(nextTab);
   }
 
+  function handleTrainingFinished(trainingResult) {
+    const trainedModelId = trainingResult?.trained_model_id
+      ? `trained_model_${trainingResult.trained_model_id}`
+      : null;
+
+    controller.refreshModels(trainedModelId).catch(() => {});
+  }
+
   return (
     <main className="app-shell">
       <AppHeader apiStatus={controller.apiStatus} />
@@ -100,6 +108,7 @@ function App() {
       {controller.activeTab === "training" && (
         <TrainingView
           file={trainingDataset.file}
+          onTrainingFinished={handleTrainingFinished}
           onTrainingStateChange={setTrainingInProgress}
           selectedDataset={trainingDataset.selectedDataset}
           stats={trainingDataset.stats}
