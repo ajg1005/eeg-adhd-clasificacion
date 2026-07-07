@@ -29,7 +29,13 @@ function modelDefaults(options, modelType, modelName) {
   return options?.model_types?.[modelType]?.models?.[modelName]?.default_params || {};
 }
 
-export function TrainingView({ file, onTrainingStateChange, selectedDataset, stats }) {
+export function TrainingView({
+  file,
+  onTrainingFinished,
+  onTrainingStateChange,
+  selectedDataset,
+  stats,
+}) {
   const { t } = useTranslation();
   const [options, setOptions] = useState(null);
   const [modelType, setModelType] = useState("ml");
@@ -139,6 +145,7 @@ export function TrainingView({ file, onTrainingStateChange, selectedDataset, sta
         trainingParams,
       });
       setResult(trainingResult);
+      onTrainingFinished?.(trainingResult);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -234,6 +241,7 @@ export function TrainingView({ file, onTrainingStateChange, selectedDataset, sta
 
 TrainingView.propTypes = {
   file: fileShape,
+  onTrainingFinished: PropTypes.func,
   onTrainingStateChange: PropTypes.func,
   selectedDataset: PropTypes.shape({
     filename: PropTypes.string.isRequired,

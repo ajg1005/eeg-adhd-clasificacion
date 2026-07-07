@@ -294,3 +294,21 @@ def _class_distribution(dataframe: pd.DataFrame) -> dict[str, int]:
         return {}
     labels = dataframe["Class"].map(normalize_class_to_label)
     return {str(label): int(count) for label, count in labels.value_counts(dropna=False).items()}
+
+#Listar modelos entrenados
+def list_trained_models(limit: int = 100, offset: int = 0):
+    """Lista modelos entrenados registrados para inferencia."""
+    with SessionLocal() as session:
+        stmt = (
+            select(TrainedModel)
+            .order_by(TrainedModel.created_at.desc(), TrainedModel.id.desc())
+            .offset(max(0, offset))
+            .limit(max(1, min(limit, 200)))
+        )
+        return list(session.scalars(stmt).all())
+
+
+def get_trained_model(trained_model_id: int):
+    """Devuelve un modelo entrenado por id."""
+    with SessionLocal() as session:
+        return session.get(TrainedModel, trained_model_id)

@@ -3,7 +3,12 @@ import { useTranslation } from "react-i18next";
 
 import { modelInfoShape } from "../propTypes";
 
-export function ModelSelector({ modelInfo, models, onModelChange, selectedModelId }) {
+export function ModelSelector({
+  modelInfo,
+  models,
+  onModelChange,
+  selectedModelId,
+}) {
   const { t } = useTranslation();
 
   return (
@@ -21,8 +26,7 @@ export function ModelSelector({ modelInfo, models, onModelChange, selectedModelI
 
       {modelInfo && (
         <p className="muted">
-          {modelInfo.display_name} · {modelInfo.model_name} ·{" "}
-          {modelInfo.model_family}
+          {modelInfo.display_name} · {modelInfo.model_name} · {modelInfo.model_family}
         </p>
       )}
     </section>

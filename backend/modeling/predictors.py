@@ -1,12 +1,14 @@
 from functools import cached_property, lru_cache
 import json
+from pathlib import Path
 from typing import Any
 
 import joblib
 import numpy as np
 import pandas as pd
 
-from backend.config import MODELS_DIR
+from backend.config import BASE_DIR, MODELS_DIR
+from backend.db.repository import get_trained_model
 from backend.modeling.common import (
     map_prediction_label,
     prepare_dl_epochs_from_dataframe,
@@ -21,7 +23,7 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
         "model_id": "ml_best",
         "display_name": "Mejor modelo ML",
         "model_family": "machine_learning",
-        "description": "Modelo clásico basado en caracteristicas temporales y espectrales.",
+        "description": "Modelo clasico basado en caracteristicas temporales y espectrales.",
         "feature_mode": None,
         "enabled": True,
         "figures": [
@@ -64,24 +66,83 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
 }
 
 
-# Leer metadatos y métricas guardadas al exportar modelos.
+TRAINED_MODEL_PREFIX = "trained_model_"
+
+
+# Leer metadatos y metricas guardadas al exportar modelos.
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-# Buscar la configuración del modelo seleccionado.
+# Buscar la configuracion del modelo seleccionado.
 def get_model_config(model_id: str) -> dict[str, Any]:
-    try:
-        model_config = MODEL_REGISTRY[model_id]
-    except KeyError as exc:
-        raise ValueError("Modelo no encontrado.") from exc
+    if model_id.startswith(TRAINED_MODEL_PREFIX):
+        model_config = _trained_model_config(model_id)
+    else:
+        try:
+            model_config = MODEL_REGISTRY[model_id]
+        except KeyError as exc:
+            raise ValueError("Modelo no encontrado.") from exc
 
     if not model_config.get("enabled", False):
         raise ValueError("Modelo no disponible.")
 
     return model_config
 
+
+def _trained_model_config(model_id: str) -> dict[str, Any]:
+    trained_model_id = _parse_trained_model_id(model_id)
+    trained_model = get_trained_model(trained_model_id)
+    if trained_model is None:
+        raise ValueError("Modelo no encontrado.")
+
+    artifact_path = _resolve_path(trained_model.artifact_path)
+    feature_columns_path = _resolve_optional_path(trained_model.feature_columns_path)
+    metadata = dict(trained_model.model_metadata or {})
+    if trained_model.threshold is not None and "threshold" not in metadata:
+        metadata["threshold"] = float(trained_model.threshold)
+
+    return {
+        "model_id": model_id,
+        "display_name": f"{trained_model.model_name} - experimento #{trained_model.experiment_id}",
+        "model_name": trained_model.model_name,
+        "model_family": trained_model.model_family,
+        "description": "Modelo entrenado desde la aplicacion",
+        "feature_mode": metadata.get("feature_mode") or _default_feature_mode(trained_model.model_family),
+        "enabled": artifact_path.exists(),
+        "artifact_path": artifact_path,
+        "feature_columns_path": feature_columns_path,
+        "metadata_path": artifact_path.parent / "metadata.json",
+        "metrics_path": artifact_path.parent / "model_metrics.json",
+        "metadata": metadata,
+        "metrics": None,
+    }
+
+
+def _parse_trained_model_id(model_id: str) -> int:
+    suffix = model_id.removeprefix(TRAINED_MODEL_PREFIX)
+    try:
+        return int(suffix)
+    except ValueError as exc:
+        raise ValueError("Modelo no encontrado.") from exc
+
+
+def _resolve_path(path_value: str | Path) -> Path:
+    path = Path(path_value)
+    return path if path.is_absolute() else BASE_DIR / path
+
+
+def _resolve_optional_path(path_value: str | None) -> Path | None:
+    if not path_value:
+        return None
+    return _resolve_path(path_value)
+
+
+def _default_feature_mode(model_family: str) -> str | None:
+    if model_family == "deep_learning":
+        return "raw_epochs"
+    return None
 
 def list_enabled_models() -> list[dict[str, Any]]:
     return [
@@ -110,7 +171,7 @@ class MLPredictor:
     """Encapsula la carga e inferencia del mejor modelo ML exportado.
 
     Lee `final_model.joblib`, sus feature_columns y los metadatos guardados
-    cuando se entreno. Sirve el `info()` para la pestaña Modelo, el
+    cuando se entreno. Sirve el `info()` para la pestana Modelo, el
     `validate()` para comprobar el CSV antes de predecir y el `predict()`
     que devuelve la clase final agregando los votos por epoch.
     """
@@ -118,31 +179,38 @@ class MLPredictor:
     def __init__(self, model_config: dict[str, Any]):
         self.model_config = model_config
         self.model_dir = MODELS_DIR / "ml"
-        self.model_path = self.model_dir / "final_model.joblib"
-        self.feature_columns_path = self.model_dir / "feature_columns.json"
-        self.metadata_path = self.model_dir / "model_metadata.json"
-        self.metrics_path = self.model_dir / "model_metrics.json"
+        self.model_path = _config_path(
+            model_config.get("artifact_path"),
+            self.model_dir / "final_model.joblib",
+        )
+        self.feature_columns_path = _config_path(
+            model_config.get("feature_columns_path"),
+            self.model_dir / "feature_columns.json",
+        )
+        self.metadata_path = _config_path(
+            model_config.get("metadata_path"),
+            self.model_dir / "model_metadata.json",
+        )
+        self.metrics_path = _config_path(
+            model_config.get("metrics_path"),
+            self.model_dir / "model_metrics.json",
+        )
+        self.inline_metadata = model_config.get("metadata")
+        self.inline_metrics = model_config.get("metrics")
 
     @cached_property
     def artifacts(self):
-        """Carga una vez el modelo ML y sus metadatos.
-
-        cached_property evita leer los artefactos desde disco en cada llamada a
-        /model/info, /validate o /predict.
-        """
+        """Carga una vez el modelo ML y sus metadatos."""
         if not self.model_path.exists():
             raise FileNotFoundError(f"No existe el modelo: {self.model_path}")
 
         if not self.feature_columns_path.exists():
             raise FileNotFoundError(f"No existe feature_columns.json: {self.feature_columns_path}")
 
-        if not self.metadata_path.exists():
-            raise FileNotFoundError(f"No existe model_metadata.json: {self.metadata_path}")
-
         model = joblib.load(self.model_path)
         feature_columns = load_json(self.feature_columns_path)
-        metadata = load_json(self.metadata_path)
-        metrics = load_json(self.metrics_path) if self.metrics_path.exists() else None
+        metadata = _load_metadata(self.metadata_path, self.inline_metadata)
+        metrics = _load_metrics(self.metrics_path, self.inline_metrics)
 
         return model, feature_columns, metadata, metrics
 
@@ -208,7 +276,7 @@ class MLPredictor:
             probabilities = model.predict_proba(x_features)
             epoch_probabilities = probabilities
 
-        # Predicción final agregando todas las epochs del archivo.
+        # Prediccion final agregando todas las epochs del archivo.
         unique_preds, pred_counts = np.unique(epoch_predictions, return_counts=True)
         best_idx = int(np.argmax(pred_counts))
         final_prediction = unique_preds[best_idx]
@@ -270,28 +338,32 @@ class DLPredictor:
     def __init__(self, model_config: dict[str, Any]):
         self.model_config = model_config
         self.model_dir = MODELS_DIR / "dl"
-        self.model_path = self.model_dir / "final_model.keras"
-        self.metadata_path = self.model_dir / "model_metadata.json"
-        self.metrics_path = self.model_dir / "model_metrics.json"
+        self.model_path = _config_path(
+            model_config.get("artifact_path"),
+            self.model_dir / "final_model.keras",
+        )
+        self.metadata_path = _config_path(
+            model_config.get("metadata_path"),
+            self.model_dir / "model_metadata.json",
+        )
+        self.metrics_path = _config_path(
+            model_config.get("metrics_path"),
+            self.model_dir / "model_metrics.json",
+        )
+        self.inline_metadata = model_config.get("metadata")
+        self.inline_metrics = model_config.get("metrics")
 
     @cached_property
     def artifacts(self):
-        """Carga una vez el modelo DL y sus metadatos.
-
-        Los modelos de Keras son mas costosos de reconstruir desde disco, por
-        lo que se mantienen en memoria durante la vida del predictor.
-        """
+        """Carga una vez el modelo DL y sus metadatos."""
         import keras
 
         if not self.model_path.exists():
             raise FileNotFoundError(f"No existe el modelo DL: {self.model_path}")
 
-        if not self.metadata_path.exists():
-            raise FileNotFoundError(f"No existe model_metadata.json: {self.metadata_path}")
-
         model = keras.models.load_model(self.model_path)
-        metadata = load_json(self.metadata_path)
-        metrics = load_json(self.metrics_path) if self.metrics_path.exists() else None
+        metadata = _load_metadata(self.metadata_path, self.inline_metadata)
+        metrics = _load_metrics(self.metrics_path, self.inline_metrics)
 
         return model, metadata, metrics
 
@@ -302,9 +374,9 @@ class DLPredictor:
     def info(self) -> dict[str, Any]:
         """Devuelve los metadatos y metricas del modelo DL activo.
 
-        Misma intencion que en MLPredictor: alimentar la pestaña Modelo. La
+        Misma intencion que en MLPredictor: alimentar la pestana Modelo. La
         diferencia es que aqui no hay feature_columns porque DL trabaja con
-        la señal cruda.
+        la senal cruda.
         """
         _, metadata, metrics = self.load_artifacts()
 
@@ -335,7 +407,7 @@ class DLPredictor:
     def predict(self, df: pd.DataFrame) -> dict[str, Any]:
         """Predice la clase del paciente con el modelo DL.
 
-        Epocha la señal, normaliza por sujeto, pasa cada epoch por la red y
+        Epocha la senal, normaliza por sujeto, pasa cada epoch por la red y
         aplica el threshold optimo guardado. La clase final sale por voto
         mayoritario y la confianza promedia los scores de los epochs que
         votaron a la clase ganadora.
@@ -347,7 +419,7 @@ class DLPredictor:
         epoch_scores = model.predict(x_epochs, batch_size=32, verbose=0).ravel()
         epoch_predictions = (epoch_scores >= threshold).astype(int)
 
-        # Predicción final por voto mayoritario de las ventanas temporales.
+        # Prediccion final por voto mayoritario de las ventanas temporales.
 
         unique_preds, pred_counts = np.unique(epoch_predictions, return_counts=True)
         best_idx = int(np.argmax(pred_counts))
@@ -394,14 +466,35 @@ class DLPredictor:
         }
 
 
+def _config_path(path_value: str | Path | None, default: Path) -> Path:
+    if path_value is None:
+        return default
+    return Path(path_value)
+
+
+def _load_metadata(metadata_path: Path, inline_metadata: dict[str, Any] | None) -> dict[str, Any]:
+    if metadata_path.exists():
+        return load_json(metadata_path)
+    if inline_metadata:
+        return dict(inline_metadata)
+    raise FileNotFoundError(f"No existe metadata.json: {metadata_path}")
+
+
+def _load_metrics(metrics_path: Path, inline_metrics: dict[str, Any] | None) -> dict[str, Any] | None:
+    if metrics_path.exists():
+        return load_json(metrics_path)
+    return inline_metrics
+
+
 @lru_cache(maxsize=None)
 def get_predictor(model_id: str):
     model_config = get_model_config(model_id)
+    model_family = model_config.get("model_family")
 
-    if model_id == "ml_best":
+    if model_family == "machine_learning":
         return MLPredictor(model_config)
 
-    if model_id == "dl_best":
+    if model_family == "deep_learning":
         return DLPredictor(model_config)
 
     raise ValueError("Modelo no encontrado.")
