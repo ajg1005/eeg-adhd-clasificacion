@@ -116,6 +116,8 @@ export function TrainingModelPanel({
       >
         {loadingTraining ? t("training.training") : t("training.train")}
       </button>
+
+      {loadingTraining && <p className="muted">{t("training.trainingHint")}</p>}
     </div>
   );
 }
