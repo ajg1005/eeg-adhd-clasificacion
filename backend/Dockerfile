@@ -16,10 +16,10 @@ COPY Figuras ./Figuras
 COPY alembic ./alembic
 COPY alembic.ini ./alembic.ini
 
-RUN mkdir -p /app/logs /app/tmp /app/results /app/data/uploads/datasets \
-    && chown -R app:app /app/logs /app/tmp /app/results /app/data \
+RUN mkdir -p /app/logs /app/tmp /app/results /app/data/uploads/datasets /app/models/trained \
+    && chown -R app:app /app/logs /app/tmp /app/results /app/data /app/models/trained \
     && chmod -R 755 /app \
-    && chmod -R 750 /app/logs /app/tmp /app/results /app/data
+    && chmod -R 750 /app/logs /app/tmp /app/results /app/data /app/models/trained
 
 USER app
 

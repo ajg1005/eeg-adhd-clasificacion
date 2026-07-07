@@ -28,6 +28,7 @@ services:
     volumes:
       - ./results:/app/results
       - dataset_uploads:/app/data/uploads/datasets
+      - trained_models:/app/models/trained
     depends_on:
       db:
         condition: service_healthy
@@ -50,3 +51,4 @@ services:
 volumes:
   postgres_data:
   dataset_uploads:
+  trained_models:
