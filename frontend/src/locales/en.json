@@ -41,6 +41,8 @@
     "analyzing": "Analyzing...",
     "selectCsv": "Select EEG CSV",
     "savedDatasets": "Saved datasets",
+    "loadingSavedDatasets": "Loading saved datasets...",
+    "readyToAnalyze": "Dataset selected. Analyze it before training to check patients, rows and EEG channels.",
     "newDataset": "Upload new dataset",
     "eegChannels": "EEG channels",
     "missingColumns": "Missing columns: {{columns}}",
