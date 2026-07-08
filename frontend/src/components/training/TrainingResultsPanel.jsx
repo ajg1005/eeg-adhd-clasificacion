@@ -25,7 +25,7 @@ function ClassificationReportTable({ report, t }) {
   const accuracy = typeof report.accuracy === "number" ? report.accuracy : null;
 
   return (
-    <table className="patient-table compact-table">
+    <table className="patient-table report-table">
       <thead>
         <tr>
           <th>{t("common.class")}</th>
@@ -56,6 +56,61 @@ function ClassificationReportTable({ report, t }) {
 
 ClassificationReportTable.propTypes = {
   report: PropTypes.object.isRequired,
+  t: PropTypes.func.isRequired,
+};
+
+// Sombreado secuencial de una sola tinta: cuanto mayor el recuento, mas opaca la
+// celda. La diagonal (aciertos) suele tener mas casos, asi que resalta sola.
+function confusionCellStyle(value, max) {
+  const intensity = max > 0 ? value / max : 0;
+  const alpha = (0.12 + intensity * 0.68).toFixed(3);
+  return { background: `rgba(190, 124, 77, ${alpha})` };
+}
+
+function ConfusionMatrix({ matrix, t }) {
+  const labels = [t("training.reportRows.Control"), t("training.reportRows.ADHD")];
+  const max = Math.max(...matrix.flat(), 1);
+
+  return (
+    <div className="confusion-matrix">
+      <span className="cm-caption cm-caption-top">{t("training.predicted")}</span>
+      <div className="cm-body">
+        <span className="cm-caption cm-caption-left">{t("training.actual")}</span>
+        <table className="cm-table">
+          <thead>
+            <tr>
+              <td className="cm-corner" aria-hidden="true" />
+              {labels.map((label) => (
+                <th key={label} scope="col">
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {matrix.map((row, rowIndex) => (
+              <tr key={labels[rowIndex] ?? rowIndex}>
+                <th scope="row">{labels[rowIndex]}</th>
+                {row.map((value, colIndex) => (
+                  <td
+                    className="cm-cell"
+                    key={colIndex}
+                    style={confusionCellStyle(value, max)}
+                  >
+                    {value}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+ConfusionMatrix.propTypes = {
+  matrix: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
   t: PropTypes.func.isRequired,
 };
 
@@ -151,11 +206,7 @@ export function TrainingResultsPanel({
         <div className="alert alert-warning">{t("training.modelSaveWarning")}</div>
       )}
       {result.model_saved && result.trained_model_id && (
-        <div className="alert alert-success">
-          {t("training.modelSaved", {
-            modelId: `trained_model_${result.trained_model_id}`,
-          })}
-        </div>
+        <div className="alert alert-success">{t("training.modelSaved")}</div>
       )}
 
       <div className="metric-grid metrics-wide training-result-grid">
@@ -184,17 +235,7 @@ export function TrainingResultsPanel({
       <div className="training-result-columns">
         <div>
           <h3>{t("training.confusionMatrix")}</h3>
-          <table className="patient-table compact-table">
-            <tbody>
-              {result.confusion_matrix.map((row, index) => (
-                <tr key={index}>
-                  {row.map((value, column) => (
-                    <td key={column}>{value}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ConfusionMatrix matrix={result.confusion_matrix} t={t} />
         </div>
         <div>
           <h3>{t("training.classificationReport")}</h3>
