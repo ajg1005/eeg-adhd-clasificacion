@@ -81,7 +81,7 @@ def test_models_endpoint_lists_static_and_registered_trained_models(
 
     assert models["ml_best"]["display_name"] == "Mejor modelo ML"
     assert models["dl_best"]["display_name"] == "Mejor modelo Deep Learning"
-    assert item["display_name"] == f"random_forest - experimento #{experiment_id}"
+    assert item["display_name"] == f"Random Forest - experimento #{experiment_id}"
     assert item["model_family"] == "machine_learning"
     assert item["description"] == "Modelo entrenado desde la aplicacion"
     assert item["enabled"] is True
@@ -107,7 +107,7 @@ def test_models_endpoint_marks_missing_artifact_as_disabled(
     models = {model["model_id"]: model for model in response.json()["models"]}
     item = models[f"trained_model_{trained_model_id}"]
 
-    assert item["display_name"] == f"xgboost - experimento #{experiment_id}"
+    assert item["display_name"] == f"XGBoost - experimento #{experiment_id}"
     assert item["enabled"] is False
 
 

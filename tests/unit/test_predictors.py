@@ -115,7 +115,7 @@ def test_get_model_config_resolves_registered_trained_model(monkeypatch, tmp_pat
     config = get_model_config("trained_model_7")
 
     assert config["model_id"] == "trained_model_7"
-    assert config["display_name"] == "random_forest - experimento #3"
+    assert config["display_name"] == "Random Forest - experimento #3"
     assert config["model_family"] == "machine_learning"
     assert config["feature_mode"] == "combined"
     assert config["artifact_path"] == tmp_path / "model.joblib"
