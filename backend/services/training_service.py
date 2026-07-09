@@ -6,6 +6,7 @@ from typing import Any
 
 from sklearn.metrics import classification_report, confusion_matrix
 
+from backend.modeling import catalog
 from backend.modeling.dl_factory import DL_MODEL_OPTIONS
 from backend.modeling.model_factory import ML_MODEL_OPTIONS
 from backend.db.repository import (
@@ -96,6 +97,14 @@ def get_saved_dataset_file(dataset_id: int) -> tuple[bytes, str]:
     return load_dataset_file(dataset_id)
 
 
+def _models_for_ui(models: dict[str, Any]) -> dict[str, Any]:
+    """Sobrescribe el display_name de cada modelo con el del catalogo unico."""
+    return {
+        name: {**spec, "display_name": catalog.display_name(name)}
+        for name, spec in models.items()
+    }
+
+
 def get_training_options() -> dict[str, Any]:
     """Devuelve los modelos disponibles y los rangos de parametros validos.
 
@@ -111,8 +120,8 @@ def get_training_options() -> dict[str, Any]:
         "default_training_params": DEFAULT_TRAINING_PARAMS,
         "training_params_by_type": TRAINING_PARAMS_BY_TYPE,
         "model_types": {
-            "ml": {"display_name": "Machine Learning", "models": ML_MODEL_OPTIONS},
-            "dl": {"display_name": "Deep Learning", "models": DL_MODEL_OPTIONS},
+            "ml": {"display_name": "Machine Learning", "models": _models_for_ui(ML_MODEL_OPTIONS)},
+            "dl": {"display_name": "Deep Learning", "models": _models_for_ui(DL_MODEL_OPTIONS)},
         },
         "eeg_params": {
             "epoch_size": [512, 640, 1280, 1920],
