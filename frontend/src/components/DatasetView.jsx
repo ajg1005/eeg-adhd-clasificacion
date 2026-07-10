@@ -9,9 +9,12 @@ function filterPatients(patients, classFilter, maxPatients) {
     return [];
   }
 
-  const filtered = classFilter === "all"
-    ? patients
-    : patients.filter((patient) => patient.class_label.toLowerCase() === classFilter);
+  const filtered =
+    classFilter === "all"
+      ? patients
+      : patients.filter(
+          (patient) => patient.class_label.toLowerCase() === classFilter,
+        );
 
   return filtered.slice(0, maxPatients);
 }
@@ -69,8 +72,13 @@ export function DatasetView({
               >
                 <option value="">{t("dataset.newDataset")}</option>
                 {savedDatasets.map((dataset) => (
-                  <option disabled={!dataset.reusable} key={dataset.id} value={dataset.id}>
-                    {dataset.filename} · {dataset.n_subjects} {t("common.patients")}
+                  <option
+                    disabled={!dataset.reusable}
+                    key={dataset.id}
+                    value={dataset.id}
+                  >
+                    {dataset.filename} - {dataset.n_subjects}{" "}
+                    {t("common.patients")}
                   </option>
                 ))}
               </select>
@@ -82,6 +90,14 @@ export function DatasetView({
           <input accept=".csv" onChange={handleFileChange} type="file" />
           {file?.name || selectedDataset?.filename || t("dataset.selectCsv")}
         </label>
+
+        {loadingDatasets && (
+          <p className="muted">{t("dataset.loadingSavedDatasets")}</p>
+        )}
+
+        {(file || selectedDataset) && !stats && !loadingStats && (
+          <div className="alert alert-info">{t("dataset.readyToAnalyze")}</div>
+        )}
 
         {stats && (
           <>
@@ -105,12 +121,14 @@ export function DatasetView({
             </div>
 
             <div className="class-counts">
-              {Object.entries(stats.class_distribution).map(([label, count]) => (
-                <div key={label}>
-                  <span>{label}</span>
-                  <strong>{count}</strong>
-                </div>
-              ))}
+              {Object.entries(stats.class_distribution).map(
+                ([label, count]) => (
+                  <div key={label}>
+                    <span>{label}</span>
+                    <strong>{count}</strong>
+                  </div>
+                ),
+              )}
             </div>
 
             {stats.missing_required_columns.length > 0 && (

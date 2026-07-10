@@ -99,15 +99,17 @@ export function PredictionView({
           </div>
         )}
 
-        {loadingValidation && <p>{t("prediction.validating")}</p>}
+        {loadingValidation && (
+          <div className="alert alert-info">{t("prediction.validating")}</div>
+        )}
 
         {validation && (
-          <p className="ok-text">
+          <div className="alert alert-success">
             {t("prediction.validCsv", {
               channels: validation.available_channels.length,
               rows: validation.rows,
             })}
-          </p>
+          </div>
         )}
 
         {modelInfo && validation && (
@@ -138,6 +140,10 @@ export function PredictionView({
         >
           {loadingPrediction ? t("prediction.processing") : t("prediction.run")}
         </button>
+
+        {loadingPrediction && (
+          <p className="muted">{t("prediction.processingHint")}</p>
+        )}
       </div>
 
       <div className="panel">
