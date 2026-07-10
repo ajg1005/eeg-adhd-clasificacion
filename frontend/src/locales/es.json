@@ -51,7 +51,8 @@
     "noPatients": "No hay pacientes para el filtro seleccionado."
   },
   "model": {
-    "selector": "Modelo de inferencia",
+    "inferenceSelector": "Modelo entrenado para inferencia",
+    "trainingSelector": "Modelo a entrenar",
     "trained": "Modelo de inferencia seleccionado",
     "features": "Características",
     "frequency": "Frecuencia",

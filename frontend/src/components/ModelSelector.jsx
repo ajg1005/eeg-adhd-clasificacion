@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
 import { modelInfoShape } from "../propTypes";
+import { ModelSelectField } from "./ModelSelectField";
 
 export function ModelSelector({
   modelInfo,
@@ -10,23 +11,25 @@ export function ModelSelector({
   selectedModelId,
 }) {
   const { t } = useTranslation();
+  const options = models.map((model) => ({
+    label: model.display_name,
+    value: model.model_id,
+  }));
 
   return (
     <section className="model-selector panel">
-      <label>
-        {t("model.selector")}
-        <select value={selectedModelId} onChange={onModelChange}>
-          {models.map((model) => (
-            <option key={model.model_id} value={model.model_id}>
-              {model.display_name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <ModelSelectField
+        label={t("model.inferenceSelector")}
+        onChange={onModelChange}
+        options={options}
+        value={selectedModelId}
+      />
 
       {modelInfo && (
         <p className="muted">
-          {modelInfo.display_name} · {modelInfo.model_name} · {modelInfo.model_family}
+          {[modelInfo.display_name, modelInfo.model_name, modelInfo.model_family]
+            .filter(Boolean)
+            .join(" - ")}
         </p>
       )}
     </section>
