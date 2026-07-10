@@ -9,13 +9,31 @@ import {
   validateCsv,
 } from "../api";
 
+const DEFAULT_MODEL_ID = "ml_best";
+
+function isModelEnabled(model) {
+  return model.enabled !== false;
+}
+
+function chooseModelId(availableModels, preferredModelId, currentModelId) {
+  const enabledModels = availableModels.filter(isModelEnabled);
+  const candidates = [preferredModelId, currentModelId, DEFAULT_MODEL_ID];
+  const selectedCandidate = candidates.find(
+    (candidate) =>
+      candidate &&
+      enabledModels.some((model) => model.model_id === candidate),
+  );
+
+  return selectedCandidate || enabledModels[0]?.model_id || "";
+}
+
 // Controlador del flujo de inferencia: seleccion de modelo, validacion del CSV
 // del paciente y prediccion.
 export function useInferenceController() {
   const [activeTab, setActiveTab] = useState("dataset");
   const [apiStatus, setApiStatus] = useState("checking");
   const [models, setModels] = useState([]);
-  const [selectedModelId, setSelectedModelId] = useState("ml_best");
+  const [selectedModelId, setSelectedModelId] = useState("");
   const [modelInfo, setModelInfo] = useState(null);
   const [file, setFile] = useState(null);
   const [validation, setValidation] = useState(null);
@@ -28,13 +46,9 @@ export function useInferenceController() {
   async function refreshModels(preferredModelId = null) {
     const availableModels = await getModels();
     setModels(availableModels);
-
-    if (
-      preferredModelId &&
-      availableModels.some((model) => model.model_id === preferredModelId)
-    ) {
-      setSelectedModelId(preferredModelId);
-    }
+    setSelectedModelId((currentModelId) =>
+      chooseModelId(availableModels, preferredModelId, currentModelId),
+    );
 
     return availableModels;
   }
@@ -57,6 +71,10 @@ export function useInferenceController() {
 
   // Info y figuras del modelo: se recargan cada vez que cambia el seleccionado.
   useEffect(() => {
+    if (!selectedModelId) {
+      return;
+    }
+
     async function loadModelData() {
       try {
         const info = await getModelInfo(selectedModelId);
@@ -73,7 +91,7 @@ export function useInferenceController() {
   }, [selectedModelId]);
 
   async function revalidateFile(modelId, fileToValidate) {
-    if (!fileToValidate) {
+    if (!modelId || !fileToValidate) {
       return;
     }
     setLoadingValidation(true);
@@ -111,6 +129,11 @@ export function useInferenceController() {
   }
 
   async function handlePrediction() {
+    if (!selectedModelId) {
+      setError("No hay ningún modelo disponible para realizar la predicción.");
+      return;
+    }
+
     if (!file) {
       setError("Primero sube un archivo CSV.");
       return;
@@ -129,7 +152,8 @@ export function useInferenceController() {
     }
   }
 
-  const metrics = modelInfo?.metrics?.cv_metrics || modelInfo?.metrics;
+  const activeModelInfo = selectedModelId ? modelInfo : null;
+  const metrics = activeModelInfo?.metrics?.cv_metrics || activeModelInfo?.metrics;
 
   const decisionScore = prediction
     ? prediction.decision_score ?? prediction.confidence
@@ -165,8 +189,8 @@ export function useInferenceController() {
     loadingValidation,
     metrics,
     metricsChartData,
-    modelFigures,
-    modelInfo,
+    modelFigures: selectedModelId ? modelFigures : [],
+    modelInfo: activeModelInfo,
     models,
     prediction,
     refreshModels,

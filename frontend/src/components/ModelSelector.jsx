@@ -11,14 +11,25 @@ export function ModelSelector({
   selectedModelId,
 }) {
   const { t } = useTranslation();
-  const options = models.map((model) => ({
-    label: model.display_name,
-    value: model.model_id,
-  }));
+  const hasEnabledModels = models.some((model) => model.enabled !== false);
+  const options = [
+    ...(!selectedModelId
+      ? [{ disabled: true, label: t("model.noAvailableModels"), value: "" }]
+      : []),
+    ...models.map((model) => ({
+      disabled: model.enabled === false,
+      label:
+        model.enabled === false
+          ? `${model.display_name} (${t("model.unavailable")})`
+          : model.display_name,
+      value: model.model_id,
+    })),
+  ];
 
   return (
     <section className="model-selector panel">
       <ModelSelectField
+        disabled={!hasEnabledModels}
         label={t("model.inferenceSelector")}
         onChange={onModelChange}
         options={options}
@@ -41,6 +52,7 @@ ModelSelector.propTypes = {
   models: PropTypes.arrayOf(
     PropTypes.shape({
       display_name: PropTypes.string.isRequired,
+      enabled: PropTypes.bool,
       model_id: PropTypes.string.isRequired,
     }),
   ).isRequired,
