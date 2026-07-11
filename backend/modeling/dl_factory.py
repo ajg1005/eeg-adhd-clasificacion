@@ -3,7 +3,6 @@ from typing import Any
 
 DL_MODEL_OPTIONS: dict[str, dict[str, Any]] = {
     "cnn_1d": {
-        "display_name": "CNN 1D",
         "default_params": {"filters": 16, "dropout": 0.4},
         "parameters": {
             "filters": [16, 32, 64],
@@ -11,7 +10,6 @@ DL_MODEL_OPTIONS: dict[str, dict[str, Any]] = {
         },
     },
     "cnn_lstm": {
-        "display_name": "CNN-LSTM",
         "default_params": {"filters": 16, "dropout": 0.4, "lstm_units": 32},
         "parameters": {
             "filters": [16, 32, 64],

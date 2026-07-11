@@ -4,6 +4,7 @@ import pandas as pd
 
 from backend.config import BASE_DIR
 from backend.db.repository import list_trained_models
+from backend.modeling import catalog
 from backend.modeling.predictors import (
     get_model_config,
     get_predictor,
@@ -22,12 +23,12 @@ def list_models() -> list[dict]:
 
 def _trained_model_item(model) -> dict:
     artifact_path = _resolve_path(model.artifact_path)
-    display_name = f"{model.model_name} - experimento #{model.experiment_id}"
+    display_name = f"{catalog.display_name(model.model_name)} - experimento #{model.experiment_id}"
 
     return {
         "model_id": f"trained_model_{model.id}",
         "display_name": display_name,
-        "model_family": model.model_family,
+        "model_family": catalog.model_family(model.model_name, default=model.model_family),
         "description": "Modelo entrenado desde la aplicacion",
         "enabled": artifact_path.exists(),
     }

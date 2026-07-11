@@ -9,6 +9,7 @@ import pandas as pd
 
 from backend.config import BASE_DIR, MODELS_DIR
 from backend.db.repository import get_trained_model
+from backend.modeling import catalog
 from backend.modeling.common import (
     map_prediction_label,
     prepare_dl_epochs_from_dataframe,
@@ -22,7 +23,7 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     "ml_best": {
         "model_id": "ml_best",
         "display_name": "Mejor modelo ML",
-        "model_family": "machine_learning",
+        "model_family": catalog.MACHINE_LEARNING,
         "description": "Modelo clasico basado en caracteristicas temporales y espectrales.",
         "feature_mode": None,
         "enabled": True,
@@ -48,7 +49,7 @@ MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     "dl_best": {
         "model_id": "dl_best",
         "display_name": "Mejor modelo Deep Learning",
-        "model_family": "deep_learning",
+        "model_family": catalog.DEEP_LEARNING,
         "description": "Modelo neuronal entrenado directamente sobre epochs EEG.",
         "feature_mode": "raw_epochs",
         "enabled": True,
@@ -102,14 +103,15 @@ def _trained_model_config(model_id: str) -> dict[str, Any]:
     metadata = dict(trained_model.model_metadata or {})
     if trained_model.threshold is not None and "threshold" not in metadata:
         metadata["threshold"] = float(trained_model.threshold)
+    family = catalog.model_family(trained_model.model_name, default=trained_model.model_family)
 
     return {
         "model_id": model_id,
-        "display_name": f"{trained_model.model_name} - experimento #{trained_model.experiment_id}",
+        "display_name": f"{catalog.display_name(trained_model.model_name)} - experimento #{trained_model.experiment_id}",
         "model_name": trained_model.model_name,
-        "model_family": trained_model.model_family,
+        "model_family": family,
         "description": "Modelo entrenado desde la aplicacion",
-        "feature_mode": metadata.get("feature_mode") or _default_feature_mode(trained_model.model_family),
+        "feature_mode": metadata.get("feature_mode") or _default_feature_mode(family),
         "enabled": artifact_path.exists(),
         "artifact_path": artifact_path,
         "feature_columns_path": feature_columns_path,

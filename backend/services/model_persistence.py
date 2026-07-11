@@ -21,6 +21,7 @@ import numpy as np
 from sklearn.utils.class_weight import compute_class_weight, compute_sample_weight
 
 from backend.config import BASE_DIR, TRAINED_MODELS_DIR
+from backend.modeling import catalog
 from backend.modeling.dl_factory import create_dl_model
 from backend.modeling.model_factory import create_ml_model
 from backend.services.training_data import PreparedEpochs, features_for_mode
@@ -32,11 +33,6 @@ from backend.services.training_runners import (
 from scripts.constants import RANDOM_STATE
 from scripts.evaluation import find_best_threshold
 from scripts.split import make_group_shuffle_split
-
-MODEL_FAMILIES = {
-    "ml": "machine_learning",
-    "dl": "deep_learning",
-}
 
 
 def persist_final_model(
@@ -244,7 +240,7 @@ def _base_metadata(
     """
     metadata = {
         "model_name": model_name,
-        "model_family": MODEL_FAMILIES[model_type],
+        "model_family": catalog.model_family(model_name),
         "sfreq": int(eeg_params.get("sfreq", 128)),
         "epoch_size": int(eeg_params.get("epoch_size", 1920)),
         "step_size": int(eeg_params.get("step_size", 960)),
@@ -286,7 +282,7 @@ def _record(
     return {
         "model_type": model_type,
         "model_name": model_name,
-        "model_family": MODEL_FAMILIES[model_type],
+        "model_family": catalog.model_family(model_name),
         "artifact_path": _relative_path(artifact_path),
         "feature_columns_path": (
             _relative_path(feature_columns_path) if feature_columns_path is not None else None

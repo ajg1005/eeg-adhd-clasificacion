@@ -128,6 +128,7 @@ function App() {
           <PredictionView
             decisionScore={controller.decisionScore}
             file={controller.file}
+            modelAvailable={Boolean(controller.selectedModelId)}
             loadingPrediction={controller.loadingPrediction}
             loadingValidation={controller.loadingValidation}
             modelInfo={controller.modelInfo}

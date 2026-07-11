@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
+import { ModelSelectField } from "../ModelSelectField";
 import { fileShape, modelOptionShape } from "../../propTypes";
 import {
   modelParamLabel,
@@ -30,6 +31,10 @@ export function TrainingModelPanel({
   visibleTrainingParams,
 }) {
   const { t } = useTranslation();
+  const modelOptions = Object.entries(currentModels).map(([key, model]) => ({
+    label: model.display_name,
+    value: key,
+  }));
 
   return (
     <div className="panel training-section">
@@ -52,16 +57,12 @@ export function TrainingModelPanel({
       </div>
 
       <div className="controls-row">
-        <label>
-          {t("common.model")}
-          <select value={modelName} onChange={onModelNameChange}>
-            {Object.entries(currentModels).map(([key, model]) => (
-              <option key={key} value={key}>
-                {model.display_name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ModelSelectField
+          label={t("model.trainingSelector")}
+          onChange={onModelNameChange}
+          options={modelOptions}
+          value={modelName}
+        />
 
         {Object.entries(currentModelParameters).map(([name, values]) => (
           <label key={name}>

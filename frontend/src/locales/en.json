@@ -51,7 +51,10 @@
     "noPatients": "No patients match the selected filter."
   },
   "model": {
-    "selector": "Inference model",
+    "inferenceSelector": "Trained model for inference",
+    "trainingSelector": "Model to train",
+    "unavailable": "Unavailable",
+    "noAvailableModels": "No models are available for inference",
     "trained": "Selected inference model",
     "features": "Features",
     "frequency": "Frequency",

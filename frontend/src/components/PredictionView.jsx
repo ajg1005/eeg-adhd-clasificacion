@@ -74,6 +74,7 @@ export function PredictionView({
   file,
   loadingPrediction,
   loadingValidation,
+  modelAvailable,
   modelInfo,
   onFileChange,
   onPredict,
@@ -134,7 +135,12 @@ export function PredictionView({
 
         <button
           className="primary-button"
-          disabled={!file || loadingPrediction || loadingValidation}
+          disabled={
+            !modelAvailable ||
+            !file ||
+            loadingPrediction ||
+            loadingValidation
+          }
           onClick={onPredict}
           type="button"
         >
@@ -196,6 +202,7 @@ PredictionView.propTypes = {
   file: fileShape,
   loadingPrediction: PropTypes.bool.isRequired,
   loadingValidation: PropTypes.bool.isRequired,
+  modelAvailable: PropTypes.bool.isRequired,
   modelInfo: modelInfoShape,
   onFileChange: PropTypes.func.isRequired,
   onPredict: PropTypes.func.isRequired,
