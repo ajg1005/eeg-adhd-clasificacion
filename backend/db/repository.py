@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from backend.config import BASE_DIR, DATASETS_DIR
 from backend.constants import normalize_class_to_label
@@ -111,52 +111,6 @@ def get_trained_model_by_experiment(experiment_id: int):
         return session.scalar(
             select(TrainedModel).where(TrainedModel.experiment_id == experiment_id)
         )
-
-def list_experiments(
-    model_type: str | None = None,
-    model_name: str | None = None,
-    limit: int = 50,
-    offset: int = 0,
-):
-    """Devuelve los experimentos guardados del mas reciente al mas antiguo.
-
-    Acepta filtros opcionales por tipo de modelo (ml/dl) y por nombre. La
-    pestaña de Experimentos usa esto para paginar y filtrar. Eager-carga el
-    dataset asociado para no provocar N+1 queries al pintar la tabla.
-    """
-    with SessionLocal() as session:
-        stmt = (
-            select(Experiment)
-            .options(selectinload(Experiment.dataset))
-            .order_by(Experiment.created_at.desc(), Experiment.id.desc())
-            .offset(max(0, offset))
-            .limit(max(1, min(limit, 200)))
-        )
-        if model_type:
-            stmt = stmt.where(Experiment.model_type == model_type)
-        if model_name:
-            stmt = stmt.where(Experiment.model_name == model_name)
-
-        return list(session.scalars(stmt).all())
-
-
-def get_experiment(experiment_id: int):
-    """Devuelve un experimento concreto con su dataset y todos sus folds.
-
-    Eager-carga las relaciones (dataset y fold_results) para que la respuesta
-    del endpoint de detalle no haga consultas adicionales. Si el ID no existe
-    devuelve None y el router lo traduce a 404.
-    """
-    with SessionLocal() as session:
-        return session.get(
-            Experiment,
-            experiment_id,
-            options=[
-                selectinload(Experiment.dataset),
-                selectinload(Experiment.fold_results),
-            ],
-        )
-
 
 def _get_or_create_dataset(
     session: Session,

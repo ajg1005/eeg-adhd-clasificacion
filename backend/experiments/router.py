@@ -2,9 +2,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
 
-from backend.db.repository import get_experiment, list_experiments
+from backend.experiments import service
+from backend.experiments.schemas import (
+    ExperimentDetailResponse,
+    ExperimentsListResponse,
+)
 from backend.routers.responses import NOT_FOUND_RESPONSES
-from backend.schemas import ExperimentDetailResponse, ExperimentsListResponse
 
 
 router = APIRouter()
@@ -19,7 +22,7 @@ def experiments_list(
 ):
     """Devuelve experimentos paginados, opcionalmente filtrados por modelo."""
     return {
-        "experiments": list_experiments(
+        "experiments": service.list_experiments(
             model_type=model_type,
             model_name=model_name,
             limit=limit,
@@ -35,7 +38,7 @@ def experiments_list(
 )
 def experiment_detail(experiment_id: int):
     """Devuelve un experimento guardado con dataset y resultados por fold."""
-    experiment = get_experiment(experiment_id)
+    experiment = service.get_experiment(experiment_id)
     if experiment is None:
         raise HTTPException(status_code=404, detail="Experimento no encontrado.")
     return experiment
