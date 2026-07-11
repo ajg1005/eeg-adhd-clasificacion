@@ -8,7 +8,7 @@ los metadatos minimos para poder cargarlo despues en inferencia. Lo consume
 run_training en backend/services/training_service.py tras persistir el experimento.
 
 El binario pesado (.joblib / .keras) vive en disco bajo TRAINED_MODELS_DIR; en la BD
-solo se guarda la ruta y los metadatos (ver repository.save_trained_model).
+solo se guarda la ruta y los metadatos (ver model_registry.repository.save_trained_model).
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ import numpy as np
 from sklearn.utils.class_weight import compute_class_weight, compute_sample_weight
 
 from backend.config import BASE_DIR, TRAINED_MODELS_DIR
-from backend.modeling import catalog
+from backend.model_registry import catalog
 from backend.modeling.dl_factory import create_dl_model
 from backend.modeling.model_factory import create_ml_model
 from backend.services.training_data import PreparedEpochs, features_for_mode
@@ -47,7 +47,7 @@ def persist_final_model(
     """Reentrena el modelo final sobre todo el dataset y persiste sus artefactos.
 
     Delega en la variante ML o DL segun model_type. Devuelve el dict que
-    repository.save_trained_model insertara en la tabla trained_models (rutas
+    model_registry.repository.save_trained_model insertara en la tabla trained_models (rutas
     relativas, metadatos y tamaño del artefacto). No lanza si el fit es costoso:
     el llamador (run_training) ya envuelve la llamada en try/except.
     """

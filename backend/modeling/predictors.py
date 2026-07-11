@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 
 from backend.config import BASE_DIR, MODELS_DIR
-from backend.db.repository import get_trained_model
-from backend.modeling import catalog
+from backend.model_registry import catalog
+from backend.model_registry.repository import get_trained_model
 from backend.modeling.common import (
     map_prediction_label,
     prepare_dl_epochs_from_dataframe,

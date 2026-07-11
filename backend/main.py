@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.config import CORS_ORIGINS, FIGURES_DIR
 from backend.experiments.router import router as experiments_router
-from backend.routers import health, models, prediction, training_router
+from backend.model_registry.router import router as model_registry_router
+from backend.routers import health, prediction, training_router
 
 
 app = FastAPI(
@@ -24,7 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
-app.include_router(models.router)
+app.include_router(model_registry_router)
 app.include_router(prediction.router)
 app.include_router(training_router.router, prefix="/training", tags=["training"])
 app.include_router(experiments_router, tags=["experiments"])

@@ -1,12 +1,5 @@
 from backend.schemas.common import FlexibleSchema, OrmSchema
 from backend.schemas.health import HealthResponse
-from backend.schemas.models import (
-    FigureItem,
-    FiguresResponse,
-    ModelInfoResponse,
-    ModelRegistryItem,
-    ModelsResponse,
-)
 from backend.schemas.prediction import PredictionResponse, ValidationResponse
 from backend.schemas.training import (
     FeatureImportanceItem,
@@ -23,13 +16,8 @@ from backend.schemas.training import (
 __all__ = [
     "FeatureImportanceItem",
     "FeatureImportanceResponse",
-    "FigureItem",
-    "FiguresResponse",
     "FlexibleSchema",
     "HealthResponse",
-    "ModelInfoResponse",
-    "ModelRegistryItem",
-    "ModelsResponse",
     "OrmSchema",
     "PatientTrainingResult",
     "PredictionResponse",

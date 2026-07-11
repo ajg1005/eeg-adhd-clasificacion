@@ -1,4 +1,4 @@
-from backend.modeling import catalog
+from backend.model_registry import catalog
 from backend.services.training_service import get_training_options
 
 
