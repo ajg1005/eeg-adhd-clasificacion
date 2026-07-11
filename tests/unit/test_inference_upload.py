@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from backend.services.csv_service import ensure_csv_upload, read_csv_upload
+from backend.inference.upload import ensure_csv_upload, read_csv_upload
 
 
 def _upload(filename: str, content: bytes = b"a,b\n1,2\n"):

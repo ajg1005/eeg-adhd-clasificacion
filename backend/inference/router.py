@@ -1,11 +1,14 @@
-﻿from typing import Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
+from backend.inference.schemas import PredictionResponse, ValidationResponse
+from backend.inference.service import (
+    predict_dataframe,
+    validate_dataframe_for_model,
+)
+from backend.inference.upload import read_csv_upload
 from backend.routers.responses import BAD_REQUEST_RESPONSES
-from backend.schemas import PredictionResponse, ValidationResponse
-from backend.services.csv_service import read_csv_upload
-from backend.services.model_service import predict_dataframe, validate_dataframe_for_model
 
 
 router = APIRouter()

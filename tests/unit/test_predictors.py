@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from backend.modeling import predictors
-from backend.modeling.predictors import (
+from backend.inference import predictors
+from backend.inference.predictors import (
     DLPredictor,
     MLPredictor,
     get_model_config,

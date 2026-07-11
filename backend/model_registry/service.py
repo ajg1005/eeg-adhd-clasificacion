@@ -2,7 +2,7 @@ from pathlib import Path
 
 from backend.config import BASE_DIR
 from backend.model_registry import catalog, repository
-from backend.modeling.predictors import (
+from backend.inference.predictors import (
     get_model_config,
     get_predictor,
     list_enabled_models,

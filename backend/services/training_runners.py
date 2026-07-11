@@ -379,6 +379,6 @@ def _release_keras_model(model) -> None:
 
 
 def _clear_predictor_cache() -> None:
-    from backend.modeling.predictors import get_predictor
+    from backend.inference.predictors import get_predictor
 
     get_predictor.cache_clear()

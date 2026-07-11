@@ -1,6 +1,6 @@
 import pandas as pd
 
-from backend.modeling.predictors import get_predictor
+from backend.inference.predictors import get_predictor
 
 
 def validate_dataframe_for_model(df: pd.DataFrame, model_id: str) -> dict:
