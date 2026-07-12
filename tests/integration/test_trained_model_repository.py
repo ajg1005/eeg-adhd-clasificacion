@@ -1,6 +1,6 @@
 import pandas as pd
 
-from backend.db.repository import save_experiment
+from backend.experiments.repository import save_experiment
 from backend.model_registry.repository import (
     get_trained_model_by_experiment,
     save_trained_model,

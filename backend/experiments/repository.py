@@ -1,6 +1,8 @@
 from typing import Any
 
 import pandas as pd
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from backend.datasets import repository as dataset_repository
 from backend.db.engine import SessionLocal
@@ -12,13 +14,8 @@ def save_experiment(
     filename: str,
     dataframe: pd.DataFrame,
     result: dict[str, Any],
-):
-    """Guarda en BD un experimento completo con sus folds.
-
-    Si el CSV ya existia (mismo hash SHA-256) reutiliza la fila de Dataset
-    en vez de duplicarla. Devuelve el ID del experimento recien creado para
-    que el endpoint lo pueda incluir en la respuesta al frontend.
-    """
+) -> int:
+    """Guarda un experimento completo y sus resultados por fold."""
     with SessionLocal() as session:
         dataset = dataset_repository.get_or_create_dataset(
             session,
@@ -38,7 +35,43 @@ def save_experiment(
         return int(experiment.id)
 
 
-def _experiment_from_result(dataset_id: int, result: dict[str, Any]):
+def list_experiments(
+    model_type: str | None = None,
+    model_name: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[Experiment]:
+    """Devuelve los experimentos del mas reciente al mas antiguo."""
+    with SessionLocal() as session:
+        stmt = (
+            select(Experiment)
+            .options(selectinload(Experiment.dataset))
+            .order_by(Experiment.created_at.desc(), Experiment.id.desc())
+            .offset(max(0, offset))
+            .limit(max(1, min(limit, 200)))
+        )
+        if model_type:
+            stmt = stmt.where(Experiment.model_type == model_type)
+        if model_name:
+            stmt = stmt.where(Experiment.model_name == model_name)
+
+        return list(session.scalars(stmt).all())
+
+
+def get_experiment(experiment_id: int) -> Experiment | None:
+    """Devuelve un experimento con su dataset y resultados por fold."""
+    with SessionLocal() as session:
+        return session.get(
+            Experiment,
+            experiment_id,
+            options=[
+                selectinload(Experiment.dataset),
+                selectinload(Experiment.fold_results),
+            ],
+        )
+
+
+def _experiment_from_result(dataset_id: int, result: dict[str, Any]) -> Experiment:
     configuration = result.get("configuration", {})
     return Experiment(
         dataset_id=dataset_id,
@@ -59,7 +92,7 @@ def _experiment_from_result(dataset_id: int, result: dict[str, Any]):
     )
 
 
-def _fold_from_result(experiment_id: int, fold: dict[str, Any]):
+def _fold_from_result(experiment_id: int, fold: dict[str, Any]) -> ExperimentFold:
     return ExperimentFold(
         experiment_id=experiment_id,
         fold=int(fold.get("fold", 0)),

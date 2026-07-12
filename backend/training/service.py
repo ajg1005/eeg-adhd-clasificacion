@@ -9,7 +9,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from backend.modeling.dl_factory import DL_MODEL_OPTIONS
 from backend.modeling.model_factory import ML_MODEL_OPTIONS
 from backend.datasets.service import read_csv, validate_training_dataframe
-from backend.db.repository import save_experiment
+from backend.experiments.service import save_experiment
 from backend.model_registry import catalog
 from backend.model_registry.repository import save_trained_model
 from backend.training.persistence import persist_final_model
