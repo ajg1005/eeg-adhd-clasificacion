@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from backend.schemas.common import FlexibleSchema, OrmSchema
+from backend.api.schemas import FlexibleSchema, OrmSchema
 
 
 class TrainingDatasetPatient(BaseModel):

@@ -7,7 +7,7 @@ from backend.datasets.schemas import (
     SavedTrainingDatasetsListResponse,
     TrainingDatasetStatsResponse,
 )
-from backend.routers.responses import BAD_REQUEST_RESPONSES
+from backend.api.responses import BAD_REQUEST_RESPONSES
 from backend.datasets.service import (
     get_dataset_stats,
     get_saved_dataset_stats,

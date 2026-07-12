@@ -6,7 +6,7 @@ from backend.model_registry.schemas import (
     ModelInfoResponse,
     ModelsResponse,
 )
-from backend.routers.responses import MODEL_INFO_RESPONSES, NOT_FOUND_RESPONSES
+from backend.api.responses import MODEL_INFO_RESPONSES, NOT_FOUND_RESPONSES
 
 
 router = APIRouter()

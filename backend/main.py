@@ -2,12 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from backend.api.health import router as health_router
 from backend.config import CORS_ORIGINS, FIGURES_DIR
 from backend.datasets.router import router as datasets_router
 from backend.experiments.router import router as experiments_router
 from backend.inference.router import router as inference_router
 from backend.model_registry.router import router as model_registry_router
-from backend.routers import health
 from backend.training.router import router as training_router
 
 
@@ -27,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(health.router)
+app.include_router(health_router)
 app.include_router(model_registry_router)
 app.include_router(inference_router)
 app.include_router(training_router)

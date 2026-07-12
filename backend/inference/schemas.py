@@ -1,6 +1,6 @@
 from typing import Any
 
-from backend.schemas.common import FlexibleSchema
+from backend.api.schemas import FlexibleSchema
 
 
 class ValidationResponse(FlexibleSchema):

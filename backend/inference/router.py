@@ -8,7 +8,7 @@ from backend.inference.service import (
     validate_dataframe_for_model,
 )
 from backend.inference.upload import read_csv_upload
-from backend.routers.responses import BAD_REQUEST_RESPONSES
+from backend.api.responses import BAD_REQUEST_RESPONSES
 
 
 router = APIRouter()

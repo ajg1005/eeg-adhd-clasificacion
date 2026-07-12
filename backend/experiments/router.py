@@ -7,7 +7,7 @@ from backend.experiments.schemas import (
     ExperimentDetailResponse,
     ExperimentsListResponse,
 )
-from backend.routers.responses import NOT_FOUND_RESPONSES
+from backend.api.responses import NOT_FOUND_RESPONSES
 
 
 router = APIRouter()

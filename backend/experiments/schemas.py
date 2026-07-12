@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from backend.schemas.common import OrmSchema
+from backend.api.schemas import OrmSchema
 
 
 class ExperimentDatasetResponse(OrmSchema):

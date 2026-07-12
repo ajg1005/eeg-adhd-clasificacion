@@ -3,7 +3,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from backend.routers.responses import TRAINING_RUN_RESPONSES
+from backend.api.responses import TRAINING_RUN_RESPONSES
 from backend.training.schemas import TrainingOptionsResponse, TrainingRunResponse
 from backend.datasets.service import get_saved_dataset_file
 from backend.training.service import get_training_options, run_training
