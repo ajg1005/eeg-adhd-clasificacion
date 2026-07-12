@@ -5,7 +5,7 @@ para medir y los descarta, asi que al terminar no queda ningun modelo reutilizab
 en memoria. Este modulo cierra ese hueco: reentrena un modelo final sobre el
 dataset (mismo criterio que scripts/export_model.py) y lo vuelca a disco junto con
 los metadatos minimos para poder cargarlo despues en inferencia. Lo consume
-run_training en backend/services/training_service.py tras persistir el experimento.
+run_training en backend/training/service.py tras persistir el experimento.
 
 El binario pesado (.joblib / .keras) vive en disco bajo TRAINED_MODELS_DIR; en la BD
 solo se guarda la ruta y los metadatos (ver model_registry.repository.save_trained_model).
@@ -24,8 +24,8 @@ from backend.config import BASE_DIR, TRAINED_MODELS_DIR
 from backend.model_registry import catalog
 from backend.modeling.dl_factory import create_dl_model
 from backend.modeling.model_factory import create_ml_model
-from backend.services.training_data import PreparedEpochs, features_for_mode
-from backend.services.training_runners import (
+from backend.training.data import PreparedEpochs, features_for_mode
+from backend.training.runners import (
     _dl_callbacks,
     _force_single_thread,
     _release_keras_model,

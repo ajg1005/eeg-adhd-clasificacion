@@ -4,12 +4,12 @@ from typing import Annotated, Any
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from backend.routers.responses import TRAINING_RUN_RESPONSES
-from backend.schemas import TrainingOptionsResponse, TrainingRunResponse
+from backend.training.schemas import TrainingOptionsResponse, TrainingRunResponse
 from backend.datasets.service import get_saved_dataset_file
-from backend.services.training_service import get_training_options, run_training
+from backend.training.service import get_training_options, run_training
 
 
-router = APIRouter()
+router = APIRouter(prefix="/training", tags=["training"])
 
 
 def _json_dict(raw_value: str | None) -> dict[str, Any]:

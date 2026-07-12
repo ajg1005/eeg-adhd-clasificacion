@@ -2,7 +2,7 @@ import pandas as pd
 
 from backend.modeling.model_factory import create_ml_model
 from backend.datasets.service import get_dataset_stats
-from backend.services.training_service import get_training_options
+from backend.training.service import get_training_options
 
 
 # comprueba que las opciones de entrenamiento exponen los modelos UI esperados

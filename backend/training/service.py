@@ -12,9 +12,9 @@ from backend.datasets.service import read_csv, validate_training_dataframe
 from backend.db.repository import save_experiment
 from backend.model_registry import catalog
 from backend.model_registry.repository import save_trained_model
-from backend.services.model_persistence import persist_final_model
-from backend.services.training_data import prepare_epochs
-from backend.services.training_runners import (
+from backend.training.persistence import persist_final_model
+from backend.training.data import prepare_epochs
+from backend.training.runners import (
     metrics_dict,
     patient_results,
     run_dl_cross_subject_cv,

@@ -1,5 +1,5 @@
 from backend.model_registry import catalog
-from backend.services.training_service import get_training_options
+from backend.training.service import get_training_options
 
 
 def test_catalog_display_and_family_for_known_models():
