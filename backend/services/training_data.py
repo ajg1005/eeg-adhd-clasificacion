@@ -1,22 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from io import BytesIO
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from backend.constants import (
-    REQUIRED_COLUMNS,
-    REQUIRED_EEG_COLUMNS,
-    normalize_class_to_label,
-)
+from backend.constants import REQUIRED_EEG_COLUMNS
 from scripts.epochs import create_epochs
 from scripts.feature_pipeline import build_features_from_epochs
 from scripts.preprocessing import preprocess_dataset
 from scripts.signal_preprocessing import apply_basic_filtering, zscore_per_subject
-from scripts.validators import validate_training_dataframe  # noqa: F401
 
 
 @dataclass
@@ -25,26 +19,6 @@ class PreparedEpochs:
     y_epochs: np.ndarray
     groups_epochs: np.ndarray
     eeg_columns: list[str]
-
-
-def read_csv(file_bytes: bytes) -> pd.DataFrame:
-    if not file_bytes:
-        raise ValueError("El archivo CSV está vacío.")
-    return pd.read_csv(BytesIO(file_bytes))
-
-
-def get_dataset_stats(file_bytes: bytes, preview_rows: int = 5) -> dict[str, Any]:
-    df = read_csv(file_bytes)
-    return {
-        "rows": int(len(df)),
-        "columns": int(len(df.columns)),
-        "n_patients": int(df["ID"].nunique()) if "ID" in df.columns else 0,
-        "class_distribution": _class_distribution(df),
-        "patients": _patient_rows(df),
-        "eeg_columns": [column for column in REQUIRED_EEG_COLUMNS if column in df.columns],
-        "missing_required_columns": _missing_required_columns(df),
-        "preview": df.head(preview_rows).replace({np.nan: None}).to_dict(orient="records"),
-    }
 
 
 def prepare_epochs(df: pd.DataFrame, eeg_params: dict[str, Any]) -> PreparedEpochs:
@@ -97,26 +71,3 @@ def n_splits_for_groups(y_epochs: np.ndarray, groups_epochs: np.ndarray) -> int:
         raise ValueError("Se necesitan al menos 2 pacientes por clase para aplicar CV cross-subject.")
 
     return n_splits
-
-
-def _missing_required_columns(df: pd.DataFrame) -> list[str]:
-    return [column for column in REQUIRED_COLUMNS if column not in df.columns]
-
-
-def _class_distribution(df: pd.DataFrame) -> dict[str, int]:
-    if "Class" not in df.columns:
-        return {}
-
-    labels = df["Class"].map(normalize_class_to_label)
-    return {str(label): int(count) for label, count in labels.value_counts(dropna=False).items()}
-
-
-def _patient_rows(df: pd.DataFrame) -> list[dict[str, Any]]:
-    if "ID" not in df.columns:
-        return []
-
-    rows = []
-    for patient_id, patient_df in df.groupby("ID", sort=False):
-        label = normalize_class_to_label(patient_df["Class"].iloc[0]) if "Class" in patient_df.columns else "N/A"
-        rows.append({"patient_id": str(patient_id), "class_label": label, "rows": int(len(patient_df))})
-    return rows

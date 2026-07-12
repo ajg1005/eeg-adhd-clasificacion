@@ -8,21 +8,12 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 from backend.modeling.dl_factory import DL_MODEL_OPTIONS
 from backend.modeling.model_factory import ML_MODEL_OPTIONS
-from backend.db.repository import (
-    list_datasets,
-    load_dataset_file,
-    save_dataset,
-    save_experiment,
-)
+from backend.datasets.service import read_csv, validate_training_dataframe
+from backend.db.repository import save_experiment
 from backend.model_registry import catalog
 from backend.model_registry.repository import save_trained_model
 from backend.services.model_persistence import persist_final_model
-from backend.services.training_data import (
-    get_dataset_stats as _get_dataset_stats,
-    prepare_epochs,
-    read_csv,
-    validate_training_dataframe,
-)
+from backend.services.training_data import prepare_epochs
 from backend.services.training_runners import (
     metrics_dict,
     patient_results,
@@ -66,35 +57,6 @@ TRAINING_PARAMS_BY_TYPE = {
     "ml": [],
     "dl": ["epochs", "batch_size", "learning_rate", "early_stopping_patience"],
 }
-
-
-def get_dataset_stats(file_bytes: bytes, preview_rows: int = 5) -> dict[str, Any]:
-    """Calcula estadisticas exploratorias del CSV de entrenamiento.
-
-    Devuelve filas, columnas, sujetos unicos, canales detectados y
-    distribucion de clases. Lo usa la pestaña Dataset antes de lanzar
-    un entrenamiento para que el usuario vea con que esta trabajando.
-    """
-    return _get_dataset_stats(file_bytes, preview_rows)
-
-
-def get_saved_datasets(limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
-    return list_datasets(limit=limit, offset=offset)
-
-
-def save_training_dataset(file_bytes: bytes, filename: str) -> dict[str, Any]:
-    df = read_csv(file_bytes)
-    validate_training_dataframe(df)
-    return save_dataset(file_bytes=file_bytes, filename=filename, dataframe=df)
-
-
-def get_saved_dataset_stats(dataset_id: int, preview_rows: int = 5) -> dict[str, Any]:
-    file_bytes, _ = load_dataset_file(dataset_id)
-    return get_dataset_stats(file_bytes, preview_rows=preview_rows)
-
-
-def get_saved_dataset_file(dataset_id: int) -> tuple[bytes, str]:
-    return load_dataset_file(dataset_id)
 
 
 def _models_for_ui(models: dict[str, Any]) -> dict[str, Any]:

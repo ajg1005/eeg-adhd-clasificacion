@@ -4,10 +4,6 @@ from backend.schemas.training import (
     FeatureImportanceItem,
     FeatureImportanceResponse,
     PatientTrainingResult,
-    SavedTrainingDatasetResponse,
-    SavedTrainingDatasetsListResponse,
-    TrainingDatasetPatient,
-    TrainingDatasetStatsResponse,
     TrainingOptionsResponse,
     TrainingRunResponse,
 )
@@ -19,10 +15,6 @@ __all__ = [
     "HealthResponse",
     "OrmSchema",
     "PatientTrainingResult",
-    "SavedTrainingDatasetResponse",
-    "SavedTrainingDatasetsListResponse",
-    "TrainingDatasetPatient",
-    "TrainingDatasetStatsResponse",
     "TrainingOptionsResponse",
     "TrainingRunResponse",
 ]
