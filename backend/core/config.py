@@ -1,9 +1,9 @@
+import os
 from pathlib import Path
 from urllib.parse import quote
-import os
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 MODELS_DIR = Path(os.getenv("MODELS_DIR", BASE_DIR / "models"))
 TRAINED_MODELS_DIR = Path(os.getenv("TRAINED_MODELS_DIR", MODELS_DIR / "trained"))
 FIGURES_DIR = Path(os.getenv("FIGURES_DIR", BASE_DIR / "Figuras"))

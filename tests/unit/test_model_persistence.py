@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from backend.config import BASE_DIR
+from backend.core.config import BASE_DIR
 from backend.training.persistence import persist_final_model
 from backend.training.data import prepare_epochs
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from backend.constants import REQUIRED_EEG_COLUMNS as EEG_CHANNELS
+from scripts.constants import REQUIRED_EEG_COLUMNS as EEG_CHANNELS
 from scripts.epochs import create_epochs
 from scripts.features import extract_epoch_features
 from scripts.preprocessing import preprocess_dataset

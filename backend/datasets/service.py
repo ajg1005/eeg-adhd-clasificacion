@@ -4,7 +4,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from backend.constants import (
+from scripts.constants import (
     REQUIRED_COLUMNS,
     REQUIRED_EEG_COLUMNS,
     normalize_class_to_label,

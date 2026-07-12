@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.api.health import router as health_router
-from backend.config import CORS_ORIGINS, FIGURES_DIR
+from backend.core.config import CORS_ORIGINS, FIGURES_DIR
 from backend.datasets.router import router as datasets_router
 from backend.experiments.router import router as experiments_router
 from backend.inference.router import router as inference_router

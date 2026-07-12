@@ -7,8 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from backend.config import BASE_DIR, DATASETS_DIR
-from backend.constants import normalize_class_to_label
+from backend.core.config import BASE_DIR, DATASETS_DIR
+from scripts.constants import normalize_class_to_label
 from backend.db.engine import SessionLocal
 from backend.db.models import Dataset
 

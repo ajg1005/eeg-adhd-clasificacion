@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from backend.constants import REQUIRED_EEG_COLUMNS
+from scripts.constants import REQUIRED_EEG_COLUMNS
 from scripts.epochs import create_epochs
 from scripts.feature_pipeline import build_features_from_epochs
 from scripts.preprocessing import preprocess_dataset

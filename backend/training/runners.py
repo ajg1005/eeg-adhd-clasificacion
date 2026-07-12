@@ -9,7 +9,6 @@ from sklearn.base import clone
 from sklearn.inspection import permutation_importance
 from sklearn.utils.class_weight import compute_class_weight, compute_sample_weight
 
-from backend.constants import CLASS_TO_LABEL
 from backend.modeling.dl_factory import create_dl_model, create_early_stopping
 from backend.modeling.model_factory import create_ml_model
 from backend.training.data import (
@@ -17,7 +16,7 @@ from backend.training.data import (
     features_for_mode,
     n_splits_for_groups,
 )
-from scripts.constants import RANDOM_STATE
+from scripts.constants import CLASS_TO_LABEL, RANDOM_STATE
 from scripts.evaluation import find_best_threshold, metrics_dict
 from scripts.split import make_group_kfold_splits, make_group_shuffle_split
 

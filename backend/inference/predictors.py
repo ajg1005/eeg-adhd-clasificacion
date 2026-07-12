@@ -7,7 +7,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from backend.config import BASE_DIR, MODELS_DIR
+from backend.core.config import BASE_DIR, MODELS_DIR
 from backend.model_registry import catalog
 from backend.model_registry.repository import get_trained_model
 from backend.modeling.common import (

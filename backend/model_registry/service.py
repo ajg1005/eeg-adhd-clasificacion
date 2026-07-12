@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from backend.config import BASE_DIR
+from backend.core.config import BASE_DIR
 from backend.model_registry import catalog, repository
 from backend.inference.predictors import (
     get_model_config,

@@ -20,7 +20,7 @@ import joblib
 import numpy as np
 from sklearn.utils.class_weight import compute_class_weight, compute_sample_weight
 
-from backend.config import BASE_DIR, TRAINED_MODELS_DIR
+from backend.core.config import BASE_DIR, TRAINED_MODELS_DIR
 from backend.model_registry import catalog
 from backend.modeling.dl_factory import create_dl_model
 from backend.modeling.model_factory import create_ml_model
