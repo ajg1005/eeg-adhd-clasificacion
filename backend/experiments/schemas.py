@@ -24,6 +24,7 @@ class ExperimentSummaryResponse(OrmSchema):
     created_at: datetime
     model_type: str
     model_name: str
+    display_name: str
     evaluation_mode: str
     training_time_seconds: float
     accuracy: float

@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from backend.model_registry import service
 from backend.model_registry.schemas import (
+    BestAvailableModelResponse,
     FiguresResponse,
     ModelInfoResponse,
     ModelsResponse,
@@ -17,6 +18,12 @@ router = APIRouter()
 def list_available_models():
     """Devuelve los modelos de inferencia disponibles en el selector."""
     return {"models": service.list_models()}
+
+
+@router.get("/models/best", response_model=BestAvailableModelResponse | None)
+def best_available_model():
+    """Devuelve el mejor modelo entrenado que puede utilizarse en inferencia."""
+    return service.get_best_available_model()
 
 
 # Devolver informacion del modelo cargado
