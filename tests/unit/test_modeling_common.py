@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from backend.constants import REQUIRED_EEG_COLUMNS as EEG_CHANNELS
+from scripts.constants import REQUIRED_EEG_COLUMNS as EEG_CHANNELS
 from backend.modeling.common import map_prediction_label, validate_eeg_dataframe
 
 

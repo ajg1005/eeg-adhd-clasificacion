@@ -1,4 +1,4 @@
-from backend.constants import CLASS_TO_LABEL
+from scripts.constants import CLASS_TO_LABEL
 from scripts.epochs import create_epochs
 from scripts.feature_pipeline import align_feature_columns, build_features_from_config
 from scripts.preprocessing import preprocess_dataset

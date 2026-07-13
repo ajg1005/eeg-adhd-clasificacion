@@ -79,7 +79,7 @@ def post_csv():
 
 @pytest.fixture
 def eeg_dataframe_factory():
-    from backend.constants import REQUIRED_EEG_COLUMNS
+    from scripts.constants import REQUIRED_EEG_COLUMNS
 
     def _factory(patients=None, samples_per_patient=32):
         patients = patients or [

@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from backend.constants import (
+from scripts.constants import (
     CLASS_ADHD,
     CLASS_CONTROL,
     CLASS_UNKNOWN,

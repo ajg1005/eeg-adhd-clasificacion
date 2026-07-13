@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from backend.services import training_runners
-from backend.services.training_runners import (
+from backend.training import runners as training_runners
+from backend.training.runners import (
     _aggregate_importance_by_channel,
     _importance_rows,
     _safe_feature_importance_for_fold,

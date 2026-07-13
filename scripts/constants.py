@@ -6,8 +6,7 @@ Fuente unica de verdad para:
 - Logica de normalizacion de la columna ``Class`` (acepta variantes textuales
   y numericas).
 
-backend/constants.py re-exporta estos simbolos por compatibilidad con los
-imports existentes.
+Los scripts de investigacion y el backend importan directamente este modulo.
 """
 from __future__ import annotations
 

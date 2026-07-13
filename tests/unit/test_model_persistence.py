@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from backend.config import BASE_DIR
-from backend.services.model_persistence import persist_final_model
-from backend.services.training_data import prepare_epochs
+from backend.core.config import BASE_DIR
+from backend.training.persistence import persist_final_model
+from backend.training.data import prepare_epochs
 
 
 def _resolve(path_value: str) -> Path:
@@ -14,7 +14,7 @@ def _resolve(path_value: str) -> Path:
 
 
 def test_persist_final_model_ml_creates_artifacts(tmp_path, monkeypatch, eeg_dataframe_factory):
-    from backend.services import model_persistence
+    from backend.training import persistence as model_persistence
 
     monkeypatch.setattr(model_persistence, "TRAINED_MODELS_DIR", tmp_path / "trained")
     eeg_params = {

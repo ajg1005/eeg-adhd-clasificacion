@@ -1,6 +1,7 @@
 import pandas as pd
 
-from backend.db.repository import save_experiment, save_trained_model
+from backend.experiments.repository import save_experiment
+from backend.model_registry.repository import save_trained_model
 from tests.conftest import requires_ml_model
 
 
