@@ -37,6 +37,16 @@ export async function getModels() {
   return data.models;
 }
 
+export async function getBestAvailableModel() {
+  const response = await fetch(`${API_BASE_URL}/models/best`);
+
+  if (!response.ok) {
+    throw new Error(await readError(response, "No se pudo cargar el mejor modelo disponible"));
+  }
+
+  return response.json();
+}
+
 export async function getTrainingOptions() {
   // Cargar parámetros de red y entrenamiento.
   const response = await fetch(`${API_BASE_URL}/training/options`);

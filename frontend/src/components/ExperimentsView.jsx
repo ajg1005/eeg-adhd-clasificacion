@@ -1,7 +1,12 @@
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { getExperimentDetail, getExperiments } from "../api";
+import {
+  getBestAvailableModel,
+  getExperimentDetail,
+  getExperiments,
+} from "../api";
 import { formatMetric } from "../utils/formatters";
 
 function formatDate(value, language) {
@@ -15,6 +20,7 @@ function formatDate(value, language) {
 export function ExperimentsView() {
   const { i18n, t } = useTranslation();
   const [experiments, setExperiments] = useState([]);
+  const [bestAvailableModel, setBestAvailableModel] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [selectedExperiment, setSelectedExperiment] = useState(null);
   const [loadingList, setLoadingList] = useState(true);
@@ -26,8 +32,12 @@ export function ExperimentsView() {
     setError("");
 
     try {
-      const items = await getExperiments();
+      const [items, bestModel] = await Promise.all([
+        getExperiments(),
+        getBestAvailableModel(),
+      ]);
       setExperiments(items);
+      setBestAvailableModel(bestModel);
       setSelectedId((current) => current ?? items[0]?.id ?? null);
     } catch (err) {
       setError(err.message);
@@ -41,12 +51,16 @@ export function ExperimentsView() {
 
     async function loadInitialExperiments() {
       try {
-        const items = await getExperiments();
+        const [items, bestModel] = await Promise.all([
+          getExperiments(),
+          getBestAvailableModel(),
+        ]);
         if (!mounted) {
           return;
         }
 
         setExperiments(items);
+        setBestAvailableModel(bestModel);
         setSelectedId((current) => current ?? items[0]?.id ?? null);
       } catch (err) {
         if (mounted) {
@@ -92,21 +106,56 @@ export function ExperimentsView() {
     [experiments, selectedId],
   );
 
-  const bestExperiment = useMemo(() => {
-    if (experiments.length === 0) {
-      return null;
-    }
-
-    return experiments.reduce((best, experiment) => {
-      const bestScore = Number(best.f1_score ?? -1);
-      const currentScore = Number(experiment.f1_score ?? -1);
-      return currentScore > bestScore ? experiment : best;
-    }, experiments[0]);
-  }, [experiments]);
 
   return (
     <section className="training-layout">
       {error && <div className="alert alert-error">{error}</div>}
+
+      <div className="panel best-model-overview">
+        <div className="section-heading-row">
+          <div>
+            <h2>{t("experiments.bestAvailableTitle")}</h2>
+            <p className="muted">{t("experiments.bestAvailableDescription")}</p>
+          </div>
+
+        </div>
+
+        {loadingList && !bestAvailableModel ? (
+          <p className="muted">{t("common.loading")}</p>
+        ) : bestAvailableModel ? (
+          <>
+            <div className="best-model-identity">
+              <h3>{bestAvailableModel.display_name}</h3>
+              <p className="muted">
+                {bestAvailableModel.model_type.toUpperCase()} / {t("experiments.experiment", {
+                  id: bestAvailableModel.experiment_id,
+                })} / {formatDate(bestAvailableModel.created_at, i18n.resolvedLanguage)}
+              </p>
+            </div>
+
+            <div className="metric-grid best-model-summary-grid">
+              <div>
+                <span>{t("metrics.balancedAccuracy")}</span>
+                <strong>{formatMetric(bestAvailableModel.balanced_accuracy)}</strong>
+              </div>
+              <div>
+                <span>{t("metrics.f1")}</span>
+                <strong>{formatMetric(bestAvailableModel.f1_score)}</strong>
+              </div>
+              <div>
+                <span>{t("common.dataset")}</span>
+                <strong>{bestAvailableModel.dataset_filename}</strong>
+              </div>
+              <div>
+                <span>{t("common.patients")}</span>
+                <strong>{bestAvailableModel.n_subjects}</strong>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="muted">{t("experiments.bestAvailableEmpty")}</p>
+        )}
+      </div>
 
       <div className="panel">
         <div className="section-heading-row">
@@ -136,38 +185,58 @@ export function ExperimentsView() {
                   <th>ID</th>
                   <th>{t("experiments.date")}</th>
                   <th>{t("common.model")}</th>
+                  <th>{t("experiments.modelType")}</th>
                   <th>{t("common.dataset")}</th>
-                  <th>F1</th>
                   <th>{t("metrics.balanced")}</th>
+                  <th>F1</th>
+
                 </tr>
               </thead>
               <tbody>
                 {experiments.map((experiment) => {
-                  const isBestExperiment = experiment.id === bestExperiment?.id;
-                  const rowClasses = [
-                    experiment.id === selectedId ? "selected-row" : "",
-                    isBestExperiment ? "best-row" : "",
+                  const isSelected = experiment.id === selectedId;
+                  const isBestAvailable = experiment.id === bestAvailableModel?.experiment_id;
+                  const rowClass = [
+                    isSelected ? "selected-row" : "",
+                    isBestAvailable ? "best-row" : "",
                   ]
                     .filter(Boolean)
                     .join(" ");
+                  const selectExperiment = () => setSelectedId(experiment.id);
 
                   return (
                     <tr
-                      className={rowClasses}
+                      aria-selected={isSelected}
+                      className={rowClass}
                       key={experiment.id}
-                      onClick={() => setSelectedId(experiment.id)}
+                      onClick={selectExperiment}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          selectExperiment();
+                        }
+                      }}
+                      tabIndex={0}
                     >
-                      <td>
-                        #{experiment.id}
-                        {isBestExperiment && (
-                          <span className="best-row-badge">{t("experiments.bestBadge")}</span>
+                      <td>#{experiment.id}</td>
+                      <td>{formatDate(experiment.created_at, i18n.resolvedLanguage)}</td>
+                      <td className="experiment-model-cell">
+                        <strong>{experiment.display_name}</strong>
+                        {isBestAvailable && (
+                          <span className="best-row-badge">
+                            {t("experiments.bestBadge")}
+                          </span>
                         )}
                       </td>
-                      <td>{formatDate(experiment.created_at, i18n.resolvedLanguage)}</td>
-                      <td>{experiment.model_type} / {experiment.model_name}</td>
+                      <td>
+                        <span className="model-type-label">
+                          {experiment.model_type.toUpperCase()}
+                        </span>
+                      </td>
                       <td>{experiment.dataset.filename}</td>
-                      <td>{formatMetric(experiment.f1_score)}</td>
                       <td>{formatMetric(experiment.balanced_accuracy)}</td>
+                      <td>{formatMetric(experiment.f1_score)}</td>
+
                     </tr>
                   );
                 })}

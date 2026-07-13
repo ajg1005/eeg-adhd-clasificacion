@@ -682,6 +682,7 @@ h3 {
 
 .patient-table {
   width: 100%;
+  min-width: 980px;
   border-collapse: collapse;
   color: var(--ink);
 }
@@ -709,6 +710,56 @@ h3 {
   background: rgba(190, 124, 77, 0.14);
 }
 
+.patient-table tbody tr:focus-visible {
+  outline: 2px solid var(--golden-chestnut);
+  outline-offset: -2px;
+}
+
+.experiment-model-cell strong {
+  display: inline;
+  color: var(--ink);
+}
+
+.model-type-label {
+  color: var(--silver);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+
+.best-model-overview {
+  border-color: rgba(190, 124, 77, 0.52);
+}
+
+
+.best-model-identity h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.35rem;
+}
+
+.best-model-identity p {
+  margin: 6px 0 0;
+}
+
+.best-model-summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.best-model-summary-grid div {
+  border: 0;
+  border-left: 1px solid var(--border-soft);
+  border-radius: 0;
+  padding: 4px 14px;
+  background: transparent;
+}
+
+.best-model-summary-grid div:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
 .patient-table .best-row {
   box-shadow: inset 3px 0 0 var(--golden-chestnut);
 }
@@ -731,8 +782,20 @@ h3 {
     display: grid;
   }
 
-  .dataset-summary-grid {
+  .dataset-summary-grid,
+  .best-model-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .best-model-summary-grid div,
+  .best-model-summary-grid div:first-child {
+    border-left: 0;
+    border-top: 1px solid var(--border-soft);
+    padding: 10px 0;
+  }
+
+  .best-model-summary-grid div:first-child {
+    border-top: 0;
   }
 }
 .training-layout {

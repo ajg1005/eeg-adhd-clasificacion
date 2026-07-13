@@ -91,9 +91,13 @@
   "experiments": {
     "title": "Experimentos guardados",
     "description": "Historial de entrenamientos persistidos en la base de datos.",
+    "bestAvailableTitle": "Mejor modelo entrenado",
+    "bestAvailableDescription": "Modelo con mayor exactitud balanceada entre los entrenamientos guardados con modelo final.",
+    "bestAvailableEmpty": "Todavía no hay ningún modelo final entrenado.",
     "loadingList": "Cargando experimentos...",
     "empty": "Todavía no hay experimentos guardados.",
     "date": "Fecha",
+    "modelType": "Tipo",
     "detail": "Detalle",
     "experiment": "Experimento #{{id}}",
     "loadingDetail": "Cargando detalle...",
