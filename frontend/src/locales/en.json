@@ -101,7 +101,10 @@
     "detail": "Detail",
     "experiment": "Experiment #{{id}}",
     "loadingDetail": "Loading detail...",
-    "bestBadge": "Best"
+    "bestBadge": "Best",
+    "signalConfiguration": "Signal and segmentation",
+    "modelConfiguration": "Model hyperparameters",
+    "trainingConfiguration": "Training"
   },
   "metrics": {
     "accuracy": "Accuracy",

@@ -8,6 +8,13 @@ import {
   getExperiments,
 } from "../api";
 import { formatMetric } from "../utils/formatters";
+import {
+  evaluationModeLabel,
+  modelParamLabel,
+  optionValueLabel,
+  signalParamLabel,
+  trainingParamLabel,
+} from "../utils/trainingLabels";
 
 function formatDate(value, language) {
   if (!value) {
@@ -15,6 +22,42 @@ function formatDate(value, language) {
   }
 
   return new Date(value).toLocaleString(language === "en" ? "en-US" : "es-ES");
+}
+
+function formatParameterValue(t, value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => formatParameterValue(t, item)).join(", ");
+  }
+
+  if (value && typeof value === "object") {
+    return Object.entries(value)
+      .map(([key, item]) => key + ": " + formatParameterValue(t, item))
+      .join(", ");
+  }
+
+  return optionValueLabel(t, value);
+}
+
+function ParameterGroup({ labelFor, params, t, title }) {
+  const entries = Object.entries(params || {});
+
+  if (entries.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="experiment-parameter-group">
+      <h4>{title}</h4>
+      <dl className="experiment-parameter-list">
+        {entries.map(([name, value]) => (
+          <div key={name}>
+            <dt>{labelFor(t, name)}</dt>
+            <dd>{formatParameterValue(t, value)}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 export function ExperimentsView() {
@@ -179,7 +222,7 @@ export function ExperimentsView() {
           </p>
         ) : (
           <div className="patient-table-wrap">
-            <table className="patient-table">
+            <table className="patient-table experiments-table">
               <thead>
                 <tr>
                   <th>ID</th>
@@ -261,10 +304,22 @@ export function ExperimentsView() {
 
           {selectedExperiment && (
             <>
-              <div className="metric-grid metrics-wide">
+              <div className="experiment-detail-identity">
+                <h3>{selectedExperiment.display_name}</h3>
+                <p className="muted">
+                  {selectedExperiment.model_type.toUpperCase()} /{" "}
+                  {evaluationModeLabel(t, selectedExperiment.evaluation_mode)}
+                </p>
+              </div>
+
+              <div className="metric-grid metrics-wide experiment-metrics">
                 <div>
                   <span>{t("metrics.accuracy")}</span>
                   <strong>{formatMetric(selectedExperiment.accuracy)}</strong>
+                </div>
+                <div>
+                  <span>{t("metrics.balancedAccuracy")}</span>
+                  <strong>{formatMetric(selectedExperiment.balanced_accuracy)}</strong>
                 </div>
                 <div>
                   <span>{t("metrics.precision")}</span>
@@ -287,22 +342,34 @@ export function ExperimentsView() {
               <h3>{t("common.dataset")}</h3>
               <p className="muted">
                 {selectedExperiment.dataset.filename} - {selectedExperiment.dataset.rows}{" "}
-                {t("common.rows").toLowerCase()} - {selectedExperiment.dataset.n_subjects}{" "}
+                {t("common.rows").toLowerCase()} - {selectedExperiment.dataset.columns}{" "}
+                {t("common.columns").toLowerCase()} - {selectedExperiment.dataset.n_subjects}{" "}
                 {t("common.patients").toLowerCase()}
               </p>
 
-              <h3>{t("common.configuration")}</h3>
-              <pre className="training-log">
-                {JSON.stringify(
-                  {
-                    eeg_params: selectedExperiment.eeg_params,
-                    model_params: selectedExperiment.model_params,
-                    training_params: selectedExperiment.training_params,
-                  },
-                  null,
-                  2,
-                )}
-              </pre>
+              <div className="experiment-configuration">
+                <h3>{t("common.configuration")}</h3>
+                <div className="experiment-parameter-groups">
+                  <ParameterGroup
+                    labelFor={signalParamLabel}
+                    params={selectedExperiment.eeg_params}
+                    t={t}
+                    title={t("experiments.signalConfiguration")}
+                  />
+                  <ParameterGroup
+                    labelFor={modelParamLabel}
+                    params={selectedExperiment.model_params}
+                    t={t}
+                    title={t("experiments.modelConfiguration")}
+                  />
+                  <ParameterGroup
+                    labelFor={trainingParamLabel}
+                    params={selectedExperiment.training_params}
+                    t={t}
+                    title={t("experiments.trainingConfiguration")}
+                  />
+                </div>
+              </div>
             </>
           )}
         </div>
