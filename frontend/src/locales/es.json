@@ -102,8 +102,8 @@
     "experiment": "Experimento #{{id}}",
     "loadingDetail": "Cargando detalle...",
     "bestBadge": "Mejor",
-    "signalConfiguration": "Se\u00f1al y segmentaci\u00f3n",
-    "modelConfiguration": "Hiperpar\u00e1metros del modelo",
+    "signalConfiguration": "Señal y segmentación",
+    "modelConfiguration": "Hiperparámetros del modelo",
     "trainingConfiguration": "Entrenamiento"
   },
   "metrics": {
