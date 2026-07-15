@@ -5,15 +5,21 @@ from backend.model_registry.repository import save_trained_model
 from tests.conftest import requires_ml_model
 
 
-def _save_training_experiment(eeg_dataframe_factory, model_name="random_forest"):
+def _save_training_experiment(
+    eeg_dataframe_factory,
+    model_name="random_forest",
+    *,
+    balanced_accuracy=0.79,
+    f1_score=0.79,
+):
     df = pd.DataFrame(eeg_dataframe_factory(samples_per_patient=16))
     file_bytes = df.to_csv(index=False).encode("utf-8")
     result = {
         "accuracy": 0.8,
-        "balanced_accuracy": 0.79,
+        "balanced_accuracy": balanced_accuracy,
         "precision": 0.78,
         "recall": 0.81,
-        "f1_score": 0.79,
+        "f1_score": f1_score,
         "training_time_seconds": 0.2,
         "confusion_matrix": [[3, 1], [1, 3]],
         "classification_report": {},
@@ -110,6 +116,56 @@ def test_models_endpoint_marks_missing_artifact_as_disabled(
 
     assert item["display_name"] == f"XGBoost - experimento #{experiment_id}"
     assert item["enabled"] is False
+
+
+def test_best_model_endpoint_returns_highest_ranked_available_artifact(
+    client,
+    eeg_dataframe_factory,
+    tmp_path,
+):
+    missing_experiment_id = _save_training_experiment(
+        eeg_dataframe_factory,
+        model_name="xgboost",
+        balanced_accuracy=0.95,
+        f1_score=0.94,
+    )
+    _register_trained_model(
+        missing_experiment_id,
+        tmp_path,
+        model_name="xgboost",
+        create_artifact=False,
+    )
+
+    available_experiment_id = _save_training_experiment(
+        eeg_dataframe_factory,
+        balanced_accuracy=0.87,
+        f1_score=0.86,
+    )
+    trained_model_id = _register_trained_model(
+        available_experiment_id,
+        tmp_path,
+    )
+
+    response = client.get("/models/best")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["model_id"] == f"trained_model_{trained_model_id}"
+    assert data["experiment_id"] == available_experiment_id
+    assert data["display_name"] == "Random Forest"
+    assert data["balanced_accuracy"] == 0.87
+    assert data["dataset_filename"] == "training.csv"
+
+
+def test_best_model_endpoint_returns_null_without_registered_models(client, monkeypatch):
+    monkeypatch.setattr(
+        "backend.model_registry.repository.list_trained_models_ranked",
+        lambda: [],
+    )
+    response = client.get("/models/best")
+
+    assert response.status_code == 200
+    assert response.json() is None
 
 
 # comprueba que /model/info devuelve metadatos del modelo seleccionado

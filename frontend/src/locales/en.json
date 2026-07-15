@@ -91,13 +91,20 @@
   "experiments": {
     "title": "Saved experiments",
     "description": "History of training runs persisted in the database.",
+    "bestAvailableTitle": "Best trained model",
+    "bestAvailableDescription": "Model with the highest balanced accuracy among saved runs with a final model.",
+    "bestAvailableEmpty": "There are no final trained models yet.",
     "loadingList": "Loading experiments...",
     "empty": "There are no saved experiments yet.",
     "date": "Date",
+    "modelType": "Type",
     "detail": "Detail",
     "experiment": "Experiment #{{id}}",
     "loadingDetail": "Loading detail...",
-    "bestBadge": "Best"
+    "bestBadge": "Best",
+    "signalConfiguration": "Signal and segmentation",
+    "modelConfiguration": "Model hyperparameters",
+    "trainingConfiguration": "Training"
   },
   "metrics": {
     "accuracy": "Accuracy",

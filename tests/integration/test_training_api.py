@@ -89,6 +89,7 @@ def test_training_run_ml_returns_metrics_and_feature_importance(client, eeg_data
     assert detail_response.status_code == 200
     detail = detail_response.json()
     assert detail["model_name"] == "random_forest"
+    assert detail["display_name"] == "Random Forest"
     assert detail["dataset"]["filename"] == "training.csv"
     assert detail["fold_results"]
 

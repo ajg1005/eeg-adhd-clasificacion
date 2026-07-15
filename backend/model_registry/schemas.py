@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel
@@ -15,6 +16,21 @@ class ModelRegistryItem(FlexibleSchema):
 
 class ModelsResponse(BaseModel):
     models: list[ModelRegistryItem]
+
+
+class BestAvailableModelResponse(BaseModel):
+    model_id: str
+    trained_model_id: int
+    experiment_id: int
+    display_name: str
+    model_name: str
+    model_type: str
+    model_family: str
+    created_at: datetime
+    balanced_accuracy: float
+    f1_score: float
+    dataset_filename: str
+    n_subjects: int
 
 
 class ModelInfoResponse(FlexibleSchema):

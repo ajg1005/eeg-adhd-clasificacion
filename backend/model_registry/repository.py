@@ -1,9 +1,10 @@
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from backend.db.engine import SessionLocal
-from backend.db.models import TrainedModel
+from backend.db.models import Experiment, TrainedModel
 
 
 def save_trained_model(experiment_id: int, record: dict[str, Any]) -> int:
@@ -45,6 +46,25 @@ def list_trained_models(limit: int = 100, offset: int = 0):
             .order_by(TrainedModel.created_at.desc(), TrainedModel.id.desc())
             .offset(max(0, offset))
             .limit(max(1, min(limit, 200)))
+        )
+        return list(session.scalars(stmt).all())
+
+
+def list_trained_models_ranked():
+    """Lista modelos registrados ordenados por el resultado de su experimento."""
+    with SessionLocal() as session:
+        stmt = (
+            select(TrainedModel)
+            .join(TrainedModel.experiment)
+            .options(
+                selectinload(TrainedModel.experiment).selectinload(Experiment.dataset)
+            )
+            .order_by(
+                Experiment.balanced_accuracy.desc(),
+                Experiment.f1_score.desc(),
+                Experiment.created_at.desc(),
+                TrainedModel.id.desc(),
+            )
         )
         return list(session.scalars(stmt).all())
 
