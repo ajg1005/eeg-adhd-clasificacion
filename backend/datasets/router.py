@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from backend.datasets.schemas import (
+    DatasetAnalysisTaskResponse,
     SavedTrainingDatasetResponse,
     SavedTrainingDatasetsListResponse,
     TrainingDatasetStatsResponse,
@@ -14,7 +15,7 @@ from backend.datasets.service import (
     get_saved_datasets,
     save_training_dataset,
 )
-
+from backend.datasets.tasks import analyze_dataset
 
 router = APIRouter(prefix="/training", tags=["datasets"])
 
@@ -39,6 +40,17 @@ async def upload_training_dataset(file: Annotated[UploadFile, File(...)]):
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post(
+    "/datasets/{dataset_id}/analysis",
+    response_model=DatasetAnalysisTaskResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def queue_dataset_analysis(dataset_id: int):
+    """Encola el analisis de un dataset guardado."""
+    task = analyze_dataset.delay(dataset_id)
+    return {"task_id": task.id, "status": "PENDING"}
 
 
 @router.get(

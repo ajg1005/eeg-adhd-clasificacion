@@ -52,6 +52,25 @@ def test_training_dataset_upload_lists_saved_dataset(client, post_csv, valid_eeg
     assert stats_response.json()["n_patients"] == 4
 
 
+def test_dataset_analysis_is_queued(client, monkeypatch):
+    queued_dataset_ids = []
+
+    class TaskResult:
+        id = "dataset-task-1"
+
+    def enqueue(dataset_id):
+        queued_dataset_ids.append(dataset_id)
+        return TaskResult()
+
+    monkeypatch.setattr("backend.datasets.router.analyze_dataset.delay", enqueue)
+
+    response = client.post("/training/datasets/7/analysis")
+
+    assert response.status_code == 202
+    assert response.json() == {"task_id": "dataset-task-1", "status": "PENDING"}
+    assert queued_dataset_ids == [7]
+
+
 # comprueba que /training/run entrena un modelo ML y devuelve metricas + importancia
 def test_training_run_ml_returns_metrics_and_feature_importance(client, eeg_dataframe_factory):
     rows = eeg_dataframe_factory(samples_per_patient=32)
