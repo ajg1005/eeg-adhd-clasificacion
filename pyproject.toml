@@ -1,0 +1,77 @@
+[project]
+name = "eeg-adhd-clasificacion"
+version = "0.1.0"
+description = "Aplicacion web para clasificar senales EEG mediante ML y DL."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+license = "MIT"
+authors = [
+    { name = "Adrian Jimenez Garcia" },
+]
+dependencies = [
+    "numpy>=2.1,<3",
+    "pandas>=2.3,<4",
+    "scikit-learn>=1.8,<1.9",
+    "scipy>=1.15,<2",
+    "matplotlib>=3.10,<4",
+    "joblib>=1.5,<2",
+    "fastapi>=0.130,<1",
+    "uvicorn>=0.40,<1",
+    "python-multipart>=0.0.20,<1",
+    "sqlalchemy>=2.0.40,<3",
+    "alembic>=1.17,<2",
+    "psycopg[binary]>=3.2,<4",
+    "xgboost>=3,<4",
+    "tensorflow>=2.21,<2.22",
+    "celery[redis]>=5.6,<6",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.7,<3",
+    "pytest>=9,<10",
+    "pytest-cov>=7,<8",
+    "ruff>=0.15,<0.16",
+]
+
+[tool.uv]
+package = false
+required-version = ">=0.11.29,<0.12"
+
+[tool.ruff]
+target-version = "py313"
+extend-exclude = ["notebooks"]
+
+[tool.pytest]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+markers = [
+    "slow: carga TensorFlow, Keras o modelos exportados pesados",
+    "requires_ml_model: requiere el modelo ML exportado",
+    "requires_dl_model: requiere el modelo DL exportado",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = [
+    "backend",
+    "scripts",
+]
+omit = [
+    "scripts/data_load.py",
+    "scripts/export_model.py",
+    "scripts/export_model_dl.py",
+    "scripts/feature_importance.py",
+    "scripts/paths.py",
+    "scripts/tf_models.py",
+    "scripts/train_dl.py",
+    "scripts/train_ml.py",
+    "scripts/visual.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
