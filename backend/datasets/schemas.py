@@ -6,6 +6,11 @@ from pydantic import BaseModel
 from backend.api.schemas import FlexibleSchema, OrmSchema
 
 
+class DatasetAnalysisTaskResponse(BaseModel):
+    task_id: str
+    status: str
+
+
 class TrainingDatasetPatient(BaseModel):
     patient_id: str
     class_label: str

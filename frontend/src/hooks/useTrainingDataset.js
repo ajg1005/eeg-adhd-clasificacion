@@ -2,9 +2,30 @@ import { useEffect, useState } from "react";
 
 import {
   getSavedTrainingDatasets,
-  getSavedTrainingDatasetStats,
+  getTaskStatus,
+  startDatasetAnalysis,
   uploadTrainingDataset,
 } from "../api";
+
+const TASK_POLL_INTERVAL_MS = 1000;
+
+async function analyzeSavedDataset(datasetId) {
+  const { task_id: taskId } = await startDatasetAnalysis(datasetId);
+
+  while (true) {
+    const task = await getTaskStatus(taskId);
+
+    if (task.status === "SUCCESS") {
+      return task.result;
+    }
+
+    if (task.status === "FAILURE") {
+      throw new Error(task.error || "No se pudo analizar el dataset");
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, TASK_POLL_INTERVAL_MS));
+  }
+}
 
 
 // Estado compartido del dataset entre "Dataset entrenamiento" y "Entrenamiento".
@@ -57,7 +78,7 @@ export function useTrainingDataset() {
 
     setLoadingStats(true);
     try {
-      setStats(await getSavedTrainingDatasetStats(dataset.id));
+      setStats(await analyzeSavedDataset(dataset.id));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -76,11 +97,11 @@ export function useTrainingDataset() {
 
     try {
       if (selectedDataset) {
-        setStats(await getSavedTrainingDatasetStats(selectedDataset.id));
+        setStats(await analyzeSavedDataset(selectedDataset.id));
       } else {
         const saved = await uploadTrainingDataset(file);
         setSelectedDataset(saved);
-        setStats(await getSavedTrainingDatasetStats(saved.id));
+        setStats(await analyzeSavedDataset(saved.id));
         await refreshSavedDatasets();
       }
     } catch (err) {

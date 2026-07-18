@@ -88,16 +88,28 @@ export async function uploadTrainingDataset(file) {
 }
 
 
-export async function getSavedTrainingDatasetStats(datasetId) {
-  const response = await fetch(`${API_BASE_URL}/training/datasets/${datasetId}/stats`);
+export async function startDatasetAnalysis(datasetId) {
+  const response = await fetch(
+    `${API_BASE_URL}/training/datasets/${datasetId}/analysis`,
+    { method: "POST" },
+  );
 
   if (!response.ok) {
-    throw new Error(await readError(response, "No se pudo analizar el dataset guardado"));
+    throw new Error(await readError(response, "No se pudo iniciar el analisis"));
   }
 
   return response.json();
 }
 
+export async function getTaskStatus(taskId) {
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`);
+
+  if (!response.ok) {
+    throw new Error(await readError(response, "No se pudo consultar la tarea"));
+  }
+
+  return response.json();
+}
 
 
 export async function runTraining(file, payload) {
