@@ -6,42 +6,48 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_NO_PROGRESS: "true"
+
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - name: Descargar repositorio
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
 
-      - name: Setup Python 3.12
-        uses: actions/setup-python@v6
+      - name: Configurar uv y Python 3.13
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: Install dependencies
+      - name: Instalar dependencias
+        run: uv sync --locked --no-build
+
+      - name: Comprobar código con Ruff
+        run: uv run --locked --no-build ruff check backend scripts tests --output-format=github
+
+      - name: Ejecutar tests con cobertura
         run: |
-          python -m pip install --upgrade pip==25.0.1
-          pip install --no-cache-dir --only-binary=:all: -r requirements-dev.txt
-
-      - name: Lint with Ruff
-        run: ruff check backend scripts tests --output-format=github
-        continue-on-error: true
-
-      - name: Run tests with coverage
-        run: |
-          pytest -v -m "not slow" --tb=short \
+          uv run --locked --no-build pytest -v -m "not slow" --tb=short \
             --cov \
             --cov-report=xml --cov-report=term
 
-      - name: SonarCloud analysis
+      - name: Analizar código con SonarCloud
         if: github.actor != 'dependabot[bot]'
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
         env:
