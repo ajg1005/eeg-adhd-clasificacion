@@ -1,13 +1,24 @@
-FROM python:3.12-slim
+FROM ghcr.io/astral-sh/uv:0.11.29 AS uv
+
+FROM python:3.13-slim-bookworm
+
+COPY --from=uv /uv /uvx /bin/
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_NO_BUILD=1 \
+    UV_NO_PROGRESS=1 \
+    PATH="/app/.venv/bin:$PATH"
 
 RUN groupadd --system --gid 1001 app \
     && useradd --system --uid 1001 --gid app --create-home --shell /usr/sbin/nologin app
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY pyproject.toml uv.lock ./
 
-RUN pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev --no-build --no-install-project
 
 COPY backend ./backend
 COPY scripts ./scripts
