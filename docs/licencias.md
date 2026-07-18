@@ -12,43 +12,44 @@ redistribución (incluso comercial) siempre que se mantenga el aviso de copyrigh
 
 ## Dependencias
 
-### Backend — Producción (`requirements.txt`)
+### Backend — Producción (`pyproject.toml` y `uv.lock`)
 
 | Librería          | Versión  | Licencia                            | Compatible con MIT |
 |-------------------|----------|-------------------------------------|--------------------|
-| numpy             | 2.1.3    | BSD-3-Clause                        | Sí                 |
-| pandas            | 2.2.3    | BSD-3-Clause                        | Sí                 |
+| numpy             | 2.5.1    | BSD-3-Clause                        | Sí                 |
+| pandas            | 3.0.3    | BSD-3-Clause                        | Sí                 |
 | scikit-learn      | 1.8.0    | BSD-3-Clause                        | Sí                 |
-| scipy             | 1.14.1   | BSD-3-Clause                        | Sí                 |
-| matplotlib        | 3.9.2    | Matplotlib License (BSD-style, PSF) | Sí                 |
-| joblib            | 1.4.2    | BSD-3-Clause                        | Sí                 |
-| fastapi           | 0.115.6  | MIT                                 | Sí                 |
-| uvicorn           | 0.32.1   | BSD-3-Clause                        | Sí                 |
-| python-multipart  | 0.0.20   | Apache 2.0                          | Sí                 |
-| xgboost           | 2.1.3    | Apache 2.0                          | Sí                 |
+| scipy             | 1.18.0   | BSD-3-Clause                        | Sí                 |
+| matplotlib        | 3.11.1   | Matplotlib License (BSD-style, PSF) | Sí                 |
+| joblib            | 1.5.3    | BSD-3-Clause                        | Sí                 |
+| fastapi           | 0.139.2  | MIT                                 | Sí                 |
+| uvicorn           | 0.51.0   | BSD-3-Clause                        | Sí                 |
+| python-multipart  | 0.0.32   | Apache 2.0                          | Sí                 |
+| xgboost           | 3.3.0    | Apache 2.0                          | Sí                 |
 | tensorflow        | 2.21.0   | Apache 2.0                          | Sí                 |
-| SQLAlchemy        | 2.0.36   | MIT                                 | Sí                 |
-| alembic           | 1.14.0   | MIT                                 | Sí                 |
-| psycopg[binary]   | 3.2.3    | LGPL-3.0-or-later                   | Sí (ver nota)      |
+| SQLAlchemy        | 2.0.51   | MIT                                 | Sí                 |
+| alembic           | 1.18.5   | MIT                                 | Sí                 |
+| psycopg[binary]   | 3.3.4    | LGPL-3.0-or-later                   | Sí (ver nota)      |
+| celery[redis]     | 5.6.3    | BSD-3-Clause                        | Sí                 |
 
 > **Nota sobre psycopg.** psycopg 3 se distribuye bajo licencia
 > **LGPL-3.0-or-later**, una licencia *copyleft débil*. Su uso como librería
 > importada por una aplicación Python (linking dinámico) es compatible con
 > licencias permisivas como MIT, siempre que el usuario final pueda sustituir
 > la versión de psycopg utilizada. En este proyecto la librería se importa
-> como dependencia externa a través de `pip` sin que se modifique su código
+> como dependencia externa a través de `uv` sin que se modifique su código
 > fuente, por lo que **no se aplica el efecto copyleft** sobre el código
 > propio del TFG. El requisito práctico es mencionar el uso de psycopg y su
 > licencia en la documentación, cosa que se hace en esta tabla.
 
-### Backend — Desarrollo (`requirements-dev.txt`)
+### Backend — Desarrollo (`pyproject.toml`, grupo `dev`)
 
 | Librería     | Versión  | Licencia      | Compatible con MIT |
 |--------------|----------|---------------|--------------------|
-| pytest       | 8.3.5    | MIT           | Sí                 |
-| pytest-cov   | 6.1.1    | MIT           | Sí                 |
-| ruff         | 0.11.8   | MIT           | Sí                 |
-| httpx        | 0.28.1   | BSD-3-Clause  | Sí                 |
+| pytest       | 9.1.1    | MIT           | Sí                 |
+| pytest-cov   | 7.1.0    | MIT           | Sí                 |
+| ruff         | 0.15.22  | MIT           | Sí                 |
+| httpx2       | 2.7.0    | BSD-3-Clause  | Sí                 |
 
 ### Frontend — Producción (`package.json` → `dependencies`)
 
@@ -76,22 +77,22 @@ redistribución (incluso comercial) siempre que se mantenga el aviso de copyrigh
 
 | Familia de licencia   | Nº de dependencias | Compatibilidad con MIT  |
 |-----------------------|--------------------|-------------------------|
-| MIT                   | 19                 | Total                   |
-| BSD-3-Clause          | 7                  | Total                   |
+| MIT                   | 18                 | Total                   |
+| BSD/BSD-style         | 9                  | Total                   |
 | Apache 2.0            | 3                  | Total                   |
 | LGPL-3.0-or-later     | 1                  | Total (uso como lib)    |
-| **TOTAL**             | **30**             | **100% compatibles**    |
+| **TOTAL**             | **31**             | **100% compatibles**    |
 
 ## Conclusiones
 
 El proyecto se distribuye bajo licencia MIT. Se ha verificado la compatibilidad
-de las 30 dependencias directas utilizadas (14 de backend en producción, 4 de
+de las 31 dependencias directas utilizadas (15 de backend en producción, 4 de
 desarrollo, 3 de frontend en producción y 9 de desarrollo), comprobando que
 todas ellas son compatibles con la licencia MIT del proyecto.
 
 La distribución por familias es:
 
-- **MIT, BSD-3-Clause y Apache 2.0** (29 dependencias): licencias permisivas
+- **MIT, BSD/BSD-style y Apache 2.0** (30 dependencias): licencias permisivas
   totalmente compatibles con MIT, sin restricciones adicionales más allá de
   mantener el aviso de copyright original.
 - **LGPL-3.0-or-later** (1 dependencia, psycopg): licencia *copyleft débil*
@@ -113,7 +114,8 @@ La elección de MIT como licencia del TFG se justifica por:
 ## Notas
 
 - Esta tabla recoge únicamente las **dependencias directas** declaradas en
-  `requirements.txt`, `requirements-dev.txt` y `frontend/package.json`. No
+  `pyproject.toml` y `frontend/package.json`. Las versiones concretas de Python
+  corresponden a `uv.lock`. No
   se incluyen dependencias transitivas (paquetes instalados como dependencia
   de otra dependencia).
 - Para una auditoría exhaustiva incluyendo dependencias transitivas pueden

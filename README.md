@@ -47,7 +47,8 @@ La aplicación se organiza en cuatro pestañas:
 
 ## Tecnologías utilizadas
 
-- Python 3.12, FastAPI, Pydantic
+- Python 3.13, FastAPI, Pydantic
+- uv para la gestión reproducible de dependencias
 - scikit-learn, XGBoost
 - TensorFlow / Keras
 - pandas, NumPy, SciPy, matplotlib
@@ -55,6 +56,7 @@ La aplicación se organiza en cuatro pestañas:
 - Recharts
 - Docker, Docker Compose
 - PostgreSQL
+- Celery y Redis
 - Alembic (migraciones de esquema)
 
 ## Estructura del proyecto
@@ -104,17 +106,18 @@ creadas tras la primera ejecución.
 
 ## Scripts de investigación
 
-- `python -m scripts.train_ml`: entrena y evalúa los modelos ML con CV cross-subject.
-- `python -m scripts.train_dl`: entrena y evalúa los modelos DL con CV cross-subject.
-- `python -m scripts.export_model` y `python -m scripts.export_model_dl`: exportan el modelo final seleccionado.
-- `python -m scripts.feature_importance`: importancia de características con permutation_importance sobre test separado cross-subject.
+- `uv run --locked --no-build python -m scripts.train_ml`: entrena y evalúa los modelos ML con CV cross-subject.
+- `uv run --locked --no-build python -m scripts.train_dl`: entrena y evalúa los modelos DL con CV cross-subject.
+- `uv run --locked --no-build python -m scripts.export_model` y `uv run --locked --no-build python -m scripts.export_model_dl`: exportan el modelo final seleccionado.
+- `uv run --locked --no-build python -m scripts.feature_importance`: importancia de características con `permutation_importance` sobre test separado cross-subject.
 
 ## Tests
 
 Los tests unitarios e integración comprueban validación de datos, segmentación, extracción de características, particiones cross-subject, servicios de entrenamiento y endpoints principales de la API.
 
 ```bash
-pytest
+uv sync --locked --no-build
+uv run --locked --no-build pytest
 ```
 
 ## Limitaciones
