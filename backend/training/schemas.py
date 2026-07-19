@@ -16,6 +16,11 @@ class TrainingOptionsResponse(FlexibleSchema):
     training_params: dict[str, list[Any]]
 
 
+class TrainingTaskResponse(BaseModel):
+    task_id: str
+    status: str
+
+
 class PatientTrainingResult(BaseModel):
     patient_id: str
     true_label: str
