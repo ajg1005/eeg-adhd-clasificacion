@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Trans, useTranslation } from "react-i18next";
 
-import { getTrainingOptions, runTraining } from "../api";
+import { getTrainingOptions } from "../api";
 import { TrainingEegParamsPanel } from "./training/TrainingEegParamsPanel";
 import { TrainingModelPanel } from "./training/TrainingModelPanel";
 import { TrainingResultsPanel } from "./training/TrainingResultsPanel";
@@ -31,10 +31,13 @@ function modelDefaults(options, modelType, modelName) {
 
 export function TrainingView({
   file,
-  onTrainingFinished,
-  onTrainingStateChange,
+  loadingTraining,
+  onStartTraining,
+  result,
   selectedDataset,
   stats,
+  taskError,
+  taskStatus,
 }) {
   const { t } = useTranslation();
   const [options, setOptions] = useState(null);
@@ -43,9 +46,7 @@ export function TrainingView({
   const [eegParams, setEegParams] = useState({});
   const [modelParams, setModelParams] = useState({});
   const [trainingParams, setTrainingParams] = useState({});
-  const [result, setResult] = useState(null);
   const [resultPatientFilter, setResultPatientFilter] = useState("");
-  const [loadingTraining, setLoadingTraining] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -130,33 +131,20 @@ export function TrainingView({
       return;
     }
 
-    setLoadingTraining(true);
-    onTrainingStateChange?.(true);
     setError("");
-    setResult(null);
-
-    try {
-      const trainingResult = await runTraining(file, {
-        datasetId: selectedDataset?.id,
-        modelType,
-        modelName,
-        eegParams,
-        modelParams,
-        trainingParams,
-      });
-      setResult(trainingResult);
-      onTrainingFinished?.(trainingResult);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoadingTraining(false);
-      onTrainingStateChange?.(false);
-    }
+    await onStartTraining(file, {
+      datasetId: selectedDataset?.id,
+      modelType,
+      modelName,
+      eegParams,
+      modelParams,
+      trainingParams,
+    });
   }
-
   return (
     <section className="training-layout interactive-training">
       {error && <div className="alert alert-error">{error}</div>}
+      {taskError && <div className="alert alert-error">{taskError}</div>}
 
       {!file && !selectedDataset && (
         <div className="panel">
@@ -224,6 +212,7 @@ export function TrainingView({
         onRunTraining={handleRunTraining}
         onTrainingParamChange={updateTrainingParam}
         trainingParams={trainingParams}
+        trainingStatus={taskStatus}
         visibleTrainingParams={visibleTrainingParams}
       />
 
@@ -241,11 +230,14 @@ export function TrainingView({
 
 TrainingView.propTypes = {
   file: fileShape,
-  onTrainingFinished: PropTypes.func,
-  onTrainingStateChange: PropTypes.func,
+  loadingTraining: PropTypes.bool.isRequired,
+  onStartTraining: PropTypes.func.isRequired,
+  result: PropTypes.object,
   selectedDataset: PropTypes.shape({
     filename: PropTypes.string.isRequired,
     id: PropTypes.number.isRequired,
   }),
   stats: datasetStatsShape,
+  taskError: PropTypes.string,
+  taskStatus: PropTypes.string,
 };

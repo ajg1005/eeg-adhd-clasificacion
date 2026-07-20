@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-
 import { useInferenceController } from "./hooks/useInferenceController";
 import { useTrainingDataset } from "./hooks/useTrainingDataset";
+import { useTrainingTask } from "./hooks/useTrainingTask";
 import { TAB_GROUPS } from "./config/tabs";
 import { AppHeader } from "./components/AppHeader";
 import { DatasetView } from "./components/DatasetView";
@@ -15,33 +13,9 @@ import { TrainingView } from "./components/TrainingView";
 import "./App.css";
 
 function App() {
-  const { t } = useTranslation();
   const controller = useInferenceController();
   const trainingDataset = useTrainingDataset();
-  const [trainingInProgress, setTrainingInProgress] = useState(false);
-
-  useEffect(() => {
-    function handleBeforeUnload(event) {
-      if (!trainingInProgress) {
-        return;
-      }
-
-      event.preventDefault();
-      event.returnValue = "";
-    }
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [trainingInProgress]);
-
-  function handleTabChange(nextTab) {
-    if (trainingInProgress && nextTab !== controller.activeTab) {
-      return;
-    }
-
-    controller.setActiveTab(nextTab);
-  }
-
+  const trainingTask = useTrainingTask(handleTrainingFinished);
   function handleTrainingFinished(trainingResult) {
     const trainedModelId = trainingResult?.trained_model_id
       ? `trained_model_${trainingResult.trained_model_id}`
@@ -56,16 +30,9 @@ function App() {
 
       <Tabs
         activeTab={controller.activeTab}
-        disabled={trainingInProgress}
-        onTabChange={handleTabChange}
+        onTabChange={controller.setActiveTab}
         tabGroups={TAB_GROUPS}
       />
-
-      {trainingInProgress && (
-        <div className="alert alert-warning">
-          {t("app.trainingInProgress")}
-        </div>
-      )}
 
       {controller.error && <div className="alert alert-error">{controller.error}</div>}
 
@@ -108,10 +75,13 @@ function App() {
       {controller.activeTab === "training" && (
         <TrainingView
           file={trainingDataset.file}
-          onTrainingFinished={handleTrainingFinished}
-          onTrainingStateChange={setTrainingInProgress}
+          loadingTraining={trainingTask.trainingInProgress}
+          onStartTraining={trainingTask.startTraining}
+          result={trainingTask.result}
           selectedDataset={trainingDataset.selectedDataset}
           stats={trainingDataset.stats}
+          taskError={trainingTask.error}
+          taskStatus={trainingTask.status}
         />
       )}
 
