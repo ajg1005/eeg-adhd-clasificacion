@@ -4,8 +4,7 @@
     "subtitle": "Load EEG datasets, train models, review saved experiments and run predictions on patient CSV files.",
     "language": "Language",
     "api": "API",
-    "serverUnavailable": "Cannot connect to the server",
-    "trainingInProgress": "Training in progress. Wait until it finishes before changing tabs or reloading."
+    "serverUnavailable": "Cannot connect to the server"
   },
   "tabs": {
     "groups": {
@@ -132,7 +131,7 @@
     "persistError": "Training has finished, but it could not be saved in the database.",
     "modelSaveWarning": "The training run was saved, but the model could not be stored for inference.",
     "modelSaved": "Model saved and available for inference.",
-    "trainingHint": "The model is evaluated with cross-subject cross-validation and the final model is trained. This may take a while.",
+    "trainingHint": "Training is running in the background.",
     "confusionMatrix": "Confusion matrix",
     "actual": "Actual",
     "predicted": "Predicted",
@@ -224,6 +223,15 @@
       "recall": "Recall",
       "f1-score": "F1-score",
       "support": "Samples"
+    },
+    "taskStatus": "Status: {{status}}.",
+    "taskStatuses": {
+      "SUBMITTING": "Submitting",
+      "PENDING": "Queued",
+      "STARTED": "Running",
+      "RETRY": "Retrying",
+      "SUCCESS": "Completed",
+      "FAILURE": "Failed"
     }
   }
 }

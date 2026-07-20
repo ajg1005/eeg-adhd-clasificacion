@@ -4,8 +4,7 @@
     "subtitle": "Carga datasets EEG, entrena modelos, consulta experimentos guardados y ejecuta predicciones sobre archivos CSV de pacientes.",
     "language": "Idioma",
     "api": "API",
-    "serverUnavailable": "No se puede conectar con el servidor",
-    "trainingInProgress": "Entrenamiento en curso. Espera a que termine antes de cambiar de pestaña o recargar."
+    "serverUnavailable": "No se puede conectar con el servidor"
   },
   "tabs": {
     "groups": {
@@ -132,7 +131,7 @@
     "persistError": "El entrenamiento ha finalizado, pero no se ha podido guardar en la base de datos.",
     "modelSaveWarning": "El entrenamiento se guardó, pero no se pudo guardar el modelo para inferencia.",
     "modelSaved": "Modelo guardado y disponible para inferencia.",
-    "trainingHint": "Se evalúa el modelo con validación cruzada por paciente y se entrena el modelo final. Puede tardar un poco.",
+    "trainingHint": "El entrenamiento se está ejecutando en segundo plano.",
     "confusionMatrix": "Matriz de confusión",
     "actual": "Real",
     "predicted": "Predicho",
@@ -224,6 +223,15 @@
       "recall": "Sensibilidad",
       "f1-score": "F1-score",
       "support": "Muestras"
+    },
+    "taskStatus": "Estado: {{status}}.",
+    "taskStatuses": {
+      "SUBMITTING": "Enviando",
+      "PENDING": "En cola",
+      "STARTED": "En ejecución",
+      "RETRY": "Reintentando",
+      "SUCCESS": "Completado",
+      "FAILURE": "Fallido"
     }
   }
 }
