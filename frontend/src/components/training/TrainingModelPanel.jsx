@@ -28,9 +28,15 @@ export function TrainingModelPanel({
   onRunTraining,
   onTrainingParamChange,
   trainingParams,
+  trainingStatus,
   visibleTrainingParams,
 }) {
   const { t } = useTranslation();
+  const trainingStatusLabel = trainingStatus
+    ? t(`training.taskStatuses.${trainingStatus}`, {
+        defaultValue: trainingStatus,
+      })
+    : "";
   const modelOptions = Object.entries(currentModels).map(([key, model]) => ({
     label: model.display_name,
     value: key,
@@ -118,7 +124,11 @@ export function TrainingModelPanel({
         {loadingTraining ? t("training.training") : t("training.train")}
       </button>
 
-      {loadingTraining && <p className="muted">{t("training.trainingHint")}</p>}
+      {loadingTraining && (
+        <p className="muted">
+          {t("training.trainingHint")} {t("training.taskStatus", { status: trainingStatusLabel })}
+        </p>
+      )}
     </div>
   );
 }
@@ -138,6 +148,7 @@ TrainingModelPanel.propTypes = {
   onRunTraining: PropTypes.func.isRequired,
   onTrainingParamChange: PropTypes.func.isRequired,
   trainingParams: PropTypes.object.isRequired,
+  trainingStatus: PropTypes.string,
   visibleTrainingParams: PropTypes.arrayOf(
     PropTypes.arrayOf(
       PropTypes.oneOfType([

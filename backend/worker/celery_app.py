@@ -7,7 +7,11 @@ celery_app = Celery(
     "eeg_adhd",
     broker=CELERY_BROKER_URL,
     backend=CELERY_RESULT_BACKEND,
-    include=["backend.worker.tasks", "backend.datasets.tasks"],
+    include=[
+        "backend.worker.tasks",
+        "backend.datasets.tasks",
+        "backend.training.tasks",
+    ],
 )
 
 celery_app.conf.update(

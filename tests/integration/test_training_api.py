@@ -25,14 +25,20 @@ def test_training_dataset_stats_endpoint(client, post_csv, valid_eeg_dataset_csv
 
 
 # comprueba que /training/dataset/stats lista las columnas que faltan
-def test_training_dataset_stats_reports_missing_columns(client, post_csv, invalid_missing_columns_csv_path):
-    response = post_csv(client, invalid_missing_columns_csv_path, "/training/dataset/stats")
+def test_training_dataset_stats_reports_missing_columns(
+    client, post_csv, invalid_missing_columns_csv_path
+):
+    response = post_csv(
+        client, invalid_missing_columns_csv_path, "/training/dataset/stats"
+    )
 
     assert response.status_code == 200
     assert "Fp1" in response.json()["missing_required_columns"]
 
 
-def test_training_dataset_upload_lists_saved_dataset(client, post_csv, valid_eeg_dataset_csv_path):
+def test_training_dataset_upload_lists_saved_dataset(
+    client, post_csv, valid_eeg_dataset_csv_path
+):
     upload_response = post_csv(client, valid_eeg_dataset_csv_path, "/training/datasets")
 
     assert upload_response.status_code == 200
@@ -43,8 +49,7 @@ def test_training_dataset_upload_lists_saved_dataset(client, post_csv, valid_eeg
     list_response = client.get("/training/datasets")
     assert list_response.status_code == 200
     assert any(
-        dataset["id"] == uploaded["id"]
-        for dataset in list_response.json()["datasets"]
+        dataset["id"] == uploaded["id"] for dataset in list_response.json()["datasets"]
     )
 
     stats_response = client.get(f"/training/datasets/{uploaded['id']}/stats")
@@ -71,8 +76,22 @@ def test_dataset_analysis_is_queued(client, monkeypatch):
     assert queued_dataset_ids == [7]
 
 
-# comprueba que /training/run entrena un modelo ML y devuelve metricas + importancia
-def test_training_run_ml_returns_metrics_and_feature_importance(client, eeg_dataframe_factory):
+# comprueba que /training/run guarda el CSV y encola el entrenamiento
+def test_training_run_queues_ml_training(client, eeg_dataframe_factory, monkeypatch):
+    queued = {}
+
+    class TaskResult:
+        id = "training-task-1"
+
+    def enqueue(**kwargs):
+        queued.update(kwargs)
+        return TaskResult()
+
+    monkeypatch.setattr(
+        "backend.training.router.execute_training_task.delay",
+        enqueue,
+    )
+
     rows = eeg_dataframe_factory(samples_per_patient=32)
     csv_bytes = pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
     response = client.post(
@@ -94,8 +113,44 @@ def test_training_run_ml_returns_metrics_and_feature_importance(client, eeg_data
         files={"file": ("training.csv", csv_bytes, "text/csv")},
     )
 
-    assert response.status_code == 200
-    data = response.json()
+    assert response.status_code == 202
+    assert response.json() == {
+        "task_id": "training-task-1",
+        "status": "PENDING",
+    }
+    assert queued["dataset_id"] > 0
+    assert queued["model_type"] == "ml"
+    assert queued["model_name"] == "random_forest"
+    assert queued["eeg_params"]["epoch_size"] == 16
+    assert queued["model_params"] == {"n_estimators": 5, "max_depth": 2}
+    assert queued["training_params"] == {}
+
+
+# comprueba que la tarea ejecuta el flujo ML completo y persiste sus resultados
+def test_training_task_ml_returns_metrics_and_feature_importance(
+    client, eeg_dataframe_factory
+):
+    from backend.datasets.service import save_training_dataset
+    from backend.training.tasks import execute_training_task
+
+    rows = eeg_dataframe_factory(samples_per_patient=32)
+    csv_bytes = pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
+    dataset = save_training_dataset(csv_bytes, "training.csv")
+
+    data = execute_training_task.run(
+        dataset_id=dataset["id"],
+        model_type="ml",
+        model_name="random_forest",
+        eeg_params={
+            "epoch_size": 16,
+            "step_size": 16,
+            "feature_mode": "temporal",
+            "use_filtering": False,
+        },
+        model_params={"n_estimators": 5, "max_depth": 2},
+        training_params={},
+    )
+
     assert 0.0 <= data["accuracy"] <= 1.0
     assert data["experiment_id"] > 0
     assert data["model_saved"] is True

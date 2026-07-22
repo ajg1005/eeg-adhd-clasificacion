@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-export function Tabs({ activeTab, disabled = false, onTabChange, tabGroups }) {
+export function Tabs({ activeTab, onTabChange, tabGroups }) {
   const { t } = useTranslation();
 
   return (
@@ -13,7 +13,6 @@ export function Tabs({ activeTab, disabled = false, onTabChange, tabGroups }) {
             {group.tabs.map((tab) => (
               <button
                 className={activeTab === tab ? "tab-button active" : "tab-button"}
-                disabled={disabled && activeTab !== tab}
                 key={tab}
                 onClick={() => onTabChange(tab)}
                 type="button"
@@ -30,7 +29,6 @@ export function Tabs({ activeTab, disabled = false, onTabChange, tabGroups }) {
 
 Tabs.propTypes = {
   activeTab: PropTypes.string.isRequired,
-  disabled: PropTypes.bool,
   onTabChange: PropTypes.func.isRequired,
   tabGroups: PropTypes.arrayOf(
     PropTypes.shape({

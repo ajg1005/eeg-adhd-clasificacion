@@ -1,12 +1,13 @@
 import json
 from typing import Annotated, Any
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
 from backend.api.responses import TRAINING_RUN_RESPONSES
-from backend.training.schemas import TrainingOptionsResponse, TrainingRunResponse
-from backend.datasets.service import get_saved_dataset_file
-from backend.training.service import get_training_options, run_training
+from backend.datasets.service import save_training_dataset
+from backend.training.schemas import TrainingOptionsResponse, TrainingTaskResponse
+from backend.training.service import get_training_options
+from backend.training.tasks import execute_training_task
 
 
 router = APIRouter(prefix="/training", tags=["training"])
@@ -30,7 +31,12 @@ def training_options():
     return get_training_options()
 
 
-@router.post("/run", response_model=TrainingRunResponse, responses=TRAINING_RUN_RESPONSES)
+@router.post(
+    "/run",
+    response_model=TrainingTaskResponse,
+    responses=TRAINING_RUN_RESPONSES,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def training_run(
     model_type: Annotated[str, Form()],
     model_name: Annotated[str, Form()],
@@ -40,27 +46,34 @@ async def training_run(
     model_params: Annotated[str | None, Form()] = None,
     training_params: Annotated[str | None, Form()] = None,
 ):
-    """Entrena y evalua un modelo desde un dataset y parametros de formulario."""
+    """Encola un entrenamiento desde un dataset y parametros de formulario."""
     try:
-        if dataset_id is not None:
-            file_bytes, filename = get_saved_dataset_file(dataset_id)
-        elif file is not None:
-            file_bytes = await file.read()
-            filename = file.filename or "training.csv"
-        else:
-            raise ValueError("Debes subir un CSV o seleccionar un dataset guardado.")
+        if dataset_id is None:
+            if file is None:
+                raise ValueError(
+                    "Debes subir un CSV o seleccionar un dataset guardado."
+                )
 
-        return run_training(
-            file_bytes=file_bytes,
+            saved_dataset = save_training_dataset(
+                file_bytes=await file.read(),
+                filename=file.filename or "training.csv",
+            )
+            dataset_id = saved_dataset["id"]
+
+        task = execute_training_task.delay(
+            dataset_id=dataset_id,
             model_type=model_type,
             model_name=model_name,
-            filename=filename,
             eeg_params=_json_dict(eeg_params),
             model_params=_json_dict(model_params),
             training_params=_json_dict(training_params),
         )
+
+        return {
+            "task_id": task.id,
+            "status": "PENDING",
+        }
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-
