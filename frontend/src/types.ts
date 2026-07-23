@@ -4,8 +4,22 @@ export type JsonValue =
   | JsonPrimitive
   | JsonValue[]
   | { [key: string]: JsonValue };
-export type TrainingOptionValue = JsonValue;
+export type TrainingOptionValue = JsonPrimitive;
 export type TrainingParameters = Record<string, JsonValue>;
+export type TrainingControlValues = Record<string, TrainingOptionValue>;
+export type TrainingModelTypeId = "ml" | "dl";
+export type ApiStatus = "checking" | "ok" | "error";
+
+export interface MetricChartDatum {
+  name: string;
+  value: number;
+}
+
+export interface SelectOption {
+  disabled?: boolean;
+  label: string;
+  value: string;
+}
 
 export type TaskStatus =
   | "PENDING"
@@ -111,7 +125,7 @@ export interface SavedTrainingDataset {
 
 export interface TrainingModelOption {
   display_name: string;
-  default_params: TrainingParameters;
+  default_params: TrainingControlValues;
   parameters: Record<string, TrainingOptionValue[]>;
 }
 
@@ -121,13 +135,13 @@ export interface TrainingModelType {
 }
 
 export interface TrainingOptions {
-  default_model_type: string;
-  default_models: Record<string, string>;
-  default_eeg_params: Record<string, TrainingParameters>;
-  eeg_params_by_type: Record<string, string[]>;
-  default_training_params: TrainingParameters;
-  training_params_by_type: Record<string, string[]>;
-  model_types: Record<string, TrainingModelType>;
+  default_model_type: TrainingModelTypeId;
+  default_models: Record<TrainingModelTypeId, string>;
+  default_eeg_params: Record<TrainingModelTypeId, TrainingControlValues>;
+  eeg_params_by_type: Record<TrainingModelTypeId, string[]>;
+  default_training_params: TrainingControlValues;
+  training_params_by_type: Record<TrainingModelTypeId, string[]>;
+  model_types: Record<TrainingModelTypeId, TrainingModelType>;
   eeg_params: Record<string, TrainingOptionValue[]>;
   training_params: Record<string, TrainingOptionValue[]>;
 }
@@ -145,7 +159,7 @@ export interface TaskStatusResponse<TResult = unknown>
 
 export interface TrainingPayload {
   datasetId?: number | null;
-  modelType: string;
+  modelType: TrainingModelTypeId;
   modelName: string;
   eegParams: TrainingParameters;
   modelParams: TrainingParameters;
@@ -194,8 +208,12 @@ export interface TrainingResult {
   patient_results: PatientTrainingResult[];
   fold_results: UnknownRecord[];
   feature_importance?: FeatureImportance | null;
-  configuration: UnknownRecord;
+  configuration: TrainingConfiguration;
   training_time_seconds: number;
+}
+
+export interface TrainingConfiguration extends UnknownRecord {
+  evaluation_mode?: string;
 }
 
 export interface ExperimentDataset {
@@ -244,9 +262,9 @@ export interface ExperimentFold {
 }
 
 export interface ExperimentDetail extends ExperimentSummary {
-  eeg_params: UnknownRecord;
-  model_params: UnknownRecord;
-  training_params: UnknownRecord;
+  eeg_params: Record<string, JsonValue>;
+  model_params: Record<string, JsonValue>;
+  training_params: Record<string, JsonValue>;
   confusion_matrix: number[][];
   classification_report: UnknownRecord;
   fold_results: ExperimentFold[];
