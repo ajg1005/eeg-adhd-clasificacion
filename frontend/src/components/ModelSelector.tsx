@@ -1,18 +1,25 @@
-import PropTypes from "prop-types";
+import type { ChangeEventHandler } from "react";
 import { useTranslation } from "react-i18next";
 
-import { modelInfoShape } from "../propTypes";
+import type { ModelInfo, ModelRegistryItem, SelectOption } from "../types";
 import { ModelSelectField } from "./ModelSelectField";
+
+interface ModelSelectorProps {
+  modelInfo: ModelInfo | null;
+  models: ModelRegistryItem[];
+  onModelChange: ChangeEventHandler<HTMLSelectElement>;
+  selectedModelId: string;
+}
 
 export function ModelSelector({
   modelInfo,
   models,
   onModelChange,
   selectedModelId,
-}) {
+}: ModelSelectorProps) {
   const { t } = useTranslation();
   const hasEnabledModels = models.some((model) => model.enabled !== false);
-  const options = [
+  const options: SelectOption[] = [
     ...(!selectedModelId
       ? [{ disabled: true, label: t("model.noAvailableModels"), value: "" }]
       : []),
@@ -46,16 +53,3 @@ export function ModelSelector({
     </section>
   );
 }
-
-ModelSelector.propTypes = {
-  modelInfo: modelInfoShape,
-  models: PropTypes.arrayOf(
-    PropTypes.shape({
-      display_name: PropTypes.string.isRequired,
-      enabled: PropTypes.bool,
-      model_id: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  onModelChange: PropTypes.func.isRequired,
-  selectedModelId: PropTypes.string.isRequired,
-};

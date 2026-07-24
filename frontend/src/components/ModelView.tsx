@@ -1,4 +1,4 @@
-﻿import {
+import {
   Bar,
   BarChart,
   CartesianGrid,
@@ -7,14 +7,26 @@
   XAxis,
   YAxis,
 } from "recharts";
-import PropTypes from "prop-types";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
-import { modelInfoShape } from "../propTypes";
+import type {
+  CvMetrics,
+  MetricChartDatum,
+  ModelFigure,
+  ModelInfo,
+} from "../types";
 import { formatMetric } from "../utils/formatters";
 
-function metricChartLabel(t, name) {
-  const labels = {
+interface ModelViewProps {
+  metrics: CvMetrics | null;
+  metricsChartData: MetricChartDatum[];
+  modelFigures: ModelFigure[];
+  modelInfo: ModelInfo | null;
+}
+
+function metricChartLabel(t: TFunction, name: string): string {
+  const labels: Record<string, string> = {
     Accuracy: t("metrics.accuracy"),
     Balanced: t("metrics.balanced"),
     Precision: t("metrics.precision"),
@@ -22,7 +34,7 @@ function metricChartLabel(t, name) {
     F1: t("metrics.f1"),
   };
 
-  return labels[name] || name;
+  return labels[name] ?? name;
 }
 
 export function ModelView({
@@ -30,7 +42,7 @@ export function ModelView({
   metricsChartData,
   modelFigures,
   modelInfo,
-}) {
+}: ModelViewProps) {
   const { t } = useTranslation();
   const localizedMetricsChartData = metricsChartData.map((item) => ({
     ...item,
@@ -138,27 +150,3 @@ export function ModelView({
     </>
   );
 }
-
-ModelView.propTypes = {
-  metrics: PropTypes.shape({
-    accuracy_epoch_mean: PropTypes.number,
-    balanced_accuracy_epoch_mean: PropTypes.number,
-    f1_epoch_mean: PropTypes.number,
-    precision_epoch_mean: PropTypes.number,
-    recall_epoch_mean: PropTypes.number,
-  }),
-  metricsChartData: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      value: PropTypes.number.isRequired,
-    }),
-  ).isRequired,
-  modelFigures: PropTypes.arrayOf(
-    PropTypes.shape({
-      title: PropTypes.string.isRequired,
-      url: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  modelInfo: modelInfoShape,
-};
-

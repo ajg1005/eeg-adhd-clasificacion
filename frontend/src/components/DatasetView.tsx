@@ -1,10 +1,36 @@
-import { useMemo } from "react";
-import PropTypes from "prop-types";
+import { useMemo, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
-import { datasetStatsShape, fileShape } from "../propTypes";
+import type {
+  SavedTrainingDataset,
+  TrainingDatasetPatient,
+  TrainingDatasetStats,
+} from "../types";
 
-function filterPatients(patients, classFilter, maxPatients) {
+interface DatasetViewProps {
+  classFilter: string;
+  error: string;
+  file: File | null;
+  handleAnalyzeDataset: () => Promise<void>;
+  handleClassFilterChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  handleFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleMaxPatientsChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleSavedDatasetChange: (
+    event: ChangeEvent<HTMLSelectElement>,
+  ) => Promise<void>;
+  loadingDatasets: boolean;
+  loadingStats: boolean;
+  maxPatients: number;
+  savedDatasets: SavedTrainingDataset[];
+  selectedDataset: SavedTrainingDataset | null;
+  stats: TrainingDatasetStats | null;
+}
+
+function filterPatients(
+  patients: TrainingDatasetPatient[] | undefined,
+  classFilter: string,
+  maxPatients: number,
+): TrainingDatasetPatient[] {
   if (!patients) {
     return [];
   }
@@ -34,7 +60,7 @@ export function DatasetView({
   savedDatasets,
   selectedDataset,
   stats,
-}) {
+}: DatasetViewProps) {
   const { t } = useTranslation();
   const filteredPatients = useMemo(
     () => filterPatients(stats?.patients, classFilter, maxPatients),
@@ -54,7 +80,9 @@ export function DatasetView({
           <button
             className="primary-button compact-button"
             disabled={(!file && !selectedDataset) || loadingStats}
-            onClick={handleAnalyzeDataset}
+            onClick={() => {
+              void handleAnalyzeDataset();
+            }}
             type="button"
           >
             {loadingStats ? t("dataset.analyzing") : t("dataset.analyze")}
@@ -67,8 +95,10 @@ export function DatasetView({
               {t("dataset.savedDatasets")}
               <select
                 disabled={loadingDatasets || loadingStats}
-                value={selectedDataset?.id || ""}
-                onChange={handleSavedDatasetChange}
+                value={selectedDataset?.id ?? ""}
+                onChange={(event) => {
+                  void handleSavedDatasetChange(event);
+                }}
               >
                 <option value="">{t("dataset.newDataset")}</option>
                 {savedDatasets.map((dataset) => (
@@ -121,14 +151,12 @@ export function DatasetView({
             </div>
 
             <div className="class-counts">
-              {Object.entries(stats.class_distribution).map(
-                ([label, count]) => (
-                  <div key={label}>
-                    <span>{label}</span>
-                    <strong>{count}</strong>
-                  </div>
-                ),
-              )}
+              {Object.entries(stats.class_distribution).map(([label, count]) => (
+                <div key={label}>
+                  <span>{label}</span>
+                  <strong>{count}</strong>
+                </div>
+              ))}
             </div>
 
             {stats.missing_required_columns.length > 0 && (
@@ -198,30 +226,3 @@ export function DatasetView({
     </section>
   );
 }
-
-DatasetView.propTypes = {
-  classFilter: PropTypes.string.isRequired,
-  error: PropTypes.string,
-  file: fileShape,
-  handleAnalyzeDataset: PropTypes.func.isRequired,
-  handleClassFilterChange: PropTypes.func.isRequired,
-  handleFileChange: PropTypes.func.isRequired,
-  handleMaxPatientsChange: PropTypes.func.isRequired,
-  handleSavedDatasetChange: PropTypes.func.isRequired,
-  loadingDatasets: PropTypes.bool.isRequired,
-  loadingStats: PropTypes.bool.isRequired,
-  maxPatients: PropTypes.number.isRequired,
-  savedDatasets: PropTypes.arrayOf(
-    PropTypes.shape({
-      filename: PropTypes.string.isRequired,
-      id: PropTypes.number.isRequired,
-      n_subjects: PropTypes.number.isRequired,
-      reusable: PropTypes.bool,
-    }),
-  ).isRequired,
-  selectedDataset: PropTypes.shape({
-    filename: PropTypes.string.isRequired,
-    id: PropTypes.number.isRequired,
-  }),
-  stats: datasetStatsShape,
-};
