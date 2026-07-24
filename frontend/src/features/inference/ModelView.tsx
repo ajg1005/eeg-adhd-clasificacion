@@ -15,8 +15,8 @@ import type {
   MetricChartDatum,
   ModelFigure,
   ModelInfo,
-} from "../types";
-import { formatMetric } from "../utils/formatters";
+} from "../../types";
+import { formatMetric } from "../../shared/utils/formatters";
 
 interface ModelViewProps {
   metrics: CvMetrics | null;

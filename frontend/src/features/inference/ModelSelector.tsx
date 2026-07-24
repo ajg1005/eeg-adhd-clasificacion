@@ -1,8 +1,8 @@
 import type { ChangeEventHandler } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { ModelInfo, ModelRegistryItem, SelectOption } from "../types";
-import { ModelSelectField } from "./ModelSelectField";
+import type { ModelInfo, ModelRegistryItem, SelectOption } from "../../types";
+import { ModelSelectField } from "../../shared/components/ModelSelectField";
 
 interface ModelSelectorProps {
   modelInfo: ModelInfo | null;

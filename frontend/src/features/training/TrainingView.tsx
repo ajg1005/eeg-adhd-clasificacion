@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
-import { getTrainingOptions } from "../api";
-import type { TrainingTaskStatus } from "../hooks/useTrainingTask";
+import { getTrainingOptions } from "../../api";
+import type { TrainingTaskStatus } from "./useTrainingTask";
 import type {
   JsonPrimitive,
   SavedTrainingDataset,
@@ -12,10 +12,10 @@ import type {
   TrainingOptions,
   TrainingPayload,
   TrainingResult,
-} from "../types";
-import { TrainingEegParamsPanel } from "./training/TrainingEegParamsPanel";
-import { TrainingModelPanel } from "./training/TrainingModelPanel";
-import { TrainingResultsPanel } from "./training/TrainingResultsPanel";
+} from "../../types";
+import { TrainingEegParamsPanel } from "./components/TrainingEegParamsPanel";
+import { TrainingModelPanel } from "./components/TrainingModelPanel";
+import { TrainingResultsPanel } from "./components/TrainingResultsPanel";
 
 interface TrainingViewProps {
   file: File | null;

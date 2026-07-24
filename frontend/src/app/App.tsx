@@ -1,16 +1,16 @@
 import { AppHeader } from "./components/AppHeader";
-import { DatasetView } from "./components/DatasetView";
-import { ExperimentsView } from "./components/ExperimentsView";
-import { ModelSelector } from "./components/ModelSelector";
-import { ModelView } from "./components/ModelView";
-import { PredictionView } from "./components/PredictionView";
-import { Tabs } from "./components/Tabs";
-import { TrainingView } from "./components/TrainingView";
-import { TAB_GROUPS } from "./config/tabs";
-import { useInferenceController } from "./hooks/useInferenceController";
-import { useTrainingDataset } from "./hooks/useTrainingDataset";
-import { useTrainingTask } from "./hooks/useTrainingTask";
-import type { TrainingResult } from "./types";
+import { DatasetView } from "../features/datasets/DatasetView";
+import { ExperimentsView } from "../features/experiments/ExperimentsView";
+import { ModelSelector } from "../features/inference/ModelSelector";
+import { ModelView } from "../features/inference/ModelView";
+import { PredictionView } from "../features/inference/PredictionView";
+import { Tabs } from "../shared/components/Tabs";
+import { TrainingView } from "../features/training/TrainingView";
+import { TAB_GROUPS } from "./tabs";
+import { useInferenceController } from "../features/inference/useInferenceController";
+import { useTrainingDataset } from "../features/datasets/useTrainingDataset";
+import { useTrainingTask } from "../features/training/useTrainingTask";
+import type { TrainingResult } from "../types";
 import "./App.css";
 
 function App() {

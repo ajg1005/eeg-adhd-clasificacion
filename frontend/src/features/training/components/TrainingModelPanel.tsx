@@ -1,20 +1,20 @@
 import type { ChangeEventHandler } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { TrainingTaskStatus } from "../../hooks/useTrainingTask";
+import type { TrainingTaskStatus } from "../useTrainingTask";
 import type {
   SelectOption,
   TrainingControlValues,
   TrainingModelOption,
   TrainingModelTypeId,
   TrainingOptionValue,
-} from "../../types";
+} from "../../../types";
 import {
   modelParamLabel,
   optionValueLabel,
   trainingParamLabel,
-} from "../../utils/trainingLabels";
-import { ModelSelectField } from "../ModelSelectField";
+} from "../trainingLabels";
+import { ModelSelectField } from "../../../shared/components/ModelSelectField";
 
 interface TrainingModelPanelProps {
   currentModelParameters: Record<string, TrainingOptionValue[]>;

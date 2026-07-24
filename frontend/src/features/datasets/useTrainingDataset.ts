@@ -11,11 +11,11 @@ import {
   getTaskStatus,
   startDatasetAnalysis,
   uploadTrainingDataset,
-} from "../api";
+} from "../../api";
 import type {
   SavedTrainingDataset,
   TrainingDatasetStats,
-} from "../types";
+} from "../../types";
 
 const TASK_POLL_INTERVAL_MS = 1000;
 

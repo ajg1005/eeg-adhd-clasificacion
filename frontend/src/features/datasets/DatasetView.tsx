@@ -5,7 +5,7 @@ import type {
   SavedTrainingDataset,
   TrainingDatasetPatient,
   TrainingDatasetStats,
-} from "../types";
+} from "../../types";
 
 interface DatasetViewProps {
   classFilter: string;

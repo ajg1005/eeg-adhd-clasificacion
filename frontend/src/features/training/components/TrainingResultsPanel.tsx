@@ -10,14 +10,14 @@ import type {
   PatientTrainingResult,
   TrainingResult,
   UnknownRecord,
-} from "../../types";
+} from "../../../types";
 import {
   REPORT_COLUMNS,
   evaluationModeLabel,
   methodLabel,
   reportColumnLabel,
   reportRowLabel,
-} from "../../utils/trainingLabels";
+} from "../trainingLabels";
 
 type ReportColumn = (typeof REPORT_COLUMNS)[number];
 

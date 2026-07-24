@@ -8,7 +8,7 @@ import {
   type SetStateAction,
 } from "react";
 
-import type { TabId } from "../config/tabs";
+import type { TabId } from "../../app/tabs";
 import {
   getHealth,
   getModelFigures,
@@ -16,7 +16,7 @@ import {
   getModels,
   predictCsv,
   validateCsv,
-} from "../api";
+} from "../../api";
 import type {
   ApiStatus,
   CvMetrics,
@@ -27,7 +27,7 @@ import type {
   ModelRegistryItem,
   PredictionResult,
   ValidationResult,
-} from "../types";
+} from "../../types";
 
 const DEFAULT_MODEL_ID = "ml_best";
 

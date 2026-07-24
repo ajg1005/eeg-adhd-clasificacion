@@ -1,7 +1,7 @@
 import { BrainCircuit } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import type { ApiStatus } from "../types";
+import type { ApiStatus } from "../../types";
 
 interface AppHeaderProps {
   apiStatus: ApiStatus;
