@@ -1,14 +1,41 @@
-import { useEffect, useMemo, useState } from "react";
-import PropTypes from "prop-types";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 import { getTrainingOptions } from "../api";
+import type { TrainingTaskStatus } from "../hooks/useTrainingTask";
+import type {
+  JsonPrimitive,
+  SavedTrainingDataset,
+  TrainingControlValues,
+  TrainingDatasetStats,
+  TrainingModelTypeId,
+  TrainingOptions,
+  TrainingPayload,
+  TrainingResult,
+} from "../types";
 import { TrainingEegParamsPanel } from "./training/TrainingEegParamsPanel";
 import { TrainingModelPanel } from "./training/TrainingModelPanel";
 import { TrainingResultsPanel } from "./training/TrainingResultsPanel";
-import { datasetStatsShape, fileShape } from "../propTypes";
 
-function normalizeValue(value) {
+interface TrainingViewProps {
+  file: File | null;
+  loadingTraining: boolean;
+  onStartTraining: (
+    file: File | null | undefined,
+    payload: TrainingPayload,
+  ) => Promise<void>;
+  result: TrainingResult | null;
+  selectedDataset: SavedTrainingDataset | null;
+  stats: TrainingDatasetStats | null;
+  taskError: string;
+  taskStatus: TrainingTaskStatus;
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function normalizeValue(value: string): JsonPrimitive {
   if (value === "none") {
     return null;
   }
@@ -25,8 +52,12 @@ function normalizeValue(value) {
   return Number.isNaN(numeric) || value === "" ? value : numeric;
 }
 
-function modelDefaults(options, modelType, modelName) {
-  return options?.model_types?.[modelType]?.models?.[modelName]?.default_params || {};
+function modelDefaults(
+  options: TrainingOptions,
+  modelType: TrainingModelTypeId,
+  modelName: string,
+): TrainingControlValues {
+  return options.model_types[modelType].models[modelName]?.default_params ?? {};
 }
 
 export function TrainingView({
@@ -38,21 +69,26 @@ export function TrainingView({
   stats,
   taskError,
   taskStatus,
-}) {
+}: TrainingViewProps) {
   const { t } = useTranslation();
-  const [options, setOptions] = useState(null);
-  const [modelType, setModelType] = useState("ml");
+  const [options, setOptions] = useState<TrainingOptions | null>(null);
+  const [modelType, setModelType] = useState<TrainingModelTypeId>("ml");
   const [modelName, setModelName] = useState("");
-  const [eegParams, setEegParams] = useState({});
-  const [modelParams, setModelParams] = useState({});
-  const [trainingParams, setTrainingParams] = useState({});
+  const [eegParams, setEegParams] = useState<TrainingControlValues>({});
+  const [modelParams, setModelParams] = useState<TrainingControlValues>({});
+  const [trainingParams, setTrainingParams] = useState<TrainingControlValues>({});
   const [resultPatientFilter, setResultPatientFilter] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadOptions() {
-      try {
-        const trainingOptions = await getTrainingOptions();
+    let cancelled = false;
+
+    void getTrainingOptions()
+      .then((trainingOptions) => {
+        if (cancelled) {
+          return;
+        }
+
         const defaultType = trainingOptions.default_model_type;
         const defaultModel = trainingOptions.default_models[defaultType];
 
@@ -62,36 +98,46 @@ export function TrainingView({
         setEegParams(trainingOptions.default_eeg_params[defaultType]);
         setModelParams(modelDefaults(trainingOptions, defaultType, defaultModel));
         setTrainingParams(trainingOptions.default_training_params);
-      } catch (err) {
-        setError(err.message);
-      }
-    }
+      })
+      .catch((caughtError: unknown) => {
+        if (!cancelled) {
+          setError(
+            errorMessage(
+              caughtError,
+              "No se pudieron cargar las opciones de entrenamiento",
+            ),
+          );
+        }
+      });
 
-    loadOptions();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const currentModels = options?.model_types?.[modelType]?.models || {};
+  const currentModels = options?.model_types[modelType].models ?? {};
   const currentModel = currentModels[modelName];
-  const currentModelParameters = currentModel?.parameters || {};
+  const currentModelParameters = currentModel?.parameters ?? {};
 
   const visibleTrainingParams = useMemo(() => {
-    const allowed = options?.training_params_by_type?.[modelType] || [];
-    return Object.entries(options?.training_params || {}).filter(([name]) =>
-      allowed.includes(name)
+    const allowed = options?.training_params_by_type[modelType] ?? [];
+    return Object.entries(options?.training_params ?? {}).filter(([name]) =>
+      allowed.includes(name),
     );
   }, [modelType, options]);
 
   const filteredPatientResults = useMemo(() => {
-    if (!result?.patient_results) {
+    if (!result) {
       return [];
     }
 
+    const normalizedFilter = resultPatientFilter.toLowerCase();
     return result.patient_results.filter((patient) =>
-      patient.patient_id.toLowerCase().includes(resultPatientFilter.toLowerCase())
+      patient.patient_id.toLowerCase().includes(normalizedFilter),
     );
   }, [result, resultPatientFilter]);
 
-  function handleModelTypeChange(nextType) {
+  function handleModelTypeChange(nextType: TrainingModelTypeId): void {
     if (!options) {
       return;
     }
@@ -103,7 +149,7 @@ export function TrainingView({
     setEegParams(options.default_eeg_params[nextType]);
   }
 
-  function handleModelNameChange(event) {
+  function handleModelNameChange(event: ChangeEvent<HTMLSelectElement>): void {
     if (!options) {
       return;
     }
@@ -113,19 +159,22 @@ export function TrainingView({
     setModelParams(modelDefaults(options, modelType, nextModel));
   }
 
-  function updateEegParam(name, value) {
+  function updateEegParam(name: string, value: string): void {
     setEegParams((current) => ({ ...current, [name]: normalizeValue(value) }));
   }
 
-  function updateModelParam(name, value) {
+  function updateModelParam(name: string, value: string): void {
     setModelParams((current) => ({ ...current, [name]: normalizeValue(value) }));
   }
 
-  function updateTrainingParam(name, value) {
-    setTrainingParams((current) => ({ ...current, [name]: normalizeValue(value) }));
+  function updateTrainingParam(name: string, value: string): void {
+    setTrainingParams((current) => ({
+      ...current,
+      [name]: normalizeValue(value),
+    }));
   }
 
-  async function handleRunTraining() {
+  async function handleRunTraining(): Promise<void> {
     if (!file && !selectedDataset) {
       setError(t("training.missingFile"));
       return;
@@ -141,6 +190,7 @@ export function TrainingView({
       trainingParams,
     });
   }
+
   return (
     <section className="training-layout interactive-training">
       {error && <div className="alert alert-error">{error}</div>}
@@ -218,26 +268,12 @@ export function TrainingView({
 
       <TrainingResultsPanel
         filteredPatientResults={filteredPatientResults}
-        onPatientFilterChange={(event) =>
-          setResultPatientFilter(event.target.value)
-        }
+        onPatientFilterChange={(event) => {
+          setResultPatientFilter(event.target.value);
+        }}
         patientFilter={resultPatientFilter}
         result={result}
       />
     </section>
   );
 }
-
-TrainingView.propTypes = {
-  file: fileShape,
-  loadingTraining: PropTypes.bool.isRequired,
-  onStartTraining: PropTypes.func.isRequired,
-  result: PropTypes.object,
-  selectedDataset: PropTypes.shape({
-    filename: PropTypes.string.isRequired,
-    id: PropTypes.number.isRequired,
-  }),
-  stats: datasetStatsShape,
-  taskError: PropTypes.string,
-  taskStatus: PropTypes.string,
-};

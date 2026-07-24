@@ -1,7 +1,16 @@
-import PropTypes from "prop-types";
+import type {
+  ChangeEventHandler,
+  CSSProperties,
+} from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
-import { patientResultShape } from "../../propTypes";
+import type {
+  FeatureImportanceItem,
+  PatientTrainingResult,
+  TrainingResult,
+  UnknownRecord,
+} from "../../types";
 import {
   REPORT_COLUMNS,
   evaluationModeLabel,
@@ -10,17 +19,53 @@ import {
   reportRowLabel,
 } from "../../utils/trainingLabels";
 
-function formatReportCell(column, value) {
-  if (value === undefined || value === null) {
+type ReportColumn = (typeof REPORT_COLUMNS)[number];
+
+interface TrainingResultsPanelProps {
+  filteredPatientResults: PatientTrainingResult[];
+  onPatientFilterChange: ChangeEventHandler<HTMLInputElement>;
+  patientFilter: string;
+  result: TrainingResult | null;
+}
+
+interface ClassificationReportTableProps {
+  report: UnknownRecord;
+  t: TFunction;
+}
+
+interface ConfusionMatrixProps {
+  matrix: number[][];
+  t: TFunction;
+}
+
+interface NumericValueProps {
+  value?: number;
+}
+
+interface ImportanceListProps {
+  rows: FeatureImportanceItem[];
+  title: string;
+}
+
+function isReportMetrics(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function formatReportCell(column: ReportColumn, value: unknown): string {
+  if (typeof value !== "number" && typeof value !== "string") {
     return "-";
   }
-  // El soporte es un recuento de muestras; el resto son metricas en [0, 1].
+
+  // El soporte es un recuento de muestras; el resto son métricas en [0, 1].
   return column === "support" ? String(value) : Number(value).toFixed(3);
 }
 
-function ClassificationReportTable({ report, t }) {
+function ClassificationReportTable({
+  report,
+  t,
+}: ClassificationReportTableProps) {
   const rows = Object.entries(report).filter(
-    ([, value]) => value !== null && typeof value === "object",
+    (entry): entry is [string, UnknownRecord] => isReportMetrics(entry[1]),
   );
   const accuracy = typeof report.accuracy === "number" ? report.accuracy : null;
 
@@ -54,20 +99,14 @@ function ClassificationReportTable({ report, t }) {
   );
 }
 
-ClassificationReportTable.propTypes = {
-  report: PropTypes.object.isRequired,
-  t: PropTypes.func.isRequired,
-};
-
-// Sombreado secuencial de una sola tinta: cuanto mayor el recuento, mas opaca la
-// celda. La diagonal (aciertos) suele tener mas casos, asi que resalta sola.
-function confusionCellStyle(value, max) {
+// Sombreado secuencial: cuanto mayor el recuento, más opaca la celda.
+function confusionCellStyle(value: number, max: number): CSSProperties {
   const intensity = max > 0 ? value / max : 0;
   const alpha = (0.12 + intensity * 0.68).toFixed(3);
   return { background: `rgba(190, 124, 77, ${alpha})` };
 }
 
-function ConfusionMatrix({ matrix, t }) {
+function ConfusionMatrix({ matrix, t }: ConfusionMatrixProps) {
   const labels = [t("training.reportRows.Control"), t("training.reportRows.ADHD")];
   const max = Math.max(...matrix.flat(), 1);
 
@@ -109,36 +148,18 @@ function ConfusionMatrix({ matrix, t }) {
   );
 }
 
-ConfusionMatrix.propTypes = {
-  matrix: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
-  t: PropTypes.func.isRequired,
-};
-
-const importanceRowShape = PropTypes.shape({
-  feature: PropTypes.string.isRequired,
-  importance_mean: PropTypes.number,
-});
-
-function Percent({ value }) {
-  return `${((value || 0) * 100).toFixed(1)}%`;
+function Percent({ value }: NumericValueProps) {
+  return `${((value ?? 0) * 100).toFixed(1)}%`;
 }
 
-Percent.propTypes = {
-  value: PropTypes.number,
-};
-
-function ImportanceValue({ value }) {
-  return Number(value || 0).toFixed(4);
+function ImportanceValue({ value }: NumericValueProps) {
+  return (value ?? 0).toFixed(4);
 }
 
-ImportanceValue.propTypes = {
-  value: PropTypes.number,
-};
-
-function ImportanceList({ rows, title }) {
+function ImportanceList({ rows, title }: ImportanceListProps) {
   const maxValue = Math.max(
-    ...rows.map((row) => Math.max(0, row.importance_mean || 0)),
-    0
+    ...rows.map((row) => Math.max(0, row.importance_mean)),
+    0,
   );
 
   return (
@@ -170,17 +191,12 @@ function ImportanceList({ rows, title }) {
   );
 }
 
-ImportanceList.propTypes = {
-  rows: PropTypes.arrayOf(importanceRowShape).isRequired,
-  title: PropTypes.string.isRequired,
-};
-
 export function TrainingResultsPanel({
   filteredPatientResults,
   onPatientFilterChange,
   patientFilter,
   result,
-}) {
+}: TrainingResultsPanelProps) {
   const { t } = useTranslation();
 
   if (!result) {
@@ -188,14 +204,15 @@ export function TrainingResultsPanel({
   }
 
   const featureImportance = result.feature_importance;
+  const evaluationMode = result.configuration.evaluation_mode;
 
   return (
     <div className="panel training-section">
       <h2>{t("training.results")}</h2>
-      {result.configuration?.evaluation_mode && (
+      {evaluationMode && (
         <p className="muted">
           {t("training.evaluation", {
-            mode: evaluationModeLabel(t, result.configuration.evaluation_mode),
+            mode: evaluationModeLabel(t, evaluationMode),
           })}
         </p>
       )}
@@ -272,11 +289,11 @@ export function TrainingResultsPanel({
           ) : (
             <div className="feature-importance-grid">
               <ImportanceList
-                rows={featureImportance.top_features || []}
+                rows={featureImportance.top_features}
                 title={t("training.topFeatures")}
               />
               <ImportanceList
-                rows={featureImportance.by_channel || []}
+                rows={featureImportance.by_channel}
                 title={t("training.byEegChannel")}
               />
             </div>
@@ -337,36 +354,3 @@ export function TrainingResultsPanel({
     </div>
   );
 }
-
-TrainingResultsPanel.propTypes = {
-  filteredPatientResults: PropTypes.arrayOf(patientResultShape).isRequired,
-  onPatientFilterChange: PropTypes.func.isRequired,
-  patientFilter: PropTypes.string.isRequired,
-  result: PropTypes.shape({
-    accuracy: PropTypes.number.isRequired,
-    balanced_accuracy: PropTypes.number.isRequired,
-    classification_report: PropTypes.object.isRequired,
-    confusion_matrix: PropTypes.arrayOf(
-      PropTypes.arrayOf(PropTypes.number),
-    ).isRequired,
-    configuration: PropTypes.shape({
-      evaluation_mode: PropTypes.string,
-    }),
-    f1_score: PropTypes.number.isRequired,
-    feature_importance: PropTypes.shape({
-      by_channel: PropTypes.arrayOf(importanceRowShape),
-      error: PropTypes.string,
-      evaluated_epochs: PropTypes.number,
-      method: PropTypes.string,
-      scoring: PropTypes.string,
-      source: PropTypes.string,
-      top_features: PropTypes.arrayOf(importanceRowShape),
-    }),
-    model_saved: PropTypes.bool,
-    persisted: PropTypes.bool,
-    precision: PropTypes.number.isRequired,
-    recall: PropTypes.number.isRequired,
-    trained_model_id: PropTypes.number,
-    training_time_seconds: PropTypes.number.isRequired,
-  }),
-};

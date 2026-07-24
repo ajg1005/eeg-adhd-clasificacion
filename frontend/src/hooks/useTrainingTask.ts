@@ -11,7 +11,7 @@ const TASK_STORAGE_KEY = "eeg-adhd-training-task-id";
 const TASK_POLL_INTERVAL_MS = 1000;
 const TERMINAL_STATUSES = new Set<TaskStatus>(["SUCCESS", "FAILURE"]);
 
-type TrainingTaskStatus = TaskStatus | "SUBMITTING" | null;
+export type TrainingTaskStatus = TaskStatus | "SUBMITTING" | null;
 
 interface UseTrainingTaskResult {
   error: string;

@@ -1,22 +1,34 @@
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
+import type {
+  TrainingControlValues,
+  TrainingModelTypeId,
+  TrainingOptions,
+} from "../../types";
 import {
   optionValueLabel,
   signalParamLabel,
 } from "../../utils/trainingLabels";
+
+interface TrainingEegParamsPanelProps {
+  eegParams: TrainingControlValues;
+  modelType: TrainingModelTypeId;
+  onEegParamChange: (name: string, value: string) => void;
+  options: TrainingOptions | null;
+}
 
 export function TrainingEegParamsPanel({
   eegParams,
   modelType,
   onEegParamChange,
   options,
-}) {
+}: TrainingEegParamsPanelProps) {
   const { t } = useTranslation();
-  const visibleParamNames = options?.eeg_params_by_type?.[modelType]
-    || Object.keys(options?.eeg_params || {});
-  const visibleParams = Object.entries(options?.eeg_params || {}).filter(([name]) =>
-    visibleParamNames.includes(name)
+  const visibleParamNames =
+    options?.eeg_params_by_type[modelType] ??
+    Object.keys(options?.eeg_params ?? {});
+  const visibleParams = Object.entries(options?.eeg_params ?? {}).filter(
+    ([name]) => visibleParamNames.includes(name),
   );
 
   return (
@@ -32,7 +44,9 @@ export function TrainingEegParamsPanel({
           <label key={name}>
             {signalParamLabel(t, name)}
             <select
-              onChange={(event) => onEegParamChange(name, event.target.value)}
+              onChange={(event) => {
+                onEegParamChange(name, event.target.value);
+              }}
               value={String(eegParams[name])}
             >
               {values.map((value) => (
@@ -47,13 +61,3 @@ export function TrainingEegParamsPanel({
     </div>
   );
 }
-
-TrainingEegParamsPanel.propTypes = {
-  eegParams: PropTypes.object.isRequired,
-  modelType: PropTypes.string.isRequired,
-  onEegParamChange: PropTypes.func.isRequired,
-  options: PropTypes.shape({
-    eeg_params: PropTypes.object,
-    eeg_params_by_type: PropTypes.object,
-  }),
-};
