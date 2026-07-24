@@ -1,7 +1,3 @@
-import { useInferenceController } from "./hooks/useInferenceController";
-import { useTrainingDataset } from "./hooks/useTrainingDataset";
-import { useTrainingTask } from "./hooks/useTrainingTask";
-import { TAB_GROUPS } from "./config/tabs";
 import { AppHeader } from "./components/AppHeader";
 import { DatasetView } from "./components/DatasetView";
 import { ExperimentsView } from "./components/ExperimentsView";
@@ -10,18 +6,24 @@ import { ModelView } from "./components/ModelView";
 import { PredictionView } from "./components/PredictionView";
 import { Tabs } from "./components/Tabs";
 import { TrainingView } from "./components/TrainingView";
+import { TAB_GROUPS } from "./config/tabs";
+import { useInferenceController } from "./hooks/useInferenceController";
+import { useTrainingDataset } from "./hooks/useTrainingDataset";
+import { useTrainingTask } from "./hooks/useTrainingTask";
+import type { TrainingResult } from "./types";
 import "./App.css";
 
 function App() {
   const controller = useInferenceController();
   const trainingDataset = useTrainingDataset();
   const trainingTask = useTrainingTask(handleTrainingFinished);
-  function handleTrainingFinished(trainingResult) {
-    const trainedModelId = trainingResult?.trained_model_id
+
+  function handleTrainingFinished(trainingResult: TrainingResult): void {
+    const trainedModelId = trainingResult.trained_model_id
       ? `trained_model_${trainingResult.trained_model_id}`
       : null;
 
-    controller.refreshModels(trainedModelId).catch(() => {});
+    void controller.refreshModels(trainedModelId).catch(() => undefined);
   }
 
   return (
@@ -34,7 +36,9 @@ function App() {
         tabGroups={TAB_GROUPS}
       />
 
-      {controller.error && <div className="alert alert-error">{controller.error}</div>}
+      {controller.error && (
+        <div className="alert alert-error">{controller.error}</div>
+      )}
 
       {controller.activeTab === "model" && (
         <>

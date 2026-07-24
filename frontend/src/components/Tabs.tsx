@@ -1,7 +1,14 @@
-import PropTypes from "prop-types";
 import { useTranslation } from "react-i18next";
 
-export function Tabs({ activeTab, onTabChange, tabGroups }) {
+import type { TabGroup, TabId } from "../config/tabs";
+
+interface TabsProps {
+  activeTab: TabId;
+  onTabChange: (tab: TabId) => void;
+  tabGroups: readonly TabGroup[];
+}
+
+export function Tabs({ activeTab, onTabChange, tabGroups }: TabsProps) {
   const { t } = useTranslation();
 
   return (
@@ -14,7 +21,9 @@ export function Tabs({ activeTab, onTabChange, tabGroups }) {
               <button
                 className={activeTab === tab ? "tab-button active" : "tab-button"}
                 key={tab}
-                onClick={() => onTabChange(tab)}
+                onClick={() => {
+                  onTabChange(tab);
+                }}
                 type="button"
               >
                 {t(`tabs.${tab}`)}
@@ -26,15 +35,3 @@ export function Tabs({ activeTab, onTabChange, tabGroups }) {
     </nav>
   );
 }
-
-Tabs.propTypes = {
-  activeTab: PropTypes.string.isRequired,
-  onTabChange: PropTypes.func.isRequired,
-  tabGroups: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      labelKey: PropTypes.string.isRequired,
-      tabs: PropTypes.arrayOf(PropTypes.string).isRequired,
-    }),
-  ).isRequired,
-};

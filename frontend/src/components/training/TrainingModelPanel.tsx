@@ -1,15 +1,41 @@
-import PropTypes from "prop-types";
+import type { ChangeEventHandler } from "react";
 import { useTranslation } from "react-i18next";
 
-import { ModelSelectField } from "../ModelSelectField";
-import { fileShape, modelOptionShape } from "../../propTypes";
+import type { TrainingTaskStatus } from "../../hooks/useTrainingTask";
+import type {
+  SelectOption,
+  TrainingControlValues,
+  TrainingModelOption,
+  TrainingModelTypeId,
+  TrainingOptionValue,
+} from "../../types";
 import {
   modelParamLabel,
   optionValueLabel,
   trainingParamLabel,
 } from "../../utils/trainingLabels";
+import { ModelSelectField } from "../ModelSelectField";
 
-function selectValue(value) {
+interface TrainingModelPanelProps {
+  currentModelParameters: Record<string, TrainingOptionValue[]>;
+  currentModels: Record<string, TrainingModelOption>;
+  datasetSelected: boolean;
+  file: File | null;
+  loadingTraining: boolean;
+  modelName: string;
+  modelParams: TrainingControlValues;
+  modelType: TrainingModelTypeId;
+  onModelNameChange: ChangeEventHandler<HTMLSelectElement>;
+  onModelParamChange: (name: string, value: string) => void;
+  onModelTypeChange: (modelType: TrainingModelTypeId) => void;
+  onRunTraining: () => Promise<void>;
+  onTrainingParamChange: (name: string, value: string) => void;
+  trainingParams: TrainingControlValues;
+  trainingStatus: TrainingTaskStatus;
+  visibleTrainingParams: [string, TrainingOptionValue[]][];
+}
+
+function selectValue(value: TrainingOptionValue | undefined): string {
   return value === null || value === undefined ? "none" : String(value);
 }
 
@@ -30,17 +56,19 @@ export function TrainingModelPanel({
   trainingParams,
   trainingStatus,
   visibleTrainingParams,
-}) {
+}: TrainingModelPanelProps) {
   const { t } = useTranslation();
   const trainingStatusLabel = trainingStatus
     ? t(`training.taskStatuses.${trainingStatus}`, {
         defaultValue: trainingStatus,
       })
     : "";
-  const modelOptions = Object.entries(currentModels).map(([key, model]) => ({
-    label: model.display_name,
-    value: key,
-  }));
+  const modelOptions: SelectOption[] = Object.entries(currentModels).map(
+    ([key, model]) => ({
+      label: model.display_name,
+      value: key,
+    }),
+  );
 
   return (
     <div className="panel training-section">
@@ -48,14 +76,18 @@ export function TrainingModelPanel({
       <div className="segmented-control">
         <button
           className={modelType === "ml" ? "active" : ""}
-          onClick={() => onModelTypeChange("ml")}
+          onClick={() => {
+            onModelTypeChange("ml");
+          }}
           type="button"
         >
           Machine Learning
         </button>
         <button
           className={modelType === "dl" ? "active" : ""}
-          onClick={() => onModelTypeChange("dl")}
+          onClick={() => {
+            onModelTypeChange("dl");
+          }}
           type="button"
         >
           Deep Learning
@@ -74,7 +106,9 @@ export function TrainingModelPanel({
           <label key={name}>
             {modelParamLabel(t, name)}
             <select
-              onChange={(event) => onModelParamChange(name, event.target.value)}
+              onChange={(event) => {
+                onModelParamChange(name, event.target.value);
+              }}
               value={selectValue(modelParams[name])}
             >
               {values.map((value) => (
@@ -98,9 +132,9 @@ export function TrainingModelPanel({
               <label key={name}>
                 {trainingParamLabel(t, name)}
                 <select
-                  onChange={(event) =>
-                    onTrainingParamChange(name, event.target.value)
-                  }
+                  onChange={(event) => {
+                    onTrainingParamChange(name, event.target.value);
+                  }}
                   value={String(trainingParams[name])}
                 >
                   {values.map((value) => (
@@ -118,7 +152,9 @@ export function TrainingModelPanel({
       <button
         className="primary-button"
         disabled={(!file && !datasetSelected) || loadingTraining}
-        onClick={onRunTraining}
+        onClick={() => {
+          void onRunTraining();
+        }}
         type="button"
       >
         {loadingTraining ? t("training.training") : t("training.train")}
@@ -126,37 +162,10 @@ export function TrainingModelPanel({
 
       {loadingTraining && (
         <p className="muted">
-          {t("training.trainingHint")} {t("training.taskStatus", { status: trainingStatusLabel })}
+          {t("training.trainingHint")}{" "}
+          {t("training.taskStatus", { status: trainingStatusLabel })}
         </p>
       )}
     </div>
   );
 }
-
-TrainingModelPanel.propTypes = {
-  currentModelParameters: PropTypes.object.isRequired,
-  currentModels: PropTypes.objectOf(modelOptionShape).isRequired,
-  datasetSelected: PropTypes.bool,
-  file: fileShape,
-  loadingTraining: PropTypes.bool.isRequired,
-  modelName: PropTypes.string.isRequired,
-  modelParams: PropTypes.object.isRequired,
-  modelType: PropTypes.string.isRequired,
-  onModelNameChange: PropTypes.func.isRequired,
-  onModelParamChange: PropTypes.func.isRequired,
-  onModelTypeChange: PropTypes.func.isRequired,
-  onRunTraining: PropTypes.func.isRequired,
-  onTrainingParamChange: PropTypes.func.isRequired,
-  trainingParams: PropTypes.object.isRequired,
-  trainingStatus: PropTypes.string,
-  visibleTrainingParams: PropTypes.arrayOf(
-    PropTypes.arrayOf(
-      PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.number,
-        PropTypes.bool,
-        PropTypes.array,
-      ]),
-    ),
-  ).isRequired,
-};

@@ -1,22 +1,51 @@
-import PropTypes from "prop-types";
+import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
-import { fileShape, modelInfoShape } from "../propTypes";
+import type {
+  ModelInfo,
+  PredictionResult,
+  ValidationResult,
+} from "../types";
 import { formatPercent } from "../utils/formatters";
 
-function classWindowCount(prediction, label) {
-  return prediction?.epoch_count_by_class?.[label] || 0;
+interface PredictionViewProps {
+  decisionScore: number | null;
+  file: File | null;
+  loadingPrediction: boolean;
+  loadingValidation: boolean;
+  modelAvailable: boolean;
+  modelInfo: ModelInfo | null;
+  onFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
+  onPredict: () => Promise<void>;
+  prediction: PredictionResult | null;
+  validation: ValidationResult | null;
 }
 
-function classWindowPercentage(prediction, label) {
-  if (!prediction?.n_epochs) {
+interface PredictionDistributionProps {
+  prediction: PredictionResult;
+}
+
+function classWindowCount(
+  prediction: PredictionResult,
+  label: string,
+): number {
+  return prediction.epoch_count_by_class[label] ?? 0;
+}
+
+function classWindowPercentage(
+  prediction: PredictionResult,
+  label: string,
+): number {
+  if (!prediction.n_epochs) {
     return 0;
   }
 
   return (classWindowCount(prediction, label) / prediction.n_epochs) * 100;
 }
 
-function PredictionDistribution({ prediction }) {
+function PredictionDistribution({
+  prediction,
+}: PredictionDistributionProps) {
   const { t } = useTranslation();
   const classes = [
     {
@@ -80,7 +109,7 @@ export function PredictionView({
   onPredict,
   prediction,
   validation,
-}) {
+}: PredictionViewProps) {
   const { t } = useTranslation();
 
   return (
@@ -90,7 +119,13 @@ export function PredictionView({
 
         <label className="file-drop">
           <span>{t("prediction.selectCsv")}</span>
-          <input type="file" accept=".csv" onChange={onFileChange} />
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(event) => {
+              void onFileChange(event);
+            }}
+          />
         </label>
 
         {file && (
@@ -120,7 +155,7 @@ export function PredictionView({
               {modelInfo.channels.map((channel) => (
                 <span
                   className={
-                    validation?.available_channels?.includes(channel)
+                    validation.available_channels.includes(channel)
                       ? "channel-ok"
                       : ""
                   }
@@ -141,7 +176,9 @@ export function PredictionView({
             loadingPrediction ||
             loadingValidation
           }
-          onClick={onPredict}
+          onClick={() => {
+            void onPredict();
+          }}
           type="button"
         >
           {loadingPrediction ? t("prediction.processing") : t("prediction.run")}
@@ -196,31 +233,3 @@ export function PredictionView({
     </section>
   );
 }
-
-PredictionView.propTypes = {
-  decisionScore: PropTypes.number,
-  file: fileShape,
-  loadingPrediction: PropTypes.bool.isRequired,
-  loadingValidation: PropTypes.bool.isRequired,
-  modelAvailable: PropTypes.bool.isRequired,
-  modelInfo: modelInfoShape,
-  onFileChange: PropTypes.func.isRequired,
-  onPredict: PropTypes.func.isRequired,
-  prediction: PropTypes.shape({
-    epoch_count_by_class: PropTypes.objectOf(PropTypes.number),
-    model_name: PropTypes.string,
-    n_epochs: PropTypes.number.isRequired,
-    prediction_label: PropTypes.string.isRequired,
-  }),
-  validation: PropTypes.shape({
-    available_channels: PropTypes.arrayOf(PropTypes.string).isRequired,
-    rows: PropTypes.number.isRequired,
-  }),
-};
-
-PredictionDistribution.propTypes = {
-  prediction: PropTypes.shape({
-    epoch_count_by_class: PropTypes.objectOf(PropTypes.number),
-    n_epochs: PropTypes.number.isRequired,
-  }).isRequired,
-};

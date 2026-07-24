@@ -1,3 +1,16 @@
+export type TabId =
+  | "dataset"
+  | "training"
+  | "experiments"
+  | "model"
+  | "prediction";
+
+export interface TabGroup {
+  id: string;
+  labelKey: string;
+  tabs: readonly TabId[];
+}
+
 export const TAB_GROUPS = [
   {
     id: "trainingFlow",
@@ -9,4 +22,4 @@ export const TAB_GROUPS = [
     labelKey: "tabs.groups.inference",
     tabs: ["model", "prediction"],
   },
-];
+] as const satisfies readonly TabGroup[];

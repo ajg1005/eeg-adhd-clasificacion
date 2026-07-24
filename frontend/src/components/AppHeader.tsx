@@ -1,8 +1,13 @@
-import PropTypes from "prop-types";
 import { BrainCircuit } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export function AppHeader({ apiStatus }) {
+import type { ApiStatus } from "../types";
+
+interface AppHeaderProps {
+  apiStatus: ApiStatus;
+}
+
+export function AppHeader({ apiStatus }: AppHeaderProps) {
   const { i18n, t } = useTranslation();
   const showApiError = apiStatus === "error";
 
@@ -23,7 +28,9 @@ export function AppHeader({ apiStatus }) {
         <label className="language-selector">
           <span>{t("app.language")}</span>
           <select
-            onChange={(event) => i18n.changeLanguage(event.target.value)}
+            onChange={(event) => {
+              void i18n.changeLanguage(event.target.value);
+            }}
             value={i18n.resolvedLanguage || "es"}
           >
             <option value="es">ES</option>
@@ -39,7 +46,3 @@ export function AppHeader({ apiStatus }) {
     </header>
   );
 }
-
-AppHeader.propTypes = {
-  apiStatus: PropTypes.string.isRequired,
-};
