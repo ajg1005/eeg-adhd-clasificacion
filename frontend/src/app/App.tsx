@@ -10,7 +10,7 @@ import { TAB_GROUPS } from "./tabs";
 import { useInferenceController } from "../features/inference/useInferenceController";
 import { useTrainingDataset } from "../features/datasets/useTrainingDataset";
 import { useTrainingTask } from "../features/training/useTrainingTask";
-import type { TrainingResult } from "../types";
+import type { TrainingResult } from "../features/training/types";
 import "./App.css";
 
 function App() {

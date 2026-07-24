@@ -9,16 +9,16 @@ import {
 } from "react";
 
 import type { TabId } from "../../app/tabs";
+import { getHealth } from "../../app/api";
 import {
-  getHealth,
   getModelFigures,
   getModelInfo,
   getModels,
   predictCsv,
   validateCsv,
-} from "../../api";
+} from "./api";
+import type { ApiStatus } from "../../app/types";
 import type {
-  ApiStatus,
   CvMetrics,
   MetricChartDatum,
   ModelFigure,
@@ -27,7 +27,7 @@ import type {
   ModelRegistryItem,
   PredictionResult,
   ValidationResult,
-} from "../../types";
+} from "./types";
 
 const DEFAULT_MODEL_ID = "ml_best";
 

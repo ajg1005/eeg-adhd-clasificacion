@@ -15,7 +15,7 @@ import type {
   MetricChartDatum,
   ModelFigure,
   ModelInfo,
-} from "../../types";
+} from "./types";
 import { formatMetric } from "../../shared/utils/formatters";
 
 interface ModelViewProps {

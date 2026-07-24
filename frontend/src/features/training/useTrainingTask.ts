@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getTaskStatus, runTraining } from "../../api";
+import { getTaskStatus } from "../../shared/api/tasks";
+import { runTraining } from "./api";
+import type { TaskStatus } from "../../shared/types";
 import type {
-  TaskStatus,
   TrainingPayload,
   TrainingResult,
-} from "../../types";
+  TrainingTaskStatus,
+} from "./types";
 
 const TASK_STORAGE_KEY = "eeg-adhd-training-task-id";
 const TASK_POLL_INTERVAL_MS = 1000;
 const TERMINAL_STATUSES = new Set<TaskStatus>(["SUCCESS", "FAILURE"]);
-
-export type TrainingTaskStatus = TaskStatus | "SUBMITTING" | null;
 
 interface UseTrainingTaskResult {
   error: string;

@@ -1,6 +1,6 @@
 import type { ChangeEventHandler } from "react";
 
-import type { SelectOption } from "../../types";
+import type { SelectOption } from "../types";
 
 interface ModelSelectFieldProps {
   disabled?: boolean;

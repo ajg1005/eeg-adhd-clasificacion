@@ -8,14 +8,14 @@ import {
 
 import {
   getSavedTrainingDatasets,
-  getTaskStatus,
   startDatasetAnalysis,
   uploadTrainingDataset,
-} from "../../api";
+} from "./api";
+import { getTaskStatus } from "../../shared/api/tasks";
 import type {
   SavedTrainingDataset,
   TrainingDatasetStats,
-} from "../../types";
+} from "./types";
 
 const TASK_POLL_INTERVAL_MS = 1000;
 

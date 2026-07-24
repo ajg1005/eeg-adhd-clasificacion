@@ -6,13 +6,13 @@ import {
   getBestAvailableModel,
   getExperimentDetail,
   getExperiments,
-} from "../../api";
+} from "./api";
+import type { JsonValue } from "../../shared/types";
 import type {
   BestAvailableModel,
   ExperimentDetail,
   ExperimentSummary,
-  JsonValue,
-} from "../../types";
+} from "./types";
 import { formatMetric } from "../../shared/utils/formatters";
 import {
   evaluationModeLabel,

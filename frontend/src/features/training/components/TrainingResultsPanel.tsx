@@ -9,8 +9,8 @@ import type {
   FeatureImportanceItem,
   PatientTrainingResult,
   TrainingResult,
-  UnknownRecord,
-} from "../../../types";
+} from "../types";
+import type { UnknownRecord } from "../../../shared/types";
 import {
   REPORT_COLUMNS,
   evaluationModeLabel,

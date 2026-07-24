@@ -4,7 +4,7 @@ import type {
   TrainingControlValues,
   TrainingModelTypeId,
   TrainingOptions,
-} from "../../../types";
+} from "../types";
 import {
   optionValueLabel,
   signalParamLabel,
