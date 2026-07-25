@@ -9,6 +9,12 @@ interface TabsProps {
   tabGroups: readonly TabGroup[];
 }
 
+// dataset -> training -> experiments es secuencial y el codigo ya lo impone
+// (training.uploadFirst, training.datasetNotAnalyzed): se numera para que la
+// navegacion lo diga. Es una decision de presentacion, por eso vive aqui y no
+// en app/tabs.ts.
+const NUMBERED_GROUP_ID = "trainingFlow";
+
 // La navegacion vive dentro de la barra fija de 64px, donde no cabe la etiqueta
 // de cada grupo: visualmente se separan con una regla, y el texto del grupo pasa
 // a ser el nombre accesible para que no se pierda la agrupacion.
@@ -27,7 +33,7 @@ export function Tabs({ activeTab, onTabChange, tabGroups }: TabsProps) {
             className="tab-group"
             role="group"
           >
-            {group.tabs.map((tab) => (
+            {group.tabs.map((tab, index) => (
               <button
                 aria-current={activeTab === tab ? "page" : undefined}
                 className={
@@ -39,6 +45,11 @@ export function Tabs({ activeTab, onTabChange, tabGroups }: TabsProps) {
                 }}
                 type="button"
               >
+                {group.id === NUMBERED_GROUP_ID && (
+                  <span aria-hidden="true" className="tab-index">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                )}
                 {t(`tabs.${tab}`)}
               </button>
             ))}

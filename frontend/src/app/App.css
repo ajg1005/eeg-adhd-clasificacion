@@ -95,6 +95,12 @@
   align-items: center;
 }
 
+.tab-index {
+  margin-right: 7px;
+  color: var(--golden-chestnut);
+  font-size: 0.7rem;
+}
+
 .tab-separator {
   width: 1px;
   height: 16px;
