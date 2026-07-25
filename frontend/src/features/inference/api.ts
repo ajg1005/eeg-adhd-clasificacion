@@ -1,4 +1,4 @@
-import { apiUrl, requestJson } from "../../shared/api/client";
+import { requestJson, resolveApiAsset } from "../../shared/api/client";
 import type {
   ModelFigure,
   ModelInfo,
@@ -9,7 +9,7 @@ import type {
 
 export async function getModels(): Promise<ModelRegistryItem[]> {
   const data = await requestJson<{ models: ModelRegistryItem[] }>(
-    "/models",
+    { route: "models" },
     undefined,
     "No se pudieron cargar los modelos disponibles",
   );
@@ -17,9 +17,8 @@ export async function getModels(): Promise<ModelRegistryItem[]> {
 }
 
 export function getModelInfo(modelId = "ml_best"): Promise<ModelInfo> {
-  const params = new URLSearchParams({ model_id: modelId });
   return requestJson<ModelInfo>(
-    `/model/info?${params}`,
+    { route: "modelInfo", query: { model_id: modelId } },
     undefined,
     "No se pudo cargar la información del modelo",
   );
@@ -31,10 +30,9 @@ export function validateCsv(
 ): Promise<ValidationResult> {
   const formData = new FormData();
   formData.append("file", file);
-  const params = new URLSearchParams({ model_id: modelId });
 
   return requestJson<ValidationResult>(
-    `/validate?${params}`,
+    { route: "validate", query: { model_id: modelId } },
     { method: "POST", body: formData },
     "CSV no válido",
   );
@@ -46,10 +44,9 @@ export function predictCsv(
 ): Promise<PredictionResult> {
   const formData = new FormData();
   formData.append("file", file);
-  const params = new URLSearchParams({ model_id: modelId });
 
   return requestJson<PredictionResult>(
-    `/predict?${params}`,
+    { route: "predict", query: { model_id: modelId } },
     { method: "POST", body: formData },
     "Error durante la predicción",
   );
@@ -58,15 +55,15 @@ export function predictCsv(
 export async function getModelFigures(
   modelId = "ml_best",
 ): Promise<ModelFigure[]> {
-  const params = new URLSearchParams({ model_id: modelId });
   const data = await requestJson<{ figures: ModelFigure[] }>(
-    `/model/figures?${params}`,
+    { route: "modelFigures", query: { model_id: modelId } },
     undefined,
     "No se pudieron cargar las figuras del modelo",
   );
 
-  return data.figures.map((figure) => ({
-    ...figure,
-    url: apiUrl(figure.url),
-  }));
+  return data.figures.flatMap((figure) => {
+    const url = resolveApiAsset(figure.url);
+
+    return url ? [{ ...figure, url }] : [];
+  });
 }

@@ -1,32 +1,146 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+// Sin barra final para que la concatenación con la ruta no genere "//" y para
+// que una base con prefijo ("https://host/api") no lo pierda.
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000"
+).replace(/\/+$/, "");
+
+const API_ORIGIN = new URL(API_BASE_URL).origin;
 
 const UUID_PATH_SEGMENT_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function uuidPathSegment(value: string): string {
-  const normalizedValue = value.trim().toLowerCase();
+const ABSOLUTE_URL_PATTERN = /^[a-z][a-z0-9+.-]*:/i;
 
-  if (!UUID_PATH_SEGMENT_PATTERN.test(normalizedValue)) {
-    throw new Error("Identificador de tarea no válido");
-  }
+// Rutas fijas de la API. Ningún llamante puede aportar una ruta nueva: solo
+// elegir una de estas entradas, así que no hay forma de que un dato de entrada
+// acabe formando parte del path.
+const STATIC_ROUTES = {
+  bestModel: "/models/best",
+  experiments: "/experiments",
+  health: "/health",
+  modelFigures: "/model/figures",
+  modelInfo: "/model/info",
+  models: "/models",
+  predict: "/predict",
+  trainingDatasets: "/training/datasets",
+  trainingOptions: "/training/options",
+  trainingRun: "/training/run",
+  validate: "/validate",
+} as const;
 
-  return encodeURIComponent(normalizedValue);
+// Las tres rutas con identificador variable. Cada una declara cómo se valida su
+// segmento y con qué mensaje falla, que es el único punto del cliente donde un
+// dato variable entra en la ruta.
+const ID_ROUTES = {
+  datasetAnalysis: {
+    invalidIdMessage: "Identificador de dataset no válido",
+    segment: "positiveInteger",
+    template: "/training/datasets/:id/analysis",
+  },
+  experimentDetail: {
+    invalidIdMessage: "Identificador de experimento no válido",
+    segment: "positiveInteger",
+    template: "/experiments/:id",
+  },
+  task: {
+    invalidIdMessage: "Identificador de tarea no válido",
+    segment: "uuid",
+    template: "/tasks/:id",
+  },
+} as const;
+
+type StaticApiRoute = keyof typeof STATIC_ROUTES;
+export type IdApiRoute = keyof typeof ID_ROUTES;
+type IdRouteDefinition = (typeof ID_ROUTES)[IdApiRoute];
+type QueryParams = Record<string, string>;
+
+interface IdApiRequest {
+  route: IdApiRoute;
+  id: string | number;
+  query?: QueryParams;
 }
 
-export function positiveIntegerPathSegment(
-  value: number,
-  errorMessage: string,
+// Unión discriminada: las rutas con :id exigen un id y el resto no lo aceptan,
+// así el compilador impide llamadas a medias.
+export type ApiRequest =
+  | { route: StaticApiRoute; id?: never; query?: QueryParams }
+  | IdApiRequest;
+
+function safePathSegment(
+  id: string | number,
+  { invalidIdMessage, segment }: IdRouteDefinition,
 ): string {
-  if (!Number.isSafeInteger(value) || value <= 0) {
-    throw new Error(errorMessage);
+  if (segment === "positiveInteger") {
+    const numericId = typeof id === "number" ? id : Number(id);
+
+    if (!Number.isSafeInteger(numericId) || numericId <= 0) {
+      throw new Error(invalidIdMessage);
+    }
+
+    return String(numericId);
   }
 
-  return String(value);
+  const normalizedId = String(id).trim().toLowerCase();
+
+  if (!UUID_PATH_SEGMENT_PATTERN.test(normalizedId)) {
+    throw new Error(invalidIdMessage);
+  }
+
+  return encodeURIComponent(normalizedId);
 }
 
-export function apiUrl(path: string): string {
-  return `${API_BASE_URL}${path}`;
+function isIdRequest(request: ApiRequest): request is IdApiRequest {
+  return request.route in ID_ROUTES;
+}
+
+function resolvePath(request: ApiRequest): string {
+  if (isIdRequest(request)) {
+    const route = ID_ROUTES[request.route];
+
+    return route.template.replace(":id", safePathSegment(request.id, route));
+  }
+
+  return STATIC_ROUTES[request.route];
+}
+
+function buildUrl(request: ApiRequest): string {
+  const url = new URL(`${API_BASE_URL}${resolvePath(request)}`);
+
+  // Defensa en profundidad: la petición no puede salir del origen de la API.
+  if (url.origin !== API_ORIGIN) {
+    throw new Error("URL de API no permitida");
+  }
+
+  for (const [key, value] of Object.entries(request.query ?? {})) {
+    url.searchParams.set(key, value);
+  }
+
+  return url.toString();
+}
+
+// Valida un identificador sin lanzar la petición. Necesario antes de entrar en
+// un bucle de sondeo: con retryOnPollError, un id inválido reintentaría siempre.
+export function assertValidRouteId(
+  route: IdApiRoute,
+  id: string | number,
+): void {
+  safePathSegment(id, ID_ROUTES[route]);
+}
+
+// Resuelve una URL que viene del backend (las figuras del modelo) y descarta la
+// que apunte fuera del origen de la API, porque acaba en el src de un <img>.
+export function resolveApiAsset(assetUrl: string): string | null {
+  const candidate = ABSOLUTE_URL_PATTERN.test(assetUrl)
+    ? assetUrl
+    : `${API_BASE_URL}${assetUrl.startsWith("/") ? "" : "/"}${assetUrl}`;
+
+  try {
+    const resolved = new URL(candidate);
+
+    return resolved.origin === API_ORIGIN ? resolved.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 async function readError(
@@ -52,11 +166,11 @@ async function readError(
 }
 
 export async function requestJson<T>(
-  path: string,
+  request: ApiRequest,
   options: RequestInit | undefined,
   fallbackMessage: string,
 ): Promise<T> {
-  const response = await fetch(apiUrl(path), options);
+  const response = await fetch(buildUrl(request), options);
 
   if (!response.ok) {
     throw new Error(await readError(response, fallbackMessage));

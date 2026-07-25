@@ -1,7 +1,4 @@
-import {
-  positiveIntegerPathSegment,
-  requestJson,
-} from "../../shared/api/client";
+import { requestJson } from "../../shared/api/client";
 import type {
   BestAvailableModel,
   ExperimentDetail,
@@ -10,7 +7,7 @@ import type {
 
 export function getBestAvailableModel(): Promise<BestAvailableModel> {
   return requestJson<BestAvailableModel>(
-    "/models/best",
+    { route: "bestModel" },
     undefined,
     "No se pudo cargar el mejor modelo disponible",
   );
@@ -18,7 +15,7 @@ export function getBestAvailableModel(): Promise<BestAvailableModel> {
 
 export async function getExperiments(): Promise<ExperimentSummary[]> {
   const data = await requestJson<{ experiments: ExperimentSummary[] }>(
-    "/experiments",
+    { route: "experiments" },
     undefined,
     "No se pudo cargar el historial de experimentos",
   );
@@ -28,13 +25,8 @@ export async function getExperiments(): Promise<ExperimentSummary[]> {
 export function getExperimentDetail(
   experimentId: number,
 ): Promise<ExperimentDetail> {
-  const safeExperimentId = positiveIntegerPathSegment(
-    experimentId,
-    "Identificador de experimento no válido",
-  );
-
   return requestJson<ExperimentDetail>(
-    `/experiments/${safeExperimentId}`,
+    { route: "experimentDetail", id: experimentId },
     undefined,
     "No se pudo cargar el experimento",
   );

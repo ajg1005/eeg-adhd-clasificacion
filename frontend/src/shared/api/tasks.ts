@@ -1,5 +1,5 @@
 import type { TaskStatusResponse } from "../types";
-import { requestJson, uuidPathSegment } from "./client";
+import { assertValidRouteId, requestJson } from "./client";
 
 const DEFAULT_POLL_INTERVAL_MS = 1000;
 
@@ -16,10 +16,8 @@ interface WaitForTaskOptions<TResult> {
 export function getTaskStatus<TResult = unknown>(
   taskId: string,
 ): Promise<TaskStatusResponse<TResult>> {
-  const safeTaskId = uuidPathSegment(taskId);
-
   return requestJson<TaskStatusResponse<TResult>>(
-    `/tasks/${safeTaskId}`,
+    { route: "task", id: taskId },
     undefined,
     "No se pudo consultar la tarea",
   );
@@ -58,13 +56,15 @@ export async function waitForTaskResult<TResult>(
     signal,
   }: WaitForTaskOptions<TResult>,
 ): Promise<TResult> {
-  const safeTaskId = uuidPathSegment(taskId);
+  // Se valida antes del bucle: con retryOnPollError, un id inválido no se
+  // arreglaría reintentando.
+  assertValidRouteId("task", taskId);
 
   while (!signal?.aborted) {
     let task: TaskStatusResponse<TResult>;
 
     try {
-      task = await getTaskStatus<TResult>(safeTaskId);
+      task = await getTaskStatus<TResult>(taskId);
     } catch (error) {
       if (!retryOnPollError) {
         throw error;
