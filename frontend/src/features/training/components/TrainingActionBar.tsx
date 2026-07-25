@@ -1,15 +1,18 @@
 import { useTranslation } from "react-i18next";
 
-import type { TrainingTaskStatus } from "../types";
+import { TrainingTaskStatus } from "./TrainingTaskStatus";
+import type { TrainingTaskStatus as TaskStatusValue } from "../types";
 
 interface TrainingActionBarProps {
   datasetName: string | undefined;
+  durationSeconds: number | undefined;
   loadingTraining: boolean;
   modelLabel: string;
   onRunTraining: () => Promise<void>;
   patients: number | undefined;
   ready: boolean;
-  trainingStatus: TrainingTaskStatus;
+  trainingStatus: TaskStatusValue;
+  trainingStatusAt: Date | null;
 }
 
 // Fija al pie: el boton de entrenar estaba al final de una rejilla de parametros
@@ -17,19 +20,16 @@ interface TrainingActionBarProps {
 // el resumen de lo que se va a ejecutar.
 export function TrainingActionBar({
   datasetName,
+  durationSeconds,
   loadingTraining,
   modelLabel,
   onRunTraining,
   patients,
   ready,
   trainingStatus,
+  trainingStatusAt,
 }: TrainingActionBarProps) {
   const { t } = useTranslation();
-  const trainingStatusLabel = trainingStatus
-    ? t(`training.taskStatuses.${trainingStatus}`, {
-        defaultValue: trainingStatus,
-      })
-    : "";
 
   return (
     <div className="training-action-bar">
@@ -52,11 +52,11 @@ export function TrainingActionBar({
       </div>
 
       <div className="training-action-controls">
-        {loadingTraining && (
-          <span className="muted">
-            {t("training.taskStatus", { status: trainingStatusLabel })}
-          </span>
-        )}
+        <TrainingTaskStatus
+          durationSeconds={durationSeconds}
+          status={trainingStatus}
+          statusAt={trainingStatusAt}
+        />
         <button
           className="primary-button"
           disabled={!ready || loadingTraining}

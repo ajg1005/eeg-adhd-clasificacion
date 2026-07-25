@@ -46,6 +46,45 @@
   margin-top: 0;
 }
 
+.task-status {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  color: var(--silver);
+  font-size: 0.85rem;
+  font-weight: 300;
+  white-space: nowrap;
+}
+
+.task-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.task-status-dot.pending {
+  background: rgba(193, 180, 174, 0.45);
+}
+
+.task-status-dot.active {
+  background: var(--golden-chestnut);
+}
+
+.task-status-dot.failed {
+  background: var(--rosy-copper);
+}
+
+.task-status-detail {
+  color: var(--silver);
+  font-variant-numeric: tabular-nums;
+}
+
+.task-status-detail::before {
+  content: "·";
+  margin-right: 7px;
+}
+
 .interactive-training .file-drop {
   margin-bottom: 16px;
 }

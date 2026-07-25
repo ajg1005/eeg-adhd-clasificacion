@@ -30,6 +30,7 @@ interface TrainingViewProps {
   stats: TrainingDatasetStats | null;
   taskError: string;
   taskStatus: TrainingTaskStatus;
+  taskStatusAt: Date | null;
 }
 
 function normalizeValue(value: string): JsonPrimitive {
@@ -66,6 +67,7 @@ export function TrainingView({
   stats,
   taskError,
   taskStatus,
+  taskStatusAt,
 }: TrainingViewProps) {
   const { t } = useTranslation();
   const [options, setOptions] = useState<TrainingOptions | null>(null);
@@ -238,12 +240,14 @@ export function TrainingView({
           caja del padre, y dentro del panel dejaria de pegarse al pasarlo. */}
       <TrainingActionBar
         datasetName={file?.name ?? selectedDataset?.filename}
+        durationSeconds={result?.training_time_seconds}
         loadingTraining={loadingTraining}
         modelLabel={currentModel?.display_name ?? modelName}
         onRunTraining={handleRunTraining}
         patients={stats?.n_patients}
         ready={Boolean(file || selectedDataset)}
         trainingStatus={taskStatus}
+        trainingStatusAt={taskStatusAt}
       />
 
       <TrainingResultsPanel

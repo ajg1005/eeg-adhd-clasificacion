@@ -278,14 +278,15 @@
       "f1-score": "F1-score",
       "support": "Muestras"
     },
-    "taskStatus": "Estado: {{status}}.",
     "taskStatuses": {
       "SUBMITTING": "Enviando",
       "PENDING": "En cola",
+      "RECEIVED": "Recibido",
       "STARTED": "En ejecución",
       "RETRY": "Reintentando",
       "SUCCESS": "Completado",
-      "FAILURE": "Fallido"
+      "FAILURE": "Fallido",
+      "REVOKED": "Cancelado"
     }
   }
 }

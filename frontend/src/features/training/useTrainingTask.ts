@@ -25,6 +25,7 @@ interface UseTrainingTaskResult {
     payload: TrainingPayload,
   ) => Promise<void>;
   status: TrainingTaskStatus;
+  statusAt: Date | null;
   trainingInProgress: boolean;
 }
 
@@ -35,9 +36,24 @@ export function useTrainingTask(
     window.sessionStorage.getItem(TASK_STORAGE_KEY),
   );
   const [status, setStatus] = useState<TrainingTaskStatus>(null);
+  const [statusAt, setStatusAt] = useState<Date | null>(null);
   const [result, setResult] = useState<TrainingResult | null>(null);
   const [error, setError] = useState("");
   const onSuccessRef = useRef(onSuccess);
+  // El sondeo llama a onStatus cada segundo, casi siempre con el mismo estado.
+  // Sin comparar, la marca de tiempo seria siempre "ahora" y provocaria un
+  // render por segundo: solo interesa el momento del cambio.
+  const statusRef = useRef<TrainingTaskStatus>(null);
+
+  const applyStatus = useCallback((next: TrainingTaskStatus): void => {
+    if (statusRef.current === next) {
+      return;
+    }
+
+    statusRef.current = next;
+    setStatus(next);
+    setStatusAt(new Date());
+  }, []);
 
   useEffect(() => {
     onSuccessRef.current = onSuccess;
@@ -69,7 +85,7 @@ export function useTrainingTask(
           return;
         }
 
-        setStatus(task.status);
+        applyStatus(task.status);
         setError("");
 
         if (TERMINAL_STATUSES.has(task.status)) {
@@ -99,7 +115,7 @@ export function useTrainingTask(
     return () => {
       controller.abort();
     };
-  }, [taskId]);
+  }, [applyStatus, taskId]);
 
   const startTraining = useCallback(
     async (
@@ -108,7 +124,7 @@ export function useTrainingTask(
     ): Promise<void> => {
       window.sessionStorage.removeItem(TASK_STORAGE_KEY);
       setTaskId(null);
-      setStatus("SUBMITTING");
+      applyStatus("SUBMITTING");
       setResult(null);
       setError("");
 
@@ -116,15 +132,15 @@ export function useTrainingTask(
         const task = await runTraining(file, payload);
         window.sessionStorage.setItem(TASK_STORAGE_KEY, task.task_id);
         setTaskId(task.task_id);
-        setStatus(task.status);
+        applyStatus(task.status);
       } catch (caughtError) {
-        setStatus("FAILURE");
+        applyStatus("FAILURE");
         setError(
           errorMessage(caughtError, "errors.training.start"),
         );
       }
     },
-    [],
+    [applyStatus],
   );
 
   const trainingInProgress =
@@ -136,6 +152,7 @@ export function useTrainingTask(
     result,
     startTraining,
     status,
+    statusAt,
     trainingInProgress,
   };
 }

@@ -103,6 +103,7 @@ function App() {
               stats={trainingDataset.stats}
               taskError={trainingTask.error}
               taskStatus={trainingTask.status}
+              taskStatusAt={trainingTask.statusAt}
             />
           </>
         )}
