@@ -1,0 +1,275 @@
+/* Vocabulario compartido: lo que usan dos o mas dominios. Antes de crear una
+   clase nueva en un fichero de feature, mira si algo de aqui ya sirve. */
+
+.grid-layout {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.panel {
+  border-bottom: 1px solid var(--section-rule);
+  padding: 52px 0;
+  color: var(--ink);
+}
+
+.section-heading-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.section-heading-row h2,
+.section-heading-row p {
+  margin-bottom: 0;
+}
+
+/* Sin tarjetas: el fondo del contenedor asoma por un hueco de 1px y hace de
+   regla vertical. Con column-gap la separacion no depende del nº de columnas,
+   asi que no aparece una regla suelta al empezar cada fila.
+   .result-main es la variante de la pantalla de prediccion; sus ajustes propios
+   estan en features/inference/inference.css. */
+.metric-grid,
+.result-main {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1px;
+  row-gap: 0;
+  border-top: 1px solid var(--section-rule);
+  border-bottom: 1px solid var(--section-rule);
+  background: var(--section-rule);
+}
+
+.metric-grid div,
+.result-main div {
+  padding: 28px 24px;
+  background: var(--graphite-deep);
+}
+
+.metric-grid span,
+.result-main span {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--silver);
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.metric-grid strong,
+.result-main strong {
+  color: var(--ink);
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.metrics-wide {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.primary-button {
+  width: auto;
+  margin-top: 16px;
+  border: 1px solid var(--golden-chestnut);
+  border-radius: 999px;
+  padding: 12px 30px;
+  background: transparent;
+  color: var(--golden-chestnut);
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--golden-chestnut);
+  color: var(--graphite-deep);
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  border-color: var(--border-soft);
+  background: transparent;
+  color: var(--silver);
+  opacity: 0.55;
+}
+
+.compact-button {
+  width: auto;
+  min-width: 160px;
+  margin-top: 0;
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px 36px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.compact-controls {
+  margin-bottom: 0;
+}
+
+/* .model-selector comparte el estilo de campo con .controls-row: van juntos
+   para no duplicar la regla. */
+.model-selector {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.model-selector label,
+.controls-row label {
+  display: grid;
+  gap: 9px;
+  color: var(--silver);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.model-selector select,
+.controls-row select,
+.controls-row input {
+  min-width: 180px;
+  border: 0;
+  border-bottom: 1px solid var(--field-rule);
+  border-radius: 0;
+  padding: 8px 30px 8px 0;
+  background-color: transparent;
+  color: var(--ink);
+  font-weight: 300;
+}
+
+.model-selector select {
+  min-width: 280px;
+}
+
+.file-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  border: 1px dashed rgba(193, 180, 174, 0.26);
+  border-radius: 4px;
+  color: var(--silver);
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.file-drop:hover {
+  border-color: var(--golden-chestnut);
+  color: var(--ink);
+}
+
+.file-drop input {
+  display: none;
+}
+
+.patient-table-wrap {
+  overflow-x: auto;
+}
+
+.patient-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  color: var(--ink);
+  font-weight: 300;
+}
+
+.patient-table th,
+.patient-table td {
+  border-bottom: 1px solid rgba(193, 180, 174, 0.1);
+  padding: 16px 12px 16px 0;
+  text-align: left;
+}
+
+.patient-table th {
+  border-bottom: 1px solid rgba(193, 180, 174, 0.2);
+  padding-bottom: 12px;
+  color: var(--silver);
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.patient-table tbody tr {
+  cursor: pointer;
+}
+
+.patient-table tbody tr:hover,
+.patient-table .selected-row {
+  background: rgba(190, 124, 77, 0.14);
+}
+
+.patient-table tbody tr:focus-visible {
+  outline: 2px solid var(--golden-chestnut);
+  outline-offset: -2px;
+}
+
+/* Metadatos a la derecha de un encabezado. Lo usan entrenamiento y experimentos. */
+.importance-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 18px;
+}
+
+.importance-meta span {
+  color: var(--silver);
+  font-size: 0.82rem;
+  font-weight: 300;
+}
+
+@media (max-width: 860px) {
+  .grid-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .section-heading-row {
+    display: grid;
+  }
+
+  .metrics-wide,
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* En una columna el hueco tiene que ser horizontal para que separe algo. */
+  .metric-grid,
+  .result-main {
+    row-gap: 1px;
+  }
+
+  .metric-grid div,
+  .result-main div {
+    padding: 20px 0;
+  }
+
+  .compact-button {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .model-selector {
+    display: grid;
+  }
+
+  .model-selector select {
+    width: 100%;
+    min-width: 100%;
+  }
+}

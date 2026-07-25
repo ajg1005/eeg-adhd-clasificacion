@@ -1,0 +1,135 @@
+/* Pestaña "Experimentos": mejor modelo, historial y detalle (ExperimentsView). */
+
+.experiments-table td {
+  vertical-align: middle;
+}
+
+.experiments-table th:nth-child(2),
+.experiments-table td:nth-child(2),
+.experiments-table th:nth-last-child(-n + 2),
+.experiments-table td:nth-last-child(-n + 2) {
+  white-space: nowrap;
+}
+
+.experiments-table th:nth-last-child(-n + 2),
+.experiments-table td:nth-last-child(-n + 2) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.experiment-model-cell strong {
+  display: inline;
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.model-type-label {
+  display: inline-block;
+  color: var(--silver);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.best-model-identity h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.75rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.best-model-identity p {
+  margin: 6px 0 0;
+}
+
+.best-model-summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.patient-table .best-row {
+  box-shadow: inset 3px 0 0 var(--golden-chestnut);
+}
+
+.best-row-badge {
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--golden-chestnut);
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  vertical-align: middle;
+}
+
+.experiment-detail-identity {
+  margin-top: 14px;
+}
+
+.experiment-detail-identity h3 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.experiment-detail-identity p {
+  margin: 5px 0 0;
+}
+
+.experiment-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.experiment-configuration {
+  margin-top: 22px;
+  border-top: 1px solid var(--section-rule);
+  padding-top: 18px;
+}
+
+.experiment-parameter-groups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 44px;
+  margin-top: 14px;
+}
+
+.experiment-parameter-group h4 {
+  margin: 0 0 20px;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.experiment-parameter-list {
+  margin: 0;
+}
+
+.experiment-parameter-list div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 7px 0;
+}
+
+.experiment-parameter-list dt {
+  color: var(--silver);
+  font-size: 0.85rem;
+  font-weight: 300;
+}
+
+.experiment-parameter-list dd {
+  max-width: 220px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 300;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+@media (max-width: 860px) {
+  .best-model-summary-grid,
+  .experiment-parameter-groups {
+    grid-template-columns: 1fr;
+  }
+}

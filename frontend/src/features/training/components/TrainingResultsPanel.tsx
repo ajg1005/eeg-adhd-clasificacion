@@ -207,7 +207,7 @@ export function TrainingResultsPanel({
   const evaluationMode = result.configuration.evaluation_mode;
 
   return (
-    <div className="panel training-section">
+    <div className="panel">
       <h2>{t("training.results")}</h2>
       {evaluationMode && (
         <p className="muted">

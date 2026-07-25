@@ -32,7 +32,7 @@ export function TrainingEegParamsPanel({
   );
 
   return (
-    <div className="panel training-section">
+    <div className="panel">
       <h2>{t("training.paramsTitle")}</h2>
       <p className="muted">
         {modelType === "ml"

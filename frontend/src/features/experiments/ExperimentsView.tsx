@@ -207,7 +207,7 @@ export function ExperimentsView() {
     <section className="training-layout">
       {error && <div className="alert alert-error">{error}</div>}
 
-      <div className="panel best-model-overview">
+      <div className="panel">
         <div className="section-heading-row">
           <div>
             <h2>{t("experiments.bestAvailableTitle")}</h2>

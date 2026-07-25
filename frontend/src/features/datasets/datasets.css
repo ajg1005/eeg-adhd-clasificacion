@@ -1,0 +1,44 @@
+/* Pestaña "Dataset entrenamiento" (DatasetView). */
+
+.dataset-summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.dataset-summary-grid strong {
+  font-size: 2.3rem;
+  letter-spacing: -0.03em;
+}
+
+.class-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  margin: 0 0 14px;
+}
+
+.class-counts div {
+  background: transparent;
+}
+
+.class-counts span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--silver);
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.class-counts strong {
+  color: var(--ink);
+  font-size: 1.3rem;
+  font-weight: 300;
+}
+
+@media (max-width: 860px) {
+  .dataset-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

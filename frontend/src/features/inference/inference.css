@@ -1,0 +1,160 @@
+/* Pestañas "Modelo" y "Prediccion" (ModelView, PredictionView, ModelSelector). */
+
+.file-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0;
+  color: var(--silver);
+}
+
+.file-info strong {
+  color: var(--ink);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.channel-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.channel-list span {
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: transparent;
+  color: var(--silver);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.channel-list .channel-ok {
+  border-color: var(--golden-chestnut);
+  color: var(--ink);
+}
+
+/* Variante de .metric-grid (shared/styles/components.css) para el resultado. */
+.result-main {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+.result-main strong {
+  font-size: 1.75rem;
+}
+
+.prediction-distribution {
+  margin-top: 18px;
+  border-top: 1px solid var(--section-rule);
+  padding-top: 2px;
+}
+
+.prediction-distribution h3 {
+  margin-bottom: 6px;
+}
+
+.prediction-distribution .muted {
+  margin-top: 0;
+}
+
+.distribution-bar {
+  display: flex;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  background: rgba(193, 180, 174, 0.16);
+}
+
+.distribution-segment {
+  min-width: 0;
+  height: 100%;
+}
+
+.distribution-segment.control,
+.legend-dot.control {
+  background: #3b82f6;
+}
+
+.distribution-segment.adhd,
+.legend-dot.adhd {
+  background: #f59e0b;
+}
+
+.distribution-legend {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.distribution-legend-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  color: var(--silver);
+  font-size: 0.9rem;
+  font-weight: 300;
+}
+
+.distribution-legend-row strong {
+  color: var(--ink);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.distribution-label {
+  overflow-wrap: anywhere;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.chart-box {
+  width: 100%;
+  min-height: 260px;
+}
+
+.figures-panel {
+  margin-top: 18px;
+}
+
+.figures-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.model-figure {
+  margin: 0;
+  border: 1px solid var(--section-rule);
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.model-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--paper);
+}
+
+.model-figure figcaption {
+  padding: 10px 12px;
+  color: var(--graphite);
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+@media (max-width: 860px) {
+  .result-main {
+    grid-template-columns: 1fr;
+  }
+
+  .figures-grid {
+    grid-template-columns: 1fr;
+  }
+}

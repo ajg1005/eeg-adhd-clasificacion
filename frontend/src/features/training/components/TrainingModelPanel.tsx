@@ -71,7 +71,7 @@ export function TrainingModelPanel({
   );
 
   return (
-    <div className="panel training-section">
+    <div className="panel">
       <h2>{t("common.model")}</h2>
       <div className="segmented-control">
         <button
