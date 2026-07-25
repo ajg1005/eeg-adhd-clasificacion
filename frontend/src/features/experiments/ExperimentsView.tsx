@@ -21,6 +21,7 @@ import {
   signalParamLabel,
   trainingParamLabel,
 } from "../training/trainingLabels";
+import { errorMessage } from "../../shared/utils/errors";
 
 type ParameterLabel = (t: TFunction, name: string) => string;
 
@@ -29,10 +30,6 @@ interface ParameterGroupProps {
   params: Record<string, JsonValue>;
   t: TFunction;
   title: string;
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }
 
 function formatDate(value: string | null | undefined, language?: string): string {
@@ -117,7 +114,7 @@ export function ExperimentsView() {
       }
     } catch (caughtError) {
       setError(
-        errorMessage(caughtError, "No se pudieron cargar los experimentos"),
+        errorMessage(caughtError, "errors.experiments.list"),
       );
     } finally {
       setLoadingList(false);
@@ -142,7 +139,7 @@ export function ExperimentsView() {
       .catch((caughtError: unknown) => {
         if (!cancelled) {
           setError(
-            errorMessage(caughtError, "No se pudieron cargar los experimentos"),
+            errorMessage(caughtError, "errors.experiments.list"),
           );
         }
       })
@@ -173,7 +170,7 @@ export function ExperimentsView() {
       .catch((caughtError: unknown) => {
         if (!cancelled) {
           setError(
-            errorMessage(caughtError, "No se pudo cargar el experimento"),
+            errorMessage(caughtError, "errors.experiments.detail"),
           );
         }
       })

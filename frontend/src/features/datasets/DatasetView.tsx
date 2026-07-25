@@ -175,8 +175,8 @@ export function DatasetView({
                 {t("dataset.filterClass")}
                 <select value={classFilter} onChange={handleClassFilterChange}>
                   <option value="all">{t("dataset.all")}</option>
-                  <option value="adhd">TDAH</option>
-                  <option value="control">Control</option>
+                  <option value="adhd">{t("common.adhd")}</option>
+                  <option value="control">{t("common.control")}</option>
                 </select>
               </label>
               <label>

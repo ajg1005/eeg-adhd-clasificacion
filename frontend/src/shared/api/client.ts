@@ -1,3 +1,5 @@
+import { translate } from "../utils/errors";
+
 // Sin barra final para que la concatenación con la ruta no genere "//" y para
 // que una base con prefijo ("https://host/api") no lo pierda.
 const API_BASE_URL = (
@@ -33,17 +35,17 @@ const STATIC_ROUTES = {
 // dato variable entra en la ruta.
 const ID_ROUTES = {
   datasetAnalysis: {
-    invalidIdMessage: "Identificador de dataset no válido",
+    invalidIdKey: "errors.invalidDatasetId",
     segment: "positiveInteger",
     template: "/training/datasets/:id/analysis",
   },
   experimentDetail: {
-    invalidIdMessage: "Identificador de experimento no válido",
+    invalidIdKey: "errors.invalidExperimentId",
     segment: "positiveInteger",
     template: "/experiments/:id",
   },
   task: {
-    invalidIdMessage: "Identificador de tarea no válido",
+    invalidIdKey: "errors.invalidTaskId",
     segment: "uuid",
     template: "/tasks/:id",
   },
@@ -68,13 +70,13 @@ export type ApiRequest =
 
 function safePathSegment(
   id: string | number,
-  { invalidIdMessage, segment }: IdRouteDefinition,
+  { invalidIdKey, segment }: IdRouteDefinition,
 ): string {
   if (segment === "positiveInteger") {
     const numericId = typeof id === "number" ? id : Number(id);
 
     if (!Number.isSafeInteger(numericId) || numericId <= 0) {
-      throw new Error(invalidIdMessage);
+      throw new Error(translate(invalidIdKey));
     }
 
     return String(numericId);
@@ -83,7 +85,7 @@ function safePathSegment(
   const normalizedId = String(id).trim().toLowerCase();
 
   if (!UUID_PATH_SEGMENT_PATTERN.test(normalizedId)) {
-    throw new Error(invalidIdMessage);
+    throw new Error(translate(invalidIdKey));
   }
 
   return encodeURIComponent(normalizedId);
@@ -108,7 +110,7 @@ function buildUrl(request: ApiRequest): string {
 
   // Defensa en profundidad: la petición no puede salir del origen de la API.
   if (url.origin !== API_ORIGIN) {
-    throw new Error("URL de API no permitida");
+    throw new Error(translate("errors.forbiddenUrl"));
   }
 
   for (const [key, value] of Object.entries(request.query ?? {})) {
@@ -170,7 +172,19 @@ export async function requestJson<T>(
   options: RequestInit | undefined,
   fallbackMessage: string,
 ): Promise<T> {
-  const response = await fetch(buildUrl(request), options);
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(request), options);
+  } catch (caughtError) {
+    // Sin red, fetch rechaza con "Failed to fetch": texto del navegador, sin
+    // traducir y sin contexto. Se sustituye por el mensaje del llamante.
+    if (caughtError instanceof DOMException && caughtError.name === "AbortError") {
+      throw caughtError;
+    }
+
+    throw new Error(fallbackMessage, { cause: caughtError });
+  }
 
   if (!response.ok) {
     throw new Error(await readError(response, fallbackMessage));

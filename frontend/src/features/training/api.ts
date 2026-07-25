@@ -1,5 +1,6 @@
 import type { AsyncTaskResponse } from "../../shared/types";
 import { requestJson } from "../../shared/api/client";
+import { translate } from "../../shared/utils/errors";
 import type {
   TrainingOptions,
   TrainingPayload,
@@ -9,7 +10,7 @@ export function getTrainingOptions(): Promise<TrainingOptions> {
   return requestJson<TrainingOptions>(
     { route: "trainingOptions" },
     undefined,
-    "No se pudieron cargar los parámetros de entrenamiento",
+    translate("errors.training.params"),
   );
 }
 
@@ -34,6 +35,6 @@ export function runTraining(
   return requestJson<AsyncTaskResponse>(
     { route: "trainingRun" },
     { method: "POST", body: formData },
-    "No se pudo entrenar el modelo",
+    translate("errors.training.run"),
   );
 }

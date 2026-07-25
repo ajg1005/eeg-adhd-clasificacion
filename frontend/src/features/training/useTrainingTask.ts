@@ -8,6 +8,7 @@ import type {
   TrainingResult,
   TrainingTaskStatus,
 } from "./types";
+import { errorMessage, translate } from "../../shared/utils/errors";
 
 const TASK_STORAGE_KEY = "eeg-adhd-training-task-id";
 const TERMINAL_STATUSES = new Set<TaskStatus>([
@@ -25,10 +26,6 @@ interface UseTrainingTaskResult {
   ) => Promise<void>;
   status: TrainingTaskStatus;
   trainingInProgress: boolean;
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }
 
 export function useTrainingTask(
@@ -55,15 +52,14 @@ export function useTrainingTask(
     const controller = new AbortController();
 
     void waitForTaskResult<TrainingResult>(activeTaskId, {
-      failureMessage: "No se pudo completar el entrenamiento",
-      missingResultMessage:
-        "El entrenamiento ha terminado sin devolver resultados",
+      failureMessage: translate("errors.training.failed"),
+      missingResultMessage: translate("errors.training.empty"),
       onPollError: (caughtError) => {
         if (!controller.signal.aborted) {
           setError(
             errorMessage(
               caughtError,
-              "No se pudo consultar el estado del entrenamiento",
+              "errors.training.statusCheck",
             ),
           );
         }
@@ -94,7 +90,7 @@ export function useTrainingTask(
           setError(
             errorMessage(
               caughtError,
-              "No se pudo completar el entrenamiento",
+              "errors.training.failed",
             ),
           );
         }
@@ -124,7 +120,7 @@ export function useTrainingTask(
       } catch (caughtError) {
         setStatus("FAILURE");
         setError(
-          errorMessage(caughtError, "No se pudo iniciar el entrenamiento"),
+          errorMessage(caughtError, "errors.training.start"),
         );
       }
     },

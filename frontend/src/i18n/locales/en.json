@@ -32,7 +32,55 @@
     "time": "Time",
     "configuration": "Configuration",
     "patient": "Patient",
-    "class": "Class"
+    "class": "Class",
+    "adhd": "ADHD",
+    "control": "Control"
+  },
+  "errors": {
+    "health": "Could not connect to the API",
+    "forbiddenUrl": "API URL not allowed",
+    "invalidDatasetId": "Invalid dataset identifier",
+    "invalidExperimentId": "Invalid experiment identifier",
+    "invalidTaskId": "Invalid task identifier",
+    "models": {
+      "list": "Could not load the available models",
+      "info": "Could not load the model information",
+      "figures": "Could not load the model figures"
+    },
+    "datasets": {
+      "list": "Could not load the saved datasets",
+      "save": "Could not save the dataset",
+      "analysisStart": "Could not start the analysis",
+      "analyze": "Could not analyse the dataset",
+      "analysisEmpty": "The analysis finished without returning results",
+      "missingCsv": "Upload an EEG CSV first."
+    },
+    "experiments": {
+      "bestModel": "Could not load the best available model",
+      "history": "Could not load the experiment history",
+      "list": "Could not load the experiments",
+      "detail": "Could not load the experiment"
+    },
+    "training": {
+      "params": "Could not load the training parameters",
+      "options": "Could not load the training options",
+      "run": "Could not train the model",
+      "start": "Could not start the training",
+      "failed": "Could not complete the training",
+      "empty": "The training finished without returning results",
+      "statusCheck": "Could not check the training status"
+    },
+    "prediction": {
+      "invalidCsv": "Invalid CSV",
+      "runFailed": "Error during the prediction",
+      "failed": "Could not run the prediction",
+      "validate": "Could not validate the CSV",
+      "noModel": "There is no model available to run the prediction.",
+      "missingFile": "Upload a CSV file first."
+    },
+    "task": {
+      "status": "Could not check the task"
+    }
   },
   "dataset": {
     "title": "Training dataset",

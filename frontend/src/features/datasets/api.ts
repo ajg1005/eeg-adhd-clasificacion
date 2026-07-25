@@ -1,6 +1,7 @@
 import type { AsyncTaskResponse } from "../../shared/types";
 import { requestJson } from "../../shared/api/client";
 import type { SavedTrainingDataset } from "./types";
+import { translate } from "../../shared/utils/errors";
 
 export async function getSavedTrainingDatasets(): Promise<
   SavedTrainingDataset[]
@@ -8,7 +9,7 @@ export async function getSavedTrainingDatasets(): Promise<
   const data = await requestJson<{ datasets: SavedTrainingDataset[] }>(
     { route: "trainingDatasets" },
     undefined,
-    "No se pudieron cargar los datasets guardados",
+    translate("errors.datasets.list"),
   );
   return data.datasets;
 }
@@ -22,7 +23,7 @@ export function uploadTrainingDataset(
   return requestJson<SavedTrainingDataset>(
     { route: "trainingDatasets" },
     { method: "POST", body: formData },
-    "No se pudo guardar el dataset",
+    translate("errors.datasets.save"),
   );
 }
 
@@ -32,6 +33,6 @@ export function startDatasetAnalysis(
   return requestJson<AsyncTaskResponse>(
     { route: "datasetAnalysis", id: datasetId },
     { method: "POST" },
-    "No se pudo iniciar el análisis",
+    translate("errors.datasets.analysisStart"),
   );
 }

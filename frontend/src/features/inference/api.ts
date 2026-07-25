@@ -1,4 +1,5 @@
 import { requestJson, resolveApiAsset } from "../../shared/api/client";
+import { translate } from "../../shared/utils/errors";
 import type {
   ModelFigure,
   ModelInfo,
@@ -11,7 +12,7 @@ export async function getModels(): Promise<ModelRegistryItem[]> {
   const data = await requestJson<{ models: ModelRegistryItem[] }>(
     { route: "models" },
     undefined,
-    "No se pudieron cargar los modelos disponibles",
+    translate("errors.models.list"),
   );
   return data.models;
 }
@@ -20,7 +21,7 @@ export function getModelInfo(modelId = "ml_best"): Promise<ModelInfo> {
   return requestJson<ModelInfo>(
     { route: "modelInfo", query: { model_id: modelId } },
     undefined,
-    "No se pudo cargar la información del modelo",
+    translate("errors.models.info"),
   );
 }
 
@@ -34,7 +35,7 @@ export function validateCsv(
   return requestJson<ValidationResult>(
     { route: "validate", query: { model_id: modelId } },
     { method: "POST", body: formData },
-    "CSV no válido",
+    translate("errors.prediction.invalidCsv"),
   );
 }
 
@@ -48,7 +49,7 @@ export function predictCsv(
   return requestJson<PredictionResult>(
     { route: "predict", query: { model_id: modelId } },
     { method: "POST", body: formData },
-    "Error durante la predicción",
+    translate("errors.prediction.runFailed"),
   );
 }
 
@@ -58,7 +59,7 @@ export async function getModelFigures(
   const data = await requestJson<{ figures: ModelFigure[] }>(
     { route: "modelFigures", query: { model_id: modelId } },
     undefined,
-    "No se pudieron cargar las figuras del modelo",
+    translate("errors.models.figures"),
   );
 
   return data.figures.flatMap((figure) => {

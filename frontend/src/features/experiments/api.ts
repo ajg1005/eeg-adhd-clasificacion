@@ -1,4 +1,5 @@
 import { requestJson } from "../../shared/api/client";
+import { translate } from "../../shared/utils/errors";
 import type {
   BestAvailableModel,
   ExperimentDetail,
@@ -9,7 +10,7 @@ export function getBestAvailableModel(): Promise<BestAvailableModel> {
   return requestJson<BestAvailableModel>(
     { route: "bestModel" },
     undefined,
-    "No se pudo cargar el mejor modelo disponible",
+    translate("errors.experiments.bestModel"),
   );
 }
 
@@ -17,7 +18,7 @@ export async function getExperiments(): Promise<ExperimentSummary[]> {
   const data = await requestJson<{ experiments: ExperimentSummary[] }>(
     { route: "experiments" },
     undefined,
-    "No se pudo cargar el historial de experimentos",
+    translate("errors.experiments.history"),
   );
   return data.experiments;
 }
@@ -28,6 +29,6 @@ export function getExperimentDetail(
   return requestJson<ExperimentDetail>(
     { route: "experimentDetail", id: experimentId },
     undefined,
-    "No se pudo cargar el experimento",
+    translate("errors.experiments.detail"),
   );
 }

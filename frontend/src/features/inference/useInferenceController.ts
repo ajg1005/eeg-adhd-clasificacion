@@ -28,6 +28,7 @@ import type {
   PredictionResult,
   ValidationResult,
 } from "./types";
+import { errorMessage, translate } from "../../shared/utils/errors";
 
 const DEFAULT_MODEL_ID = "ml_best";
 
@@ -54,10 +55,6 @@ interface UseInferenceControllerResult {
   selectedModelId: string;
   setActiveTab: Dispatch<SetStateAction<TabId>>;
   validation: ValidationResult | null;
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }
 
 function isModelEnabled(model: ModelRegistryItem): boolean {
@@ -131,7 +128,7 @@ export function useInferenceController(): UseInferenceControllerResult {
         if (!cancelled) {
           setApiStatus("error");
           setError(
-            errorMessage(caughtError, "No se pudo conectar con la API"),
+            errorMessage(caughtError, "errors.health"),
           );
         }
       });
@@ -164,7 +161,7 @@ export function useInferenceController(): UseInferenceControllerResult {
           setError(
             errorMessage(
               caughtError,
-              "No se pudo cargar la información del modelo",
+              "errors.models.info",
             ),
           );
         }
@@ -189,7 +186,7 @@ export function useInferenceController(): UseInferenceControllerResult {
       const result = await validateCsv(fileToValidate, modelId);
       setValidation(result);
     } catch (caughtError) {
-      setError(errorMessage(caughtError, "No se pudo validar el CSV"));
+      setError(errorMessage(caughtError, "errors.prediction.validate"));
     } finally {
       setLoadingValidation(false);
     }
@@ -222,12 +219,12 @@ export function useInferenceController(): UseInferenceControllerResult {
 
   async function handlePrediction(): Promise<void> {
     if (!selectedModelId) {
-      setError("No hay ningún modelo disponible para realizar la predicción.");
+      setError(translate("errors.prediction.noModel"));
       return;
     }
 
     if (!file) {
-      setError("Primero sube un archivo CSV.");
+      setError(translate("errors.prediction.missingFile"));
       return;
     }
 
@@ -238,7 +235,7 @@ export function useInferenceController(): UseInferenceControllerResult {
       const result = await predictCsv(file, selectedModelId);
       setPrediction(result);
     } catch (caughtError) {
-      setError(errorMessage(caughtError, "No se pudo realizar la predicción"));
+      setError(errorMessage(caughtError, "errors.prediction.failed"));
     } finally {
       setLoadingPrediction(false);
     }

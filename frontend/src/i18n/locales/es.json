@@ -32,7 +32,55 @@
     "time": "Tiempo",
     "configuration": "Configuración",
     "patient": "Paciente",
-    "class": "Clase"
+    "class": "Clase",
+    "adhd": "TDAH",
+    "control": "Control"
+  },
+  "errors": {
+    "health": "No se pudo conectar con la API",
+    "forbiddenUrl": "URL de API no permitida",
+    "invalidDatasetId": "Identificador de dataset no válido",
+    "invalidExperimentId": "Identificador de experimento no válido",
+    "invalidTaskId": "Identificador de tarea no válido",
+    "models": {
+      "list": "No se pudieron cargar los modelos disponibles",
+      "info": "No se pudo cargar la información del modelo",
+      "figures": "No se pudieron cargar las figuras del modelo"
+    },
+    "datasets": {
+      "list": "No se pudieron cargar los datasets guardados",
+      "save": "No se pudo guardar el dataset",
+      "analysisStart": "No se pudo iniciar el análisis",
+      "analyze": "No se pudo analizar el dataset",
+      "analysisEmpty": "El análisis ha terminado sin devolver resultados",
+      "missingCsv": "Sube primero un CSV EEG."
+    },
+    "experiments": {
+      "bestModel": "No se pudo cargar el mejor modelo disponible",
+      "history": "No se pudo cargar el historial de experimentos",
+      "list": "No se pudieron cargar los experimentos",
+      "detail": "No se pudo cargar el experimento"
+    },
+    "training": {
+      "params": "No se pudieron cargar los parámetros de entrenamiento",
+      "options": "No se pudieron cargar las opciones de entrenamiento",
+      "run": "No se pudo entrenar el modelo",
+      "start": "No se pudo iniciar el entrenamiento",
+      "failed": "No se pudo completar el entrenamiento",
+      "empty": "El entrenamiento ha terminado sin devolver resultados",
+      "statusCheck": "No se pudo consultar el estado del entrenamiento"
+    },
+    "prediction": {
+      "invalidCsv": "CSV no válido",
+      "runFailed": "Error durante la predicción",
+      "failed": "No se pudo realizar la predicción",
+      "validate": "No se pudo validar el CSV",
+      "noModel": "No hay ningún modelo disponible para realizar la predicción.",
+      "missingFile": "Primero sube un archivo CSV."
+    },
+    "task": {
+      "status": "No se pudo consultar la tarea"
+    }
   },
   "dataset": {
     "title": "Dataset de entrenamiento",

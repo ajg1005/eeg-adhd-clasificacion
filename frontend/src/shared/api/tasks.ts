@@ -1,5 +1,6 @@
 import type { TaskStatusResponse } from "../types";
 import { assertValidRouteId, requestJson } from "./client";
+import { translate } from "../utils/errors";
 
 const DEFAULT_POLL_INTERVAL_MS = 1000;
 
@@ -19,7 +20,7 @@ export function getTaskStatus<TResult = unknown>(
   return requestJson<TaskStatusResponse<TResult>>(
     { route: "task", id: taskId },
     undefined,
-    "No se pudo consultar la tarea",
+    translate("errors.task.status"),
   );
 }
 

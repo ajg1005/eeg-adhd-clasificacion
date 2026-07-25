@@ -15,6 +15,7 @@ import type {
 import { TrainingEegParamsPanel } from "./components/TrainingEegParamsPanel";
 import { TrainingModelPanel } from "./components/TrainingModelPanel";
 import { TrainingResultsPanel } from "./components/TrainingResultsPanel";
+import { errorMessage } from "../../shared/utils/errors";
 
 interface TrainingViewProps {
   file: File | null;
@@ -28,10 +29,6 @@ interface TrainingViewProps {
   stats: TrainingDatasetStats | null;
   taskError: string;
   taskStatus: TrainingTaskStatus;
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }
 
 function normalizeValue(value: string): JsonPrimitive {
@@ -103,7 +100,7 @@ export function TrainingView({
           setError(
             errorMessage(
               caughtError,
-              "No se pudieron cargar las opciones de entrenamiento",
+              "errors.training.options",
             ),
           );
         }

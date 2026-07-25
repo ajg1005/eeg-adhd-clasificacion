@@ -17,6 +17,7 @@ import type {
   SavedTrainingDataset,
   TrainingDatasetStats,
 } from "./types";
+import { errorMessage, translate } from "../../shared/utils/errors";
 
 interface UseTrainingDatasetResult {
   file: File | null;
@@ -38,18 +39,14 @@ interface UseTrainingDatasetResult {
   handleMaxPatientsChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
-
 async function analyzeSavedDataset(
   datasetId: number,
 ): Promise<TrainingDatasetStats> {
   const { task_id: taskId } = await startDatasetAnalysis(datasetId);
 
   return waitForTaskResult<TrainingDatasetStats>(taskId, {
-    failureMessage: "No se pudo analizar el dataset",
-    missingResultMessage: "El análisis ha terminado sin devolver resultados",
+    failureMessage: translate("errors.datasets.analyze"),
+    missingResultMessage: translate("errors.datasets.analysisEmpty"),
   });
 }
 // Estado compartido del dataset entre "Dataset entrenamiento" y "Entrenamiento".
@@ -70,7 +67,7 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
       setSavedDatasets(await getSavedTrainingDatasets());
     } catch (caughtError) {
       setError(
-        errorMessage(caughtError, "No se pudieron cargar los datasets guardados"),
+        errorMessage(caughtError, "errors.datasets.list"),
       );
     } finally {
       setLoadingDatasets(false);
@@ -91,7 +88,7 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
           setError(
             errorMessage(
               caughtError,
-              "No se pudieron cargar los datasets guardados",
+              "errors.datasets.list",
             ),
           );
         }
@@ -136,7 +133,7 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
     try {
       setStats(await analyzeSavedDataset(dataset.id));
     } catch (caughtError) {
-      setError(errorMessage(caughtError, "No se pudo analizar el dataset"));
+      setError(errorMessage(caughtError, "errors.datasets.analyze"));
     } finally {
       setLoadingStats(false);
     }
@@ -144,7 +141,7 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
 
   async function handleAnalyzeDataset(): Promise<void> {
     if (!file && !selectedDataset) {
-      setError("Sube primero un CSV EEG.");
+      setError(translate("errors.datasets.missingCsv"));
       return;
     }
 
@@ -162,7 +159,7 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
         await refreshSavedDatasets();
       }
     } catch (caughtError) {
-      setError(errorMessage(caughtError, "No se pudo analizar el dataset"));
+      setError(errorMessage(caughtError, "errors.datasets.analyze"));
     } finally {
       setLoadingStats(false);
     }
