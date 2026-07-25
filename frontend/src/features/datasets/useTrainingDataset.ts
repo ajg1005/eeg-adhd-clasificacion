@@ -8,16 +8,15 @@ import {
 
 import {
   getSavedTrainingDatasets,
+
   startDatasetAnalysis,
   uploadTrainingDataset,
 } from "./api";
-import { getTaskStatus } from "../../shared/api/tasks";
+import { waitForTaskResult } from "../../shared/api/tasks";
 import type {
   SavedTrainingDataset,
   TrainingDatasetStats,
 } from "./types";
-
-const TASK_POLL_INTERVAL_MS = 1000;
 
 interface UseTrainingDatasetResult {
   file: File | null;
@@ -43,36 +42,16 @@ function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-function wait(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, milliseconds);
-  });
-}
-
 async function analyzeSavedDataset(
   datasetId: number,
 ): Promise<TrainingDatasetStats> {
   const { task_id: taskId } = await startDatasetAnalysis(datasetId);
 
-  while (true) {
-    const task = await getTaskStatus<TrainingDatasetStats>(taskId);
-
-    if (task.status === "SUCCESS") {
-      if (!task.result) {
-        throw new Error("El análisis ha terminado sin devolver resultados");
-      }
-
-      return task.result;
-    }
-
-    if (task.status === "FAILURE") {
-      throw new Error(task.error || "No se pudo analizar el dataset");
-    }
-
-    await wait(TASK_POLL_INTERVAL_MS);
-  }
+  return waitForTaskResult<TrainingDatasetStats>(taskId, {
+    failureMessage: "No se pudo analizar el dataset",
+    missingResultMessage: "El análisis ha terminado sin devolver resultados",
+  });
 }
-
 // Estado compartido del dataset entre "Dataset entrenamiento" y "Entrenamiento".
 export function useTrainingDataset(): UseTrainingDatasetResult {
   const [file, setFile] = useState<File | null>(null);
