@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getTaskStatus, runTraining } from "../api";
+import { waitForTaskResult } from "../../shared/api/tasks";
+import type { TaskStatus } from "../../shared/types";
+import { runTraining } from "./api";
 import type {
-  TaskStatus,
   TrainingPayload,
   TrainingResult,
-} from "../types";
+  TrainingTaskStatus,
+} from "./types";
 
 const TASK_STORAGE_KEY = "eeg-adhd-training-task-id";
-const TASK_POLL_INTERVAL_MS = 1000;
-const TERMINAL_STATUSES = new Set<TaskStatus>(["SUCCESS", "FAILURE"]);
-
-export type TrainingTaskStatus = TaskStatus | "SUBMITTING" | null;
+const TERMINAL_STATUSES = new Set<TaskStatus>([
+  "SUCCESS",
+  "FAILURE",
+  "REVOKED",
+]);
 
 interface UseTrainingTaskResult {
   error: string;
@@ -49,40 +52,14 @@ export function useTrainingTask(
     }
 
     const activeTaskId = taskId;
-    let cancelled = false;
-    let timeoutId: number | undefined;
+    const controller = new AbortController();
 
-    async function pollTask() {
-      try {
-        const task = await getTaskStatus<TrainingResult>(activeTaskId);
-
-        if (cancelled) {
-          return;
-        }
-
-        setStatus(task.status);
-        setError("");
-
-        if (task.status === "SUCCESS") {
-          window.sessionStorage.removeItem(TASK_STORAGE_KEY);
-
-          if (!task.result) {
-            setError("El entrenamiento ha terminado sin devolver resultados");
-            return;
-          }
-
-          setResult(task.result);
-          onSuccessRef.current?.(task.result);
-          return;
-        }
-
-        if (task.status === "FAILURE") {
-          window.sessionStorage.removeItem(TASK_STORAGE_KEY);
-          setError(task.error || "No se pudo completar el entrenamiento");
-          return;
-        }
-      } catch (caughtError) {
-        if (!cancelled) {
+    void waitForTaskResult<TrainingResult>(activeTaskId, {
+      failureMessage: "No se pudo completar el entrenamiento",
+      missingResultMessage:
+        "El entrenamiento ha terminado sin devolver resultados",
+      onPollError: (caughtError) => {
+        if (!controller.signal.aborted) {
           setError(
             errorMessage(
               caughtError,
@@ -90,18 +67,41 @@ export function useTrainingTask(
             ),
           );
         }
-      }
+      },
+      onStatus: (task) => {
+        if (controller.signal.aborted) {
+          return;
+        }
 
-      if (!cancelled) {
-        timeoutId = window.setTimeout(pollTask, TASK_POLL_INTERVAL_MS);
-      }
-    }
+        setStatus(task.status);
+        setError("");
 
-    void pollTask();
+        if (TERMINAL_STATUSES.has(task.status)) {
+          window.sessionStorage.removeItem(TASK_STORAGE_KEY);
+        }
+      },
+      retryOnPollError: true,
+      signal: controller.signal,
+    })
+      .then((trainingResult) => {
+        if (!controller.signal.aborted) {
+          setResult(trainingResult);
+          onSuccessRef.current?.(trainingResult);
+        }
+      })
+      .catch((caughtError: unknown) => {
+        if (!controller.signal.aborted) {
+          setError(
+            errorMessage(
+              caughtError,
+              "No se pudo completar el entrenamiento",
+            ),
+          );
+        }
+      });
 
     return () => {
-      cancelled = true;
-      window.clearTimeout(timeoutId);
+      controller.abort();
     };
   }, [taskId]);
 

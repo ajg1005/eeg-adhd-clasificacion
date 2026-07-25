@@ -6,21 +6,21 @@ import {
   getBestAvailableModel,
   getExperimentDetail,
   getExperiments,
-} from "../api";
+} from "./api";
+import type { JsonValue } from "../../shared/types";
 import type {
   BestAvailableModel,
   ExperimentDetail,
   ExperimentSummary,
-  JsonValue,
-} from "../types";
-import { formatMetric } from "../utils/formatters";
+} from "./types";
+import { formatMetric } from "../../shared/utils/formatters";
 import {
   evaluationModeLabel,
   modelParamLabel,
   optionValueLabel,
   signalParamLabel,
   trainingParamLabel,
-} from "../utils/trainingLabels";
+} from "../training/trainingLabels";
 
 type ParameterLabel = (t: TFunction, name: string) => string;
 

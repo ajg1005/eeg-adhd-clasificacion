@@ -9,15 +9,15 @@ import type {
   FeatureImportanceItem,
   PatientTrainingResult,
   TrainingResult,
-  UnknownRecord,
-} from "../../types";
+} from "../types";
+import type { UnknownRecord } from "../../../shared/types";
 import {
   REPORT_COLUMNS,
   evaluationModeLabel,
   methodLabel,
   reportColumnLabel,
   reportRowLabel,
-} from "../../utils/trainingLabels";
+} from "../trainingLabels";
 
 type ReportColumn = (typeof REPORT_COLUMNS)[number];
 

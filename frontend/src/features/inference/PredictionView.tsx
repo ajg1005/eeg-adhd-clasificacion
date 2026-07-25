@@ -5,8 +5,8 @@ import type {
   ModelInfo,
   PredictionResult,
   ValidationResult,
-} from "../types";
-import { formatPercent } from "../utils/formatters";
+} from "./types";
+import { formatPercent } from "../../shared/utils/formatters";
 
 interface PredictionViewProps {
   decisionScore: number | null;

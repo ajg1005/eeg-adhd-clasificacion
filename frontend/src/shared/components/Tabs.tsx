@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import type { TabGroup, TabId } from "../config/tabs";
+import type { TabGroup, TabId } from "../../app/tabs";
 
 interface TabsProps {
   activeTab: TabId;

@@ -4,11 +4,11 @@ import type {
   TrainingControlValues,
   TrainingModelTypeId,
   TrainingOptions,
-} from "../../types";
+} from "../types";
 import {
   optionValueLabel,
   signalParamLabel,
-} from "../../utils/trainingLabels";
+} from "../trainingLabels";
 
 interface TrainingEegParamsPanelProps {
   eegParams: TrainingControlValues;
