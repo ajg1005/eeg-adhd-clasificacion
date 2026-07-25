@@ -43,12 +43,11 @@ select {
 }
 
 h1 {
-  max-width: 1080px;
   margin: 0;
   color: var(--ink);
-  font-size: clamp(1.85rem, 2.6vw, 2.85rem);
+  font-size: clamp(2rem, 4vw, 2.7rem);
   font-weight: 300;
-  line-height: 1.12;
+  line-height: 1.1;
   letter-spacing: -0.025em;
 }
 
@@ -69,13 +68,14 @@ h3 {
   letter-spacing: -0.025em;
 }
 
-.subtitle {
-  max-width: 940px;
-  margin: 14px 0 0;
-  color: var(--silver);
-  font-size: 1.05rem;
-  font-weight: 300;
-  line-height: 1.6;
+/* Texto solo para lectores de pantalla (la etiqueta del selector de idioma). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .muted {

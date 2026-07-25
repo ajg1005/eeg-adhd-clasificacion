@@ -72,11 +72,7 @@ export function DatasetView({
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="panel">
-        <div className="section-heading-row">
-          <div>
-            <h2>{t("dataset.title")}</h2>
-            <p className="muted">{t("dataset.description")}</p>
-          </div>
+        <div className="section-heading-row section-heading-row-end">
           <button
             className="primary-button compact-button"
             disabled={(!file && !selectedDataset) || loadingStats}

@@ -256,10 +256,7 @@ export function ExperimentsView() {
 
       <div className="panel">
         <div className="section-heading-row">
-          <div>
-            <h2>{t("experiments.title")}</h2>
-            <p className="muted">{t("experiments.description")}</p>
-          </div>
+          <h2>{t("experiments.title")}</h2>
           <button
             className="primary-button compact-button"
             disabled={loadingList}

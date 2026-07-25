@@ -5,9 +5,8 @@ import { DatasetView } from "../features/datasets/DatasetView";
 import { ExperimentsView } from "../features/experiments/ExperimentsView";
 import { ModelSelector } from "../features/inference/ModelSelector";
 import { PredictionView } from "../features/inference/PredictionView";
-import { Tabs } from "../shared/components/Tabs";
 import { TrainingView } from "../features/training/TrainingView";
-import { TAB_GROUPS } from "./tabs";
+import { ViewHeading } from "./components/ViewHeading";
 import { useInferenceController } from "../features/inference/useInferenceController";
 import { useTrainingDataset } from "../features/datasets/useTrainingDataset";
 import { useTrainingTask } from "../features/training/useTrainingTask";
@@ -33,95 +32,119 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
-      <AppHeader />
-
-      <Tabs
+    <>
+      <AppHeader
         activeTab={controller.activeTab}
         onTabChange={controller.setActiveTab}
-        tabGroups={TAB_GROUPS}
       />
 
-      {controller.error && (
-        <div className="alert alert-error">{controller.error}</div>
-      )}
+      <main className="app-shell">
+        {controller.error && (
+          <div className="alert alert-error">{controller.error}</div>
+        )}
 
-      {controller.activeTab === "model" && (
-        <>
-          <ModelSelector
-            modelInfo={controller.modelInfo}
-            models={controller.models}
-            onModelChange={controller.handleModelChange}
-            selectedModelId={controller.selectedModelId}
-          />
-          <Suspense fallback={null}>
-            <ModelView
-              metrics={controller.metrics}
-              metricsChartData={controller.metricsChartData}
-              modelFigures={controller.modelFigures}
+        {controller.activeTab === "model" && (
+          <>
+            <ViewHeading ledeKey="model.description" titleKey="model.title" />
+            <ModelSelector
               modelInfo={controller.modelInfo}
+              models={controller.models}
+              onModelChange={controller.handleModelChange}
+              selectedModelId={controller.selectedModelId}
             />
-          </Suspense>
-        </>
-      )}
+            <Suspense fallback={null}>
+              <ModelView
+                metrics={controller.metrics}
+                metricsChartData={controller.metricsChartData}
+                modelFigures={controller.modelFigures}
+                modelInfo={controller.modelInfo}
+              />
+            </Suspense>
+          </>
+        )}
 
-      {controller.activeTab === "dataset" && (
-        <DatasetView
-          classFilter={trainingDataset.classFilter}
-          error={trainingDataset.error}
-          file={trainingDataset.file}
-          handleAnalyzeDataset={trainingDataset.handleAnalyzeDataset}
-          handleClassFilterChange={trainingDataset.handleClassFilterChange}
-          handleFileChange={trainingDataset.handleFileChange}
-          handleMaxPatientsChange={trainingDataset.handleMaxPatientsChange}
-          handleSavedDatasetChange={trainingDataset.handleSavedDatasetChange}
-          loadingDatasets={trainingDataset.loadingDatasets}
-          loadingStats={trainingDataset.loadingStats}
-          maxPatients={trainingDataset.maxPatients}
-          savedDatasets={trainingDataset.savedDatasets}
-          selectedDataset={trainingDataset.selectedDataset}
-          stats={trainingDataset.stats}
-        />
-      )}
+        {controller.activeTab === "dataset" && (
+          <>
+            <ViewHeading
+              ledeKey="dataset.description"
+              titleKey="dataset.title"
+            />
+            <DatasetView
+              classFilter={trainingDataset.classFilter}
+              error={trainingDataset.error}
+              file={trainingDataset.file}
+              handleAnalyzeDataset={trainingDataset.handleAnalyzeDataset}
+              handleClassFilterChange={trainingDataset.handleClassFilterChange}
+              handleFileChange={trainingDataset.handleFileChange}
+              handleMaxPatientsChange={trainingDataset.handleMaxPatientsChange}
+              handleSavedDatasetChange={trainingDataset.handleSavedDatasetChange}
+              loadingDatasets={trainingDataset.loadingDatasets}
+              loadingStats={trainingDataset.loadingStats}
+              maxPatients={trainingDataset.maxPatients}
+              savedDatasets={trainingDataset.savedDatasets}
+              selectedDataset={trainingDataset.selectedDataset}
+              stats={trainingDataset.stats}
+            />
+          </>
+        )}
 
-      {controller.activeTab === "training" && (
-        <TrainingView
-          file={trainingDataset.file}
-          loadingTraining={trainingTask.trainingInProgress}
-          onStartTraining={trainingTask.startTraining}
-          result={trainingTask.result}
-          selectedDataset={trainingDataset.selectedDataset}
-          stats={trainingDataset.stats}
-          taskError={trainingTask.error}
-          taskStatus={trainingTask.status}
-        />
-      )}
+        {controller.activeTab === "training" && (
+          <>
+            <ViewHeading
+              ledeKey="training.description"
+              titleKey="training.title"
+            />
+            <TrainingView
+              file={trainingDataset.file}
+              loadingTraining={trainingTask.trainingInProgress}
+              onStartTraining={trainingTask.startTraining}
+              result={trainingTask.result}
+              selectedDataset={trainingDataset.selectedDataset}
+              stats={trainingDataset.stats}
+              taskError={trainingTask.error}
+              taskStatus={trainingTask.status}
+            />
+          </>
+        )}
 
-      {controller.activeTab === "experiments" && <ExperimentsView />}
+        {controller.activeTab === "experiments" && (
+          <>
+            <ViewHeading
+              ledeKey="experiments.description"
+              titleKey="experiments.title"
+            />
+            <ExperimentsView />
+          </>
+        )}
 
-      {controller.activeTab === "prediction" && (
-        <>
-          <ModelSelector
-            modelInfo={controller.modelInfo}
-            models={controller.models}
-            onModelChange={controller.handleModelChange}
-            selectedModelId={controller.selectedModelId}
-          />
-          <PredictionView
-            decisionScore={controller.decisionScore}
-            file={controller.file}
-            modelAvailable={Boolean(controller.selectedModelId)}
-            loadingPrediction={controller.loadingPrediction}
-            loadingValidation={controller.loadingValidation}
-            modelInfo={controller.modelInfo}
-            onFileChange={controller.handleFileChange}
-            onPredict={controller.handlePrediction}
-            prediction={controller.prediction}
-            validation={controller.validation}
-          />
-        </>
-      )}
-    </main>
+        {controller.activeTab === "prediction" && (
+          <>
+            <ViewHeading
+              ledeKey="prediction.description"
+              titleKey="prediction.title"
+            />
+            <ModelSelector
+              modelInfo={controller.modelInfo}
+              models={controller.models}
+              onModelChange={controller.handleModelChange}
+              selectedModelId={controller.selectedModelId}
+            />
+            <PredictionView
+              decisionScore={controller.decisionScore}
+              file={controller.file}
+              modelAvailable={Boolean(controller.selectedModelId)}
+              loadingPrediction={controller.loadingPrediction}
+              loadingValidation={controller.loadingValidation}
+              modelInfo={controller.modelInfo}
+              onFileChange={controller.handleFileChange}
+              onPredict={controller.handlePrediction}
+              prediction={controller.prediction}
+              validation={controller.validation}
+            />
+          </>
+        )}
+      </main>
+    </>
   );
 }
 

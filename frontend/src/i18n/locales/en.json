@@ -1,5 +1,6 @@
 {
   "app": {
+    "brand": "EEG Classifier",
     "title": "EEG classifier for ADHD analysis support",
     "subtitle": "Load EEG datasets, train models, review saved experiments and run predictions on patient CSV files.",
     "language": "Language",
@@ -50,6 +51,8 @@
     "noPatients": "No patients match the selected filter."
   },
   "model": {
+    "title": "Inference model",
+    "description": "Cross-validation metrics and figures for the model selected to predict.",
     "inferenceSelector": "Trained model for inference",
     "trainingSelector": "Model to train",
     "unavailable": "Unavailable",
@@ -66,6 +69,8 @@
     "figures": "Model figures"
   },
   "prediction": {
+    "title": "Prediction",
+    "description": "One CSV per patient. The final class comes from a majority vote of the analysed windows.",
     "patientFile": "Patient file",
     "selectCsv": "Select CSV",
     "validating": "Validating the CSV against the channels expected by the model...",
@@ -115,6 +120,8 @@
     "f1Score": "F1-score"
   },
   "training": {
+    "title": "Training",
+    "description": "Configure the signal and the model, launch training and review the per-patient results.",
     "missingFile": "Upload a CSV in the \"Training dataset\" tab first.",
     "uploadFirst": "Before training, upload a CSV in the tab",
     "datasetNotAnalyzed": "{{file}} has been uploaded but the dataset has not been analyzed yet. Go back to Training dataset and click \"Analyze dataset\".",

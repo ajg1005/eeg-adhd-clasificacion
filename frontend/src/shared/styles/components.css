@@ -27,6 +27,11 @@
   margin-bottom: 0;
 }
 
+/* Fila que solo contiene la accion, sin encabezado a la izquierda. */
+.section-heading-row-end {
+  justify-content: flex-end;
+}
+
 /* Sin tarjetas: el fondo del contenedor asoma por un hueco de 1px y hace de
    regla vertical. Con column-gap la separacion no depende del nº de columnas,
    asi que no aparece una regla suelta al empezar cada fila.

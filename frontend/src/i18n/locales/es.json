@@ -1,5 +1,6 @@
 {
   "app": {
+    "brand": "Clasificador EEG",
     "title": "Clasificador EEG para apoyo al análisis de TDAH",
     "subtitle": "Carga datasets EEG, entrena modelos, consulta experimentos guardados y ejecuta predicciones sobre archivos CSV de pacientes.",
     "language": "Idioma",
@@ -50,6 +51,8 @@
     "noPatients": "No hay pacientes para el filtro seleccionado."
   },
   "model": {
+    "title": "Modelo de inferencia",
+    "description": "Métricas de validación cruzada y figuras del modelo seleccionado para predecir.",
     "inferenceSelector": "Modelo entrenado para inferencia",
     "trainingSelector": "Modelo a entrenar",
     "unavailable": "No disponible",
@@ -66,6 +69,8 @@
     "figures": "Figuras del modelo"
   },
   "prediction": {
+    "title": "Predicción",
+    "description": "Un CSV por paciente. La clase final se obtiene por voto mayoritario de las ventanas analizadas.",
     "patientFile": "Archivo del paciente",
     "selectCsv": "Seleccionar CSV",
     "validating": "Validando el CSV con los canales esperados por el modelo...",
@@ -115,6 +120,8 @@
     "f1Score": "F1-score"
   },
   "training": {
+    "title": "Entrenamiento",
+    "description": "Configura la señal y el modelo, lanza el entrenamiento y revisa los resultados por paciente.",
     "missingFile": "Sube primero un CSV en la pestaña \"Dataset entrenamiento\".",
     "uploadFirst": "Antes de entrenar, sube un CSV en la pestaña",
     "datasetNotAnalyzed": "Has cargado {{file}} pero todavía no has analizado el dataset. Vuelve a Dataset entrenamiento y pulsa \"Analizar dataset\".",
