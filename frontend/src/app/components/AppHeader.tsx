@@ -1,15 +1,8 @@
 import { BrainCircuit } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import type { ApiStatus } from "../types";
-
-interface AppHeaderProps {
-  apiStatus: ApiStatus;
-}
-
-export function AppHeader({ apiStatus }: AppHeaderProps) {
+export function AppHeader() {
   const { i18n, t } = useTranslation();
-  const showApiError = apiStatus === "error";
 
   return (
     <header className="app-header">
@@ -37,11 +30,6 @@ export function AppHeader({ apiStatus }: AppHeaderProps) {
             <option value="en">EN</option>
           </select>
         </label>
-        {showApiError && (
-          <div className="api-pill api-pill-error">
-            {t("app.serverUnavailable")}
-          </div>
-        )}
       </div>
     </header>
   );

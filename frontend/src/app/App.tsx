@@ -34,7 +34,7 @@ function App() {
 
   return (
     <main className="app-shell">
-      <AppHeader apiStatus={controller.apiStatus} />
+      <AppHeader />
 
       <Tabs
         activeTab={controller.activeTab}
