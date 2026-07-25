@@ -6,6 +6,46 @@
   gap: 18px;
 }
 
+/* Se queda pegada al pie mientras se recorre la rejilla de parametros. Ningun
+   ancestro puede tener overflow distinto de visible o sticky deja de aplicar. */
+.training-action-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 15;
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+  background: rgba(32, 30, 34, 0.94);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--section-rule);
+}
+
+.training-action-summary {
+  display: flex;
+  gap: 36px;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+  font-weight: 300;
+}
+
+.training-action-summary .muted {
+  margin-right: 10px;
+}
+
+.training-action-controls {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.training-action-controls .primary-button {
+  margin-top: 0;
+}
+
 .interactive-training .file-drop {
   margin-bottom: 16px;
 }

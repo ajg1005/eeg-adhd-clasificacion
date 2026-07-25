@@ -12,6 +12,7 @@ import type {
   TrainingResult,
   TrainingTaskStatus,
 } from "./types";
+import { TrainingActionBar } from "./components/TrainingActionBar";
 import { TrainingEegParamsPanel } from "./components/TrainingEegParamsPanel";
 import { TrainingModelPanel } from "./components/TrainingModelPanel";
 import { TrainingResultsPanel } from "./components/TrainingResultsPanel";
@@ -212,30 +213,6 @@ export function TrainingView({
         </div>
       )}
 
-      {(file || selectedDataset) && stats && (
-        <div className="panel">
-          <h3>{t("training.datasetLoaded")}</h3>
-          <div className="metric-grid training-metrics-row">
-            <div>
-              <span>{t("training.file")}</span>
-              <strong>{file?.name || selectedDataset?.filename}</strong>
-            </div>
-            <div>
-              <span>{t("common.patients")}</span>
-              <strong>{stats.n_patients}</strong>
-            </div>
-            <div>
-              <span>{t("common.rows")}</span>
-              <strong>{stats.rows}</strong>
-            </div>
-            <div>
-              <span>{t("dataset.eegChannels")}</span>
-              <strong>{stats.eeg_columns.length}</strong>
-            </div>
-          </div>
-        </div>
-      )}
-
       <TrainingEegParamsPanel
         eegParams={eegParams}
         modelType={modelType}
@@ -246,20 +223,27 @@ export function TrainingView({
       <TrainingModelPanel
         currentModelParameters={currentModelParameters}
         currentModels={currentModels}
-        datasetSelected={Boolean(selectedDataset)}
-        file={file}
-        loadingTraining={loadingTraining}
         modelName={modelName}
         modelParams={modelParams}
         modelType={modelType}
         onModelNameChange={handleModelNameChange}
         onModelParamChange={updateModelParam}
         onModelTypeChange={handleModelTypeChange}
-        onRunTraining={handleRunTraining}
         onTrainingParamChange={updateTrainingParam}
         trainingParams={trainingParams}
-        trainingStatus={taskStatus}
         visibleTrainingParams={visibleTrainingParams}
+      />
+
+      {/* Hermana de .training-layout, no hija del panel: sticky se recorta a la
+          caja del padre, y dentro del panel dejaria de pegarse al pasarlo. */}
+      <TrainingActionBar
+        datasetName={file?.name ?? selectedDataset?.filename}
+        loadingTraining={loadingTraining}
+        modelLabel={currentModel?.display_name ?? modelName}
+        onRunTraining={handleRunTraining}
+        patients={stats?.n_patients}
+        ready={Boolean(file || selectedDataset)}
+        trainingStatus={taskStatus}
       />
 
       <TrainingResultsPanel

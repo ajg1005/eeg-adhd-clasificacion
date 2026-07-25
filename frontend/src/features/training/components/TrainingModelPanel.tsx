@@ -7,7 +7,6 @@ import type {
   TrainingModelOption,
   TrainingModelTypeId,
   TrainingOptionValue,
-  TrainingTaskStatus,
 } from "../types";
 import {
   modelParamLabel,
@@ -19,19 +18,14 @@ import { ModelSelectField } from "../../../shared/components/ModelSelectField";
 interface TrainingModelPanelProps {
   currentModelParameters: Record<string, TrainingOptionValue[]>;
   currentModels: Record<string, TrainingModelOption>;
-  datasetSelected: boolean;
-  file: File | null;
-  loadingTraining: boolean;
   modelName: string;
   modelParams: TrainingControlValues;
   modelType: TrainingModelTypeId;
   onModelNameChange: ChangeEventHandler<HTMLSelectElement>;
   onModelParamChange: (name: string, value: string) => void;
   onModelTypeChange: (modelType: TrainingModelTypeId) => void;
-  onRunTraining: () => Promise<void>;
   onTrainingParamChange: (name: string, value: string) => void;
   trainingParams: TrainingControlValues;
-  trainingStatus: TrainingTaskStatus;
   visibleTrainingParams: [string, TrainingOptionValue[]][];
 }
 
@@ -42,27 +36,17 @@ function selectValue(value: TrainingOptionValue | undefined): string {
 export function TrainingModelPanel({
   currentModelParameters,
   currentModels,
-  datasetSelected,
-  file,
-  loadingTraining,
   modelName,
   modelParams,
   modelType,
   onModelNameChange,
   onModelParamChange,
   onModelTypeChange,
-  onRunTraining,
   onTrainingParamChange,
   trainingParams,
-  trainingStatus,
   visibleTrainingParams,
 }: TrainingModelPanelProps) {
   const { t } = useTranslation();
-  const trainingStatusLabel = trainingStatus
-    ? t(`training.taskStatuses.${trainingStatus}`, {
-        defaultValue: trainingStatus,
-      })
-    : "";
   const modelOptions: SelectOption[] = Object.entries(currentModels).map(
     ([key, model]) => ({
       label: model.display_name,
@@ -149,23 +133,6 @@ export function TrainingModelPanel({
         </>
       )}
 
-      <button
-        className="primary-button"
-        disabled={(!file && !datasetSelected) || loadingTraining}
-        onClick={() => {
-          void onRunTraining();
-        }}
-        type="button"
-      >
-        {loadingTraining ? t("training.training") : t("training.train")}
-      </button>
-
-      {loadingTraining && (
-        <p className="muted">
-          {t("training.trainingHint")}{" "}
-          {t("training.taskStatus", { status: trainingStatusLabel })}
-        </p>
-      )}
     </div>
   );
 }
