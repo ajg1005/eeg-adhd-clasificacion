@@ -13,7 +13,7 @@ interface DatasetViewProps {
   file: File | null;
   handleAnalyzeDataset: () => Promise<void>;
   handleClassFilterChange: (event: ChangeEvent<HTMLSelectElement>) => void;
-  handleFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleMaxPatientsChange: (event: ChangeEvent<HTMLInputElement>) => void;
   handleSavedDatasetChange: (
     event: ChangeEvent<HTMLSelectElement>,
@@ -81,7 +81,13 @@ export function DatasetView({
             }}
             type="button"
           >
-            {loadingStats ? t("dataset.analyzing") : t("dataset.analyze")}
+            {/* Con un origen elegido el analisis ya se ha lanzado solo, asi que
+                el boton solo puede ser un reintento. */}
+            {loadingStats
+              ? t("dataset.analyzing")
+              : file || selectedDataset
+                ? t("dataset.retry")
+                : t("dataset.analyze")}
           </button>
         </div>
 
@@ -113,7 +119,13 @@ export function DatasetView({
         )}
 
         <label className="file-drop">
-          <input accept=".csv" onChange={handleFileChange} type="file" />
+          <input
+            accept=".csv"
+            onChange={(event) => {
+              void handleFileChange(event);
+            }}
+            type="file"
+          />
           {file?.name || selectedDataset?.filename || t("dataset.selectCsv")}
         </label>
 
@@ -121,8 +133,8 @@ export function DatasetView({
           <p className="muted">{t("dataset.loadingSavedDatasets")}</p>
         )}
 
-        {(file || selectedDataset) && !stats && !loadingStats && (
-          <div className="alert alert-info">{t("dataset.readyToAnalyze")}</div>
+        {loadingStats && (
+          <div className="alert alert-info">{t("dataset.analyzing")}</div>
         )}
 
         {stats && (
