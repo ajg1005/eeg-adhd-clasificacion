@@ -1,8 +1,9 @@
+import { lazy, Suspense } from "react";
+
 import { AppHeader } from "./components/AppHeader";
 import { DatasetView } from "../features/datasets/DatasetView";
 import { ExperimentsView } from "../features/experiments/ExperimentsView";
 import { ModelSelector } from "../features/inference/ModelSelector";
-import { ModelView } from "../features/inference/ModelView";
 import { PredictionView } from "../features/inference/PredictionView";
 import { Tabs } from "../shared/components/Tabs";
 import { TrainingView } from "../features/training/TrainingView";
@@ -12,6 +13,11 @@ import { useTrainingDataset } from "../features/datasets/useTrainingDataset";
 import { useTrainingTask } from "../features/training/useTrainingTask";
 import type { TrainingResult } from "../features/training/types";
 import "./App.css";
+
+const ModelView = lazy(async () => {
+  const module = await import("../features/inference/ModelView");
+  return { default: module.ModelView };
+});
 
 function App() {
   const controller = useInferenceController();
@@ -48,12 +54,14 @@ function App() {
             onModelChange={controller.handleModelChange}
             selectedModelId={controller.selectedModelId}
           />
-          <ModelView
-            metrics={controller.metrics}
-            metricsChartData={controller.metricsChartData}
-            modelFigures={controller.modelFigures}
-            modelInfo={controller.modelInfo}
-          />
+          <Suspense fallback={null}>
+            <ModelView
+              metrics={controller.metrics}
+              metricsChartData={controller.metricsChartData}
+              modelFigures={controller.modelFigures}
+              modelInfo={controller.modelInfo}
+            />
+          </Suspense>
         </>
       )}
 
