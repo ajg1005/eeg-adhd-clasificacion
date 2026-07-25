@@ -93,6 +93,8 @@
     "loadingSavedDatasets": "Loading saved datasets...",
     "newDataset": "Upload new dataset",
     "eegChannels": "EEG channels",
+    "classBalance": "Class balance",
+    "classRatio": "Imbalance of {{ratio}} to 1 between the majority and minority classes.",
     "missingColumns": "Missing columns: {{columns}}",
     "filterClass": "Class",
     "all": "All",

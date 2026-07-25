@@ -1,6 +1,7 @@
 import { useMemo, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
+import { formatPercent } from "../../shared/utils/formatters";
 import type {
   SavedTrainingDataset,
   TrainingDatasetPatient,
@@ -24,6 +25,48 @@ interface DatasetViewProps {
   savedDatasets: SavedTrainingDataset[];
   selectedDataset: SavedTrainingDataset | null;
   stats: TrainingDatasetStats | null;
+}
+
+// El backend normaliza a "ADHD" / "Control", pero tambien puede devolver
+// "Sin clase" o la etiqueta original del CSV: esas caen en "other".
+function classVariant(label: string): "adhd" | "control" | "other" {
+  const normalized = label.trim().toLowerCase();
+
+  if (normalized === "adhd" || normalized === "tdah") {
+    return "adhd";
+  }
+
+  return normalized === "control" ? "control" : "other";
+}
+
+interface ClassBalance {
+  entries: { count: number; label: string; share: number }[];
+  ratio: number | null;
+}
+
+function buildClassBalance(
+  distribution: Record<string, number> | undefined,
+): ClassBalance | null {
+  const entries = Object.entries(distribution ?? {});
+  const total = entries.reduce((sum, [, count]) => sum + count, 0);
+
+  if (entries.length === 0 || total === 0) {
+    return null;
+  }
+
+  const counts = entries.map(([, count]) => count);
+  const smallest = Math.min(...counts);
+
+  return {
+    entries: entries.map(([label, count]) => ({
+      count,
+      label,
+      share: count / total,
+    })),
+    // Con una sola clase, o con alguna vacia, el ratio no dice nada.
+    ratio:
+      counts.length > 1 && smallest > 0 ? Math.max(...counts) / smallest : null,
+  };
 }
 
 function filterPatients(
@@ -66,6 +109,20 @@ export function DatasetView({
     () => filterPatients(stats?.patients, classFilter, maxPatients),
     [stats, classFilter, maxPatients],
   );
+  const classBalance = useMemo(
+    () => buildClassBalance(stats?.class_distribution),
+    [stats],
+  );
+
+  function className(label: string): string {
+    const variant = classVariant(label);
+
+    if (variant === "other") {
+      return label;
+    }
+
+    return variant === "adhd" ? t("common.adhd") : t("common.control");
+  }
 
   return (
     <section className="training-layout">
@@ -158,14 +215,49 @@ export function DatasetView({
               </div>
             </div>
 
-            <div className="class-counts">
-              {Object.entries(stats.class_distribution).map(([label, count]) => (
-                <div key={label}>
-                  <span>{label}</span>
-                  <strong>{count}</strong>
+            {classBalance && (
+              <div className="class-balance">
+                <span className="eyebrow">{t("dataset.classBalance")}</span>
+
+                <div
+                  aria-label={t("dataset.classBalance")}
+                  className="distribution-bar"
+                  role="img"
+                >
+                  {classBalance.entries.map((entry) => (
+                    <span
+                      className={`distribution-segment ${classVariant(entry.label)}`}
+                      key={entry.label}
+                      style={{ width: `${entry.share * 100}%` }}
+                      title={`${className(entry.label)}: ${formatPercent(entry.share)}`}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+
+                <div className="distribution-legend">
+                  {classBalance.entries.map((entry) => (
+                    <div className="distribution-legend-row" key={entry.label}>
+                      <span
+                        className={`legend-dot ${classVariant(entry.label)}`}
+                      />
+                      <span className="distribution-label">
+                        {className(entry.label)}
+                      </span>
+                      <strong>{entry.count}</strong>
+                      <span>{formatPercent(entry.share)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {classBalance.ratio !== null && (
+                  <p className="muted class-balance-ratio">
+                    {t("dataset.classRatio", {
+                      ratio: classBalance.ratio.toFixed(2),
+                    })}
+                  </p>
+                )}
+              </div>
+            )}
 
             {stats.missing_required_columns.length > 0 && (
               <div className="alert alert-error">

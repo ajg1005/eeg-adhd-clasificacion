@@ -10,31 +10,18 @@
   letter-spacing: -0.03em;
 }
 
-.class-counts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 36px;
-  margin: 0 0 14px;
+.class-balance {
+  margin: 56px 0 0;
 }
 
-.class-counts div {
-  background: transparent;
-}
-
-.class-counts span {
+.class-balance .eyebrow {
   display: block;
-  margin-bottom: 4px;
-  color: var(--silver);
-  font-size: 0.72rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
+  margin-bottom: 22px;
 }
 
-.class-counts strong {
-  color: var(--ink);
-  font-size: 1.3rem;
-  font-weight: 300;
+.class-balance-ratio {
+  margin: 26px 0 0;
+  font-size: 0.85rem;
 }
 
 @media (max-width: 860px) {

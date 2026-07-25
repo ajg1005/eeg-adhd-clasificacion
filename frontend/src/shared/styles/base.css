@@ -18,6 +18,10 @@
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: var(--ink);
   background: var(--graphite-deep);
+  /* La interfaz es oscura: sin esto el navegador pinta en claro todo lo que
+     dibuja el sistema (barras de scroll, flechas de los number, la "X" de los
+     search, el marco del desplegable). */
+  color-scheme: dark;
 }
 
 * {
@@ -40,6 +44,14 @@ button,
 input,
 select {
   font: inherit;
+}
+
+/* El desplegable nativo pinta su fondo a partir de las option, no del select.
+   Como los select son transparentes (v3), sin esto la lista sale con el fondo
+   claro del sistema y el texto no se lee. */
+option {
+  background-color: var(--graphite-deep);
+  color: var(--ink);
 }
 
 h1 {

@@ -225,6 +225,79 @@
   outline-offset: -2px;
 }
 
+/* Reparto de una magnitud entre clases: barra de 3px + leyenda con recuento y
+   porcentaje. Lo usan el balance del dataset y la distribucion de ventanas de
+   la prediccion, asi que ambos hablan el mismo idioma visual. */
+.distribution-bar {
+  display: flex;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  background: rgba(193, 180, 174, 0.16);
+}
+
+.distribution-segment {
+  min-width: 0;
+  height: 100%;
+}
+
+/* Cobre para TDAH, plata para Control: el color de acento marca la clase que
+   interesa. Cualquier otra etiqueta que devuelva el backend cae en .other. */
+.distribution-segment.adhd,
+.legend-dot.adhd {
+  background: var(--golden-chestnut);
+}
+
+.distribution-segment.control,
+.legend-dot.control {
+  background: rgba(193, 180, 174, 0.35);
+}
+
+.distribution-segment.other,
+.legend-dot.other {
+  background: rgba(193, 180, 174, 0.18);
+}
+
+.distribution-legend {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.distribution-legend-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 14px;
+  align-items: baseline;
+  color: var(--silver);
+  font-size: 0.95rem;
+  font-weight: 300;
+}
+
+.distribution-legend-row strong {
+  color: var(--ink);
+  font-size: 1.3rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+
+.distribution-legend-row > span:last-child {
+  min-width: 46px;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.distribution-label {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
 /* Metadatos a la derecha de un encabezado. Lo usan entrenamiento y experimentos. */
 .importance-meta {
   display: flex;
