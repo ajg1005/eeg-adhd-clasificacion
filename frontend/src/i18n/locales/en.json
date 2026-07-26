@@ -137,7 +137,8 @@
     "controlLabel": "Control",
     "adhdLabel": "ADHD",
     "summary": "{{epochs}} signal windows were analyzed with model {{model}}.",
-    "empty": "No prediction has been run yet."
+    "empty": "No prediction has been run yet.",
+    "disclaimer": "Indicative result intended to support analysis. It does not constitute a clinical diagnosis."
   },
   "experiments": {
     "title": "Saved experiments",

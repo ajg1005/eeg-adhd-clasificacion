@@ -230,6 +230,10 @@ export function PredictionView({
         ) : (
           <p className="muted">{t("prediction.empty")}</p>
         )}
+
+        {/* Fuera del condicional: el aviso vale tanto antes como despues de
+            predecir, y no es algo que deba aparecer solo a posteriori. */}
+        <p className="prediction-disclaimer">{t("prediction.disclaimer")}</p>
       </div>
     </section>
   );

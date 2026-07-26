@@ -100,6 +100,20 @@
   font-size: 0.85rem;
 }
 
+/* Sistema de apoyo academico, no diagnostico: el aviso va siempre visible al
+   pie del panel de resultado, separado por una regla. */
+.prediction-disclaimer {
+  max-width: 520px;
+  margin: 26px 0 0;
+  border-top: 1px solid var(--section-rule);
+  padding-top: 26px;
+  color: var(--silver);
+  font-size: 0.85rem;
+  font-weight: 300;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
 .chart-box {
   width: 100%;
   min-height: 260px;
