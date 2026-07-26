@@ -138,7 +138,10 @@
     "adhdLabel": "TDAH",
     "summary": "Se han analizado {{epochs}} ventanas de la señal con el modelo {{model}}.",
     "empty": "Todavía no hay predicción ejecutada.",
-    "disclaimer": "Resultado orientativo de apoyo al análisis. No constituye un diagnóstico clínico."
+    "disclaimer": "Resultado orientativo de apoyo al análisis. No constituye un diagnóstico clínico.",
+    "timelineTitle": "Predicción a lo largo de la señal",
+    "timelineScale": "cada barra ≈ {{count}} ventanas",
+    "timelineScaleSingle": "una barra por ventana"
   },
   "experiments": {
     "title": "Experimentos guardados",

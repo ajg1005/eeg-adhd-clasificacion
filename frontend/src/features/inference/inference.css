@@ -95,6 +95,49 @@
   font-size: 0.9rem;
 }
 
+.prediction-timeline {
+  margin-top: 56px;
+}
+
+.prediction-timeline .eyebrow {
+  display: block;
+  margin-bottom: 18px;
+}
+
+.timeline-track {
+  display: flex;
+  gap: 3px;
+  height: 52px;
+  align-items: stretch;
+  margin-bottom: 12px;
+}
+
+.timeline-slot {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-slot.adhd {
+  background: var(--golden-chestnut);
+}
+
+.timeline-slot.control {
+  background: rgba(193, 180, 174, 0.25);
+}
+
+.timeline-slot.other {
+  background: rgba(193, 180, 174, 0.12);
+}
+
+.timeline-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--silver);
+  font-size: 0.76rem;
+  font-weight: 300;
+}
+
 .prediction-summary {
   margin: 40px 0 0;
   font-size: 0.85rem;

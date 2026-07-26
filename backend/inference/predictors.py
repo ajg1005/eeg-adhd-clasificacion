@@ -323,6 +323,11 @@ class MLPredictor:
             "n_epochs": int(len(epoch_predictions)),
             "epoch_count_by_class": epoch_count_by_class,
             "epoch_percentage_by_class": epoch_percentage_by_class,
+            # Etiqueta de cada ventana en orden temporal: los recuentos agregados
+            # dicen cuanto, pero no si la señal es consistente o deriva.
+            "epoch_predictions": [
+                map_prediction_label(prediction) for prediction in epoch_predictions
+            ],
             "metrics": metrics,
             "metadata": metadata,
         }
@@ -463,6 +468,12 @@ class DLPredictor:
             "n_epochs": int(len(epoch_predictions)),
             "epoch_count_by_class": epoch_count_by_class,
             "epoch_percentage_by_class": epoch_percentage_by_class,
+            # Etiqueta de cada ventana en orden temporal: los recuentos agregados
+            # dicen cuanto, pero no si la señal es consistente o deriva.
+            "epoch_predictions": [
+                map_prediction_label(int(prediction))
+                for prediction in epoch_predictions
+            ],
             "metrics": metrics,
             "metadata": metadata,
         }

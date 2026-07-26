@@ -138,7 +138,10 @@
     "adhdLabel": "ADHD",
     "summary": "{{epochs}} signal windows were analyzed with model {{model}}.",
     "empty": "No prediction has been run yet.",
-    "disclaimer": "Indicative result intended to support analysis. It does not constitute a clinical diagnosis."
+    "disclaimer": "Indicative result intended to support analysis. It does not constitute a clinical diagnosis.",
+    "timelineTitle": "Prediction along the signal",
+    "timelineScale": "each bar ≈ {{count}} windows",
+    "timelineScaleSingle": "one bar per window"
   },
   "experiments": {
     "title": "Saved experiments",

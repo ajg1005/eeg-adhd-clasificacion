@@ -6,6 +6,7 @@ import type {
   PredictionResult,
   ValidationResult,
 } from "./types";
+import { PredictionTimeline } from "./components/PredictionTimeline";
 import { formatPercent } from "../../shared/utils/formatters";
 
 interface PredictionViewProps {
@@ -219,6 +220,13 @@ export function PredictionView({
             </div>
 
             <PredictionDistribution prediction={prediction} />
+
+            {prediction.epoch_predictions && (
+              <PredictionTimeline
+                epochPredictions={prediction.epoch_predictions}
+                modelInfo={modelInfo}
+              />
+            )}
 
             <p className="muted prediction-summary">
               {t("prediction.summary", {
