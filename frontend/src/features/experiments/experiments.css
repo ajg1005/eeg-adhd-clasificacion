@@ -17,6 +17,29 @@
   font-variant-numeric: tabular-nums;
 }
 
+.experiment-action-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Accion secundaria dentro de una fila: enlace, no boton con contorno, para no
+   competir con el boton principal de la pantalla. */
+.row-action {
+  border: 0;
+  border-bottom: 1px solid transparent;
+  padding: 0;
+  background: transparent;
+  color: var(--golden-chestnut);
+  font-size: 0.85rem;
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.row-action:hover {
+  border-color: var(--golden-chestnut);
+  color: var(--ink);
+}
+
 .experiment-model-cell strong {
   display: inline;
   color: var(--ink);

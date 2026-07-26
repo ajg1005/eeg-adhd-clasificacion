@@ -144,7 +144,8 @@
   },
   "experiments": {
     "title": "Saved experiments",
-    "description": "History of training runs persisted in the database.",
+    "description": "History of training runs persisted in the database, sorted by balanced accuracy.",
+    "useForInference": "Use for inference",
     "bestAvailableTitle": "Best trained model",
     "bestAvailableDescription": "Model with the highest balanced accuracy among saved runs with a final model.",
     "bestAvailableEmpty": "There are no final trained models yet.",

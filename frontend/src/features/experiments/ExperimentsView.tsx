@@ -32,6 +32,17 @@ interface ParameterGroupProps {
   title: string;
 }
 
+// El listado llega por fecha; interesa mas por metrica. Se ordena al recibirlo
+// (y no al pintar) para que la fila preseleccionada sea la primera que se ve.
+function sortByBalancedAccuracy(
+  items: ExperimentSummary[],
+): ExperimentSummary[] {
+  const score = (item: ExperimentSummary): number =>
+    Number.isFinite(item.balanced_accuracy) ? item.balanced_accuracy : -Infinity;
+
+  return [...items].sort((a, b) => score(b) - score(a));
+}
+
 function formatDate(value: string | null | undefined, language?: string): string {
   if (!value) {
     return "N/A";
@@ -81,7 +92,17 @@ function ParameterGroup({
   );
 }
 
-export function ExperimentsView() {
+interface ExperimentsViewProps {
+  // Ids de modelo realmente cargables (los que devuelve /models): un
+  // trained_model_id cuyo artefacto falte no sirve para inferencia.
+  availableModelIds: string[];
+  onUseForInference: (modelId: string) => void;
+}
+
+export function ExperimentsView({
+  availableModelIds,
+  onUseForInference,
+}: ExperimentsViewProps) {
   const { i18n, t } = useTranslation();
   const [experiments, setExperiments] = useState<ExperimentSummary[]>([]);
   const [bestAvailableModel, setBestAvailableModel] =
@@ -102,9 +123,10 @@ export function ExperimentsView() {
         getExperiments(),
         getBestAvailableModel(),
       ]);
-      const nextSelectedId = selectedId ?? items[0]?.id ?? null;
+      const sorted = sortByBalancedAccuracy(items);
+      const nextSelectedId = selectedId ?? sorted[0]?.id ?? null;
 
-      setExperiments(items);
+      setExperiments(sorted);
       setBestAvailableModel(bestModel);
       setSelectedId(nextSelectedId);
 
@@ -130,8 +152,9 @@ export function ExperimentsView() {
           return;
         }
 
-        const initialSelectedId = items[0]?.id ?? null;
-        setExperiments(items);
+        const sorted = sortByBalancedAccuracy(items);
+        const initialSelectedId = sorted[0]?.id ?? null;
+        setExperiments(sorted);
         setBestAvailableModel(bestModel);
         setSelectedId(initialSelectedId);
         setLoadingDetail(initialSelectedId !== null);
@@ -282,6 +305,7 @@ export function ExperimentsView() {
                   <th>{t("common.dataset")}</th>
                   <th>{t("metrics.balanced")}</th>
                   <th>F1</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -295,6 +319,12 @@ export function ExperimentsView() {
                   ]
                     .filter(Boolean)
                     .join(" ");
+                  const modelId =
+                    experiment.trained_model_id != null
+                      ? `trained_model_${experiment.trained_model_id}`
+                      : null;
+                  const usable = modelId !== null &&
+                    availableModelIds.includes(modelId);
 
                   return (
                     <tr
@@ -330,6 +360,21 @@ export function ExperimentsView() {
                       <td>{experiment.dataset.filename}</td>
                       <td>{formatMetric(experiment.balanced_accuracy)}</td>
                       <td>{formatMetric(experiment.f1_score)}</td>
+                      <td className="experiment-action-cell">
+                        {usable && (
+                          <button
+                            className="row-action"
+                            onClick={(event) => {
+                              // La fila entera selecciona: que el boton no lo dispare.
+                              event.stopPropagation();
+                              onUseForInference(modelId);
+                            }}
+                            type="button"
+                          >
+                            {t("experiments.useForInference")}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

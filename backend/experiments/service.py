@@ -58,5 +58,8 @@ def _experiment_response(experiment) -> dict[str, Any]:
         "precision": float(experiment.precision),
         "recall": float(experiment.recall),
         "f1_score": float(experiment.f1_score),
+        "trained_model_id": (
+            int(experiment.trained_model.id) if experiment.trained_model else None
+        ),
         "dataset": experiment.dataset,
     }

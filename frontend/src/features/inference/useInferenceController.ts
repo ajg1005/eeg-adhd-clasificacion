@@ -40,6 +40,7 @@ interface UseInferenceControllerResult {
   file: File | null;
   handleFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleModelChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  selectModel: (modelId: string) => void;
   handlePrediction: () => Promise<void>;
   loadingPrediction: boolean;
   loadingValidation: boolean;
@@ -192,8 +193,9 @@ export function useInferenceController(): UseInferenceControllerResult {
     }
   }
 
-  function handleModelChange(event: ChangeEvent<HTMLSelectElement>): void {
-    const nextModelId = event.target.value;
+  // Seleccionar por id, para poder llamarlo desde fuera del <select> (por
+  // ejemplo al promocionar un experimento a inferencia).
+  function selectModel(nextModelId: string): void {
     setSelectedModelId(nextModelId);
     setModelInfo(null);
     setPrediction(null);
@@ -202,6 +204,10 @@ export function useInferenceController(): UseInferenceControllerResult {
     setError("");
 
     void revalidateFile(nextModelId, file);
+  }
+
+  function handleModelChange(event: ChangeEvent<HTMLSelectElement>): void {
+    selectModel(event.target.value);
   }
 
   async function handleFileChange(
@@ -274,6 +280,7 @@ export function useInferenceController(): UseInferenceControllerResult {
     file,
     handleFileChange,
     handleModelChange,
+    selectModel,
     handlePrediction,
     loadingPrediction,
     loadingValidation,

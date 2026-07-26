@@ -45,7 +45,12 @@ def list_experiments(
     with SessionLocal() as session:
         stmt = (
             select(Experiment)
-            .options(selectinload(Experiment.dataset))
+            # trained_model se carga aqui: la sesion se cierra al salir del with
+            # y accederlo luego dejaria la instancia desasociada.
+            .options(
+                selectinload(Experiment.dataset),
+                selectinload(Experiment.trained_model),
+            )
             .order_by(Experiment.created_at.desc(), Experiment.id.desc())
             .offset(max(0, offset))
             .limit(max(1, min(limit, 200)))
@@ -67,6 +72,7 @@ def get_experiment(experiment_id: int) -> Experiment | None:
             options=[
                 selectinload(Experiment.dataset),
                 selectinload(Experiment.fold_results),
+                selectinload(Experiment.trained_model),
             ],
         )
 

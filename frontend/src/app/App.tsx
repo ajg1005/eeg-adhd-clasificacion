@@ -114,7 +114,13 @@ function App() {
               ledeKey="experiments.description"
               titleKey="experiments.title"
             />
-            <ExperimentsView />
+            <ExperimentsView
+              availableModelIds={controller.models.map((model) => model.model_id)}
+              onUseForInference={(modelId) => {
+                controller.selectModel(modelId);
+                controller.setActiveTab("model");
+              }}
+            />
           </>
         )}
 
