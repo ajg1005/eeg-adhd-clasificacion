@@ -64,8 +64,9 @@ function PredictionDistribution({
 
   return (
     <div className="prediction-distribution">
-      <h3>{t("prediction.distributionTitle")}</h3>
-      <p className="muted">{t("prediction.distributionDescription")}</p>
+      {/* El reparto ya no necesita explicacion: el veredicto de arriba dice que
+          la clase sale por voto mayoritario y sobre cuantas ventanas. */}
+      <span className="eyebrow">{t("prediction.distributionTitle")}</span>
 
       <div
         aria-label={t("prediction.distributionTitle")}
@@ -82,7 +83,7 @@ function PredictionDistribution({
         ))}
       </div>
 
-      <div className="distribution-legend">
+      <div className="distribution-legend distribution-legend-inline">
         {classes.map((item) => (
           <div className="distribution-legend-row" key={item.className}>
             <span className={`legend-dot ${item.className}`} />
@@ -194,37 +195,37 @@ export function PredictionView({
 
         {prediction ? (
           <>
-            <div className="result-main">
+            {/* El veredicto es el dato de la pantalla: manda en tamaño, y la
+                confianza media lo acompaña como unico acento en cobre. */}
+            <div className="prediction-verdict">
               <div>
-                <span>{t("prediction.classification")}</span>
-                <strong>{prediction.prediction_label}</strong>
+                <h2 className="prediction-label">
+                  {prediction.prediction_label}
+                </h2>
+                <p className="muted">
+                  {t("prediction.majorityVote", {
+                    count: classWindowCount(
+                      prediction,
+                      prediction.prediction_label,
+                    ),
+                    total: prediction.n_epochs,
+                  })}
+                </p>
               </div>
-              <div>
-                <span>{t("prediction.meanConfidence")}</span>
+              <div className="prediction-confidence">
+                <span className="eyebrow">{t("prediction.meanConfidence")}</span>
                 <strong>{formatPercent(decisionScore)}</strong>
-              </div>
-              <div>
-                <span>{t("prediction.controlWindows")}</span>
-                <strong>
-                  {classWindowCount(prediction, "Control")}/{prediction.n_epochs}
-                </strong>
-              </div>
-              <div>
-                <span>{t("prediction.adhdWindows")}</span>
-                <strong>
-                  {classWindowCount(prediction, "ADHD")}/{prediction.n_epochs}
-                </strong>
               </div>
             </div>
 
-            <p className="muted">
+            <PredictionDistribution prediction={prediction} />
+
+            <p className="muted prediction-summary">
               {t("prediction.summary", {
                 epochs: prediction.n_epochs,
                 model: prediction.model_name || modelInfo?.model_name,
               })}
             </p>
-
-            <PredictionDistribution prediction={prediction} />
           </>
         ) : (
           <p className="muted">{t("prediction.empty")}</p>

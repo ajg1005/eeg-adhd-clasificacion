@@ -35,10 +35,8 @@
 /* Sin tarjetas: el fondo del contenedor asoma por un hueco de 1px y hace de
    regla vertical. Con column-gap la separacion no depende del nº de columnas,
    asi que no aparece una regla suelta al empezar cada fila.
-   .result-main es la variante de la pantalla de prediccion; sus ajustes propios
-   estan en features/inference/inference.css. */
-.metric-grid,
-.result-main {
+*/
+.metric-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 1px;
@@ -48,14 +46,12 @@
   background: var(--section-rule);
 }
 
-.metric-grid div,
-.result-main div {
+.metric-grid div {
   padding: 28px 24px;
   background: var(--graphite-deep);
 }
 
-.metric-grid span,
-.result-main span {
+.metric-grid span {
   display: block;
   margin-bottom: 14px;
   color: var(--silver);
@@ -65,8 +61,7 @@
   letter-spacing: 0.14em;
 }
 
-.metric-grid strong,
-.result-main strong {
+.metric-grid strong {
   color: var(--ink);
   font-size: 1.5rem;
   font-weight: 300;
@@ -327,13 +322,11 @@
   }
 
   /* En una columna el hueco tiene que ser horizontal para que separe algo. */
-  .metric-grid,
-  .result-main {
+  .metric-grid {
     row-gap: 1px;
   }
 
-  .metric-grid div,
-  .result-main div {
+  .metric-grid div {
     padding: 20px 0;
   }
 
