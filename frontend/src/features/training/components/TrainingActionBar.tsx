@@ -14,10 +14,6 @@ interface TrainingActionBarProps {
   trainingStatus: TaskStatusValue;
   trainingStatusAt: Date | null;
 }
-
-// Fija al pie: el boton de entrenar estaba al final de una rejilla de parametros
-// de altura variable y se perdia de vista justo cuando hacia falta. Lleva al lado
-// el resumen de lo que se va a ejecutar.
 export function TrainingActionBar({
   datasetName,
   durationSeconds,

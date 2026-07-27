@@ -40,9 +40,7 @@ export function useTrainingTask(
   const [result, setResult] = useState<TrainingResult | null>(null);
   const [error, setError] = useState("");
   const onSuccessRef = useRef(onSuccess);
-  // El sondeo llama a onStatus cada segundo, casi siempre con el mismo estado.
-  // Sin comparar, la marca de tiempo seria siempre "ahora" y provocaria un
-  // render por segundo: solo interesa el momento del cambio.
+  // Avoid updating the timestamp when polling repeats the same status.
   const statusRef = useRef<TrainingTaskStatus>(null);
 
   const applyStatus = useCallback((next: TrainingTaskStatus): void => {

@@ -57,8 +57,6 @@ export async function waitForTaskResult<TResult>(
     signal,
   }: WaitForTaskOptions<TResult>,
 ): Promise<TResult> {
-  // Se valida antes del bucle: con retryOnPollError, un id inválido no se
-  // arreglaría reintentando.
   assertValidRouteId("task", taskId);
 
   while (!signal?.aborted) {

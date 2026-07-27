@@ -41,8 +41,6 @@ export function reportRowLabel(t: TFunction, name: string): string {
 export function reportColumnLabel(t: TFunction, name: string): string {
   return translateKey(t, `training.reportColumns.${name}`, name);
 }
-
-// Columnas estandar del classification_report de scikit-learn.
 export const REPORT_COLUMNS = [
   "precision",
   "recall",
