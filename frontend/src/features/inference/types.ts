@@ -65,14 +65,7 @@ export interface PredictionResult {
   n_epochs: number;
   epoch_count_by_class: Record<string, number>;
   epoch_percentage_by_class: Record<string, number>;
-  // Una etiqueta por ventana en orden temporal. Opcional: un backend anterior
-  // a este campo no la manda y entonces no se dibuja la tira.
   epoch_predictions?: string[];
   metrics?: ModelMetrics | null;
   metadata: UnknownRecord;
-}
-
-export interface MetricChartDatum {
-  name: string;
-  value: number;
 }

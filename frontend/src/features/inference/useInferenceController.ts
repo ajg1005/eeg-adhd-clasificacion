@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -19,7 +18,6 @@ import {
 } from "./api";
 import type {
   CvMetrics,
-  MetricChartDatum,
   ModelFigure,
   ModelInfo,
   ModelMetrics,
@@ -43,7 +41,6 @@ interface UseInferenceControllerResult {
   loadingPrediction: boolean;
   loadingValidation: boolean;
   metrics: CvMetrics | ModelMetrics | null;
-  metricsChartData: MetricChartDatum[];
   modelFigures: ModelFigure[];
   modelInfo: ModelInfo | null;
   models: ModelRegistryItem[];
@@ -76,8 +73,6 @@ function chooseModelId(
   return selectedCandidate ?? enabledModels[0]?.model_id ?? "";
 }
 
-// Controlador del flujo de inferencia: selección de modelo, validación del CSV
-// del paciente y predicción.
 export function useInferenceController(): UseInferenceControllerResult {
   const [activeTab, setActiveTab] = useState<TabId>("dataset");
   const [models, setModels] = useState<ModelRegistryItem[]>([]);
@@ -108,7 +103,6 @@ export function useInferenceController(): UseInferenceControllerResult {
     [],
   );
 
-  // Datos estáticos del backend: se cargan al montar el hook.
   useEffect(() => {
     let cancelled = false;
 
@@ -134,7 +128,6 @@ export function useInferenceController(): UseInferenceControllerResult {
     };
   }, []);
 
-  // Info y figuras del modelo: se recargan cada vez que cambia el seleccionado.
   useEffect(() => {
     if (!selectedModelId) {
       return;
@@ -175,6 +168,7 @@ export function useInferenceController(): UseInferenceControllerResult {
       cancelled = true;
     };
   }, [selectedModelId]);
+
   useEffect(
     () => () => {
       validationRequestRef.current?.abort();
@@ -195,9 +189,9 @@ export function useInferenceController(): UseInferenceControllerResult {
       return;
     }
 
-    setLoadingValidation(true);
     const controller = new AbortController();
     validationRequestRef.current = controller;
+    setLoadingValidation(true);
 
     try {
       const result = await validateCsv(
@@ -221,8 +215,6 @@ export function useInferenceController(): UseInferenceControllerResult {
     }
   }
 
-  // Seleccionar por id, para poder llamarlo desde fuera del <select> (por
-  // ejemplo al promocionar un experimento a inferencia).
   function selectModel(nextModelId: string): void {
     predictionRequestRef.current?.abort();
     setSelectedModelId(nextModelId);
@@ -297,23 +289,6 @@ export function useInferenceController(): UseInferenceControllerResult {
     ? (prediction.decision_score ?? prediction.confidence ?? null)
     : null;
 
-  const metricsChartData = useMemo<MetricChartDatum[]>(() => {
-    if (!metrics) {
-      return [];
-    }
-
-    return [
-      { name: "Accuracy", value: metrics.accuracy_epoch_mean },
-      { name: "Balanced", value: metrics.balanced_accuracy_epoch_mean },
-      { name: "Precision", value: metrics.precision_epoch_mean },
-      { name: "Recall", value: metrics.recall_epoch_mean },
-      { name: "F1", value: metrics.f1_epoch_mean },
-    ].map((item) => ({
-      ...item,
-      value: Number((item.value ?? 0).toFixed(3)),
-    }));
-  }, [metrics]);
-
   return {
     activeTab,
     decisionScore,
@@ -326,7 +301,6 @@ export function useInferenceController(): UseInferenceControllerResult {
     loadingPrediction,
     loadingValidation,
     metrics,
-    metricsChartData,
     modelFigures: activeModelInfo ? modelFigures : [],
     modelInfo: activeModelInfo,
     models,
