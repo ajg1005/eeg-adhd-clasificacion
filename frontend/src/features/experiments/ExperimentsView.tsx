@@ -32,8 +32,6 @@ interface ParameterGroupProps {
   title: string;
 }
 
-// El listado llega por fecha; interesa mas por metrica. Se ordena al recibirlo
-// (y no al pintar) para que la fila preseleccionada sea la primera que se ve.
 function sortByBalancedAccuracy(
   items: ExperimentSummary[],
 ): ExperimentSummary[] {
@@ -93,8 +91,6 @@ function ParameterGroup({
 }
 
 interface ExperimentsViewProps {
-  // Ids de modelo realmente cargables (los que devuelve /models): un
-  // trained_model_id cuyo artefacto falte no sirve para inferencia.
   availableModelIds: string[];
   onUseForInference: (modelId: string) => void;
 }
@@ -239,58 +235,72 @@ export function ExperimentsView({
 
   return (
     <section className="training-layout">
-      {error && <div className="alert alert-error">{error}</div>}
-
-      <div className="panel">
-        <div className="section-heading-row">
-          <div>
-            <h2>{t("experiments.bestAvailableTitle")}</h2>
-            <p className="muted">{t("experiments.bestAvailableDescription")}</p>
-          </div>
-        </div>
-
+      {error && <div className="alert alert-error" role="alert">{error}</div>}
+      <div className="panel best-model-row">
         {loadingList && !bestAvailableModel ? (
           <p className="muted">{t("common.loading")}</p>
         ) : bestAvailableModel ? (
           <>
             <div className="best-model-identity">
-              <h3>{bestAvailableModel.display_name}</h3>
-              <p className="muted">
-                {bestAvailableModel.model_type.toUpperCase()} /{" "}
+              <span className="eyebrow accent">
+                {t("experiments.bestAvailableTitle")}
+              </span>
+              <h2>
+                {bestAvailableModel.display_name} ·{" "}
                 {t("experiments.experiment", {
                   id: bestAvailableModel.experiment_id,
-                })}{" "}
-                / {formatDate(bestAvailableModel.created_at, i18n.resolvedLanguage)}
+                })}
+              </h2>
+              <p className="muted">
+                {[
+                  bestAvailableModel.model_type.toUpperCase(),
+                  bestAvailableModel.dataset_filename,
+                  `${String(bestAvailableModel.n_subjects)} ${t("common.patients").toLowerCase()}`,
+                  formatDate(
+                    bestAvailableModel.created_at,
+                    i18n.resolvedLanguage,
+                  ),
+                ].join(" · ")}
               </p>
             </div>
 
-            <div className="metric-grid best-model-summary-grid">
-              <div>
+            <div className="best-model-figures">
+              <div className="headline-metric accent">
                 <span>{t("metrics.balancedAccuracy")}</span>
-                <strong>{formatMetric(bestAvailableModel.balanced_accuracy)}</strong>
+                <strong>
+                  {formatMetric(bestAvailableModel.balanced_accuracy)}
+                </strong>
               </div>
-              <div>
+              <div className="headline-metric">
                 <span>{t("metrics.f1")}</span>
                 <strong>{formatMetric(bestAvailableModel.f1_score)}</strong>
               </div>
-              <div>
-                <span>{t("common.dataset")}</span>
-                <strong>{bestAvailableModel.dataset_filename}</strong>
-              </div>
-              <div>
-                <span>{t("common.patients")}</span>
-                <strong>{bestAvailableModel.n_subjects}</strong>
-              </div>
+              {availableModelIds.includes(bestAvailableModel.model_id) && (
+                <button
+                  className="primary-button compact-button"
+                  onClick={() => {
+                    onUseForInference(bestAvailableModel.model_id);
+                  }}
+                  type="button"
+                >
+                  {t("experiments.useForInference")}
+                </button>
+              )}
             </div>
           </>
         ) : (
-          <p className="muted">{t("experiments.bestAvailableEmpty")}</p>
+          <div>
+            <span className="eyebrow">
+              {t("experiments.bestAvailableTitle")}
+            </span>
+            <p className="muted">{t("experiments.bestAvailableEmpty")}</p>
+          </div>
         )}
       </div>
 
       <div className="panel">
         <div className="section-heading-row">
-          <h2>{t("experiments.title")}</h2>
+          <span className="eyebrow">{t("experiments.title")}</span>
           <button
             className="primary-button compact-button"
             disabled={loadingList}
@@ -313,11 +323,11 @@ export function ExperimentsView({
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>{t("experiments.date")}</th>
                   <th>{t("common.model")}</th>
                   <th>{t("experiments.modelType")}</th>
-                  <th>{t("common.dataset")}</th>
-                  <th>{t("metrics.balanced")}</th>
+                  <th className="metric-column-accent">
+                    {t("metrics.balanced")}
+                  </th>
                   <th>F1</th>
                   <th />
                 </tr>
@@ -357,9 +367,10 @@ export function ExperimentsView({
                       tabIndex={0}
                     >
                       <td>#{experiment.id}</td>
-                      <td>{formatDate(experiment.created_at, i18n.resolvedLanguage)}</td>
                       <td className="experiment-model-cell">
-                        <strong>{experiment.display_name}</strong>
+                        <strong className={isBestAvailable ? "best-row-name" : undefined}>
+                          {experiment.display_name}
+                        </strong>
                         {isBestAvailable && (
                           <span className="best-row-badge">
                             {t("experiments.bestBadge")}
@@ -371,15 +382,19 @@ export function ExperimentsView({
                           {experiment.model_type.toUpperCase()}
                         </span>
                       </td>
-                      <td>{experiment.dataset.filename}</td>
-                      <td>{formatMetric(experiment.balanced_accuracy)}</td>
+                      <td
+                        className={
+                          isBestAvailable ? "metric-column-accent" : undefined
+                        }
+                      >
+                        {formatMetric(experiment.balanced_accuracy)}
+                      </td>
                       <td>{formatMetric(experiment.f1_score)}</td>
                       <td className="experiment-action-cell">
                         {usable && (
                           <button
                             className="row-action"
                             onClick={(event) => {
-                              // La fila entera selecciona: que el boton no lo dispare.
                               event.stopPropagation();
                               onUseForInference(modelId);
                             }}
