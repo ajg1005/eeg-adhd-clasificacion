@@ -74,7 +74,7 @@ function App() {
               error={trainingDataset.error}
               file={trainingDataset.file}
               handleAnalyzeDataset={trainingDataset.handleAnalyzeDataset}
-              handleClassFilterChange={trainingDataset.handleClassFilterChange}
+              onClassFilterChange={trainingDataset.onClassFilterChange}
               handleFileChange={trainingDataset.handleFileChange}
               handleMaxPatientsChange={trainingDataset.handleMaxPatientsChange}
               handleSavedDatasetChange={trainingDataset.handleSavedDatasetChange}

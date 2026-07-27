@@ -13,7 +13,7 @@ interface DatasetViewProps {
   error: string;
   file: File | null;
   handleAnalyzeDataset: () => Promise<void>;
-  handleClassFilterChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  onClassFilterChange: (value: string) => void;
   handleFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleMaxPatientsChange: (event: ChangeEvent<HTMLInputElement>) => void;
   handleSavedDatasetChange: (
@@ -26,9 +26,6 @@ interface DatasetViewProps {
   selectedDataset: SavedTrainingDataset | null;
   stats: TrainingDatasetStats | null;
 }
-
-// El backend normaliza a "ADHD" / "Control", pero tambien puede devolver
-// "Sin clase" o la etiqueta original del CSV: esas caen en "other".
 function classVariant(label: string): "adhd" | "control" | "other" {
   const normalized = label.trim().toLowerCase();
 
@@ -63,7 +60,6 @@ function buildClassBalance(
       label,
       share: count / total,
     })),
-    // Con una sola clase, o con alguna vacia, el ratio no dice nada.
     ratio:
       counts.length > 1 && smallest > 0 ? Math.max(...counts) / smallest : null,
   };
@@ -93,7 +89,7 @@ export function DatasetView({
   error,
   file,
   handleAnalyzeDataset,
-  handleClassFilterChange,
+  onClassFilterChange,
   handleFileChange,
   handleMaxPatientsChange,
   handleSavedDatasetChange,
@@ -126,164 +122,194 @@ export function DatasetView({
 
   return (
     <section className="training-layout">
-      {error && <div className="alert alert-error">{error}</div>}
+      {error && (
+        <div className="alert alert-error" role="alert">
+          {error}
+        </div>
+      )}
+      {stats && (
+        <div className="panel">
+          <div className="metric-grid dataset-summary-grid">
+            <div>
+              <span>{t("common.patients")}</span>
+              <strong>{stats.n_patients}</strong>
+            </div>
+            <div>
+              <span>{t("common.rows")}</span>
+              <strong>{stats.rows}</strong>
+            </div>
+            <div>
+              <span>{t("dataset.eegChannels")}</span>
+              <strong>{stats.eeg_columns.length}</strong>
+            </div>
+            <div>
+              <span>{t("common.columns")}</span>
+              <strong>{stats.columns}</strong>
+            </div>
+          </div>
 
-      <div className="panel">
-        <div className="section-heading-row section-heading-row-end">
-          <button
-            className="primary-button compact-button"
-            disabled={(!file && !selectedDataset) || loadingStats}
-            onClick={() => {
-              void handleAnalyzeDataset();
-            }}
-            type="button"
-          >
-            {/* Con un origen elegido el analisis ya se ha lanzado solo, asi que
-                el boton solo puede ser un reintento. */}
-            {loadingStats
-              ? t("dataset.analyzing")
-              : file || selectedDataset
-                ? t("dataset.retry")
-                : t("dataset.analyze")}
-          </button>
+          {stats.missing_required_columns.length > 0 && (
+            <div
+              className="alert alert-error dataset-missing-columns"
+              role="alert"
+            >
+              {t("dataset.missingColumns", {
+                columns: stats.missing_required_columns.join(", "),
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="panel dataset-source-row">
+        <div>
+          <span className="eyebrow">{t("dataset.source")}</span>
+
+          {savedDatasets.length > 0 && (
+            <div className="controls-row">
+              <label>
+                {t("dataset.savedDatasets")}
+                <select
+                  disabled={loadingDatasets || loadingStats}
+                  value={selectedDataset?.id ?? ""}
+                  onChange={(event) => {
+                    void handleSavedDatasetChange(event);
+                  }}
+                >
+                  <option value="">{t("dataset.newDataset")}</option>
+                  {savedDatasets.map((dataset) => (
+                    <option
+                      disabled={!dataset.reusable}
+                      key={dataset.id}
+                      value={dataset.id}
+                    >
+                      {dataset.filename} - {dataset.n_subjects}{" "}
+                      {t("common.patients")}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+
+          <label className="file-drop">
+            <input
+              accept=".csv"
+              onChange={(event) => {
+                void handleFileChange(event);
+              }}
+              type="file"
+            />
+            {file?.name || selectedDataset?.filename || t("dataset.selectCsv")}
+          </label>
+
+          {loadingDatasets && (
+            <p className="muted">{t("dataset.loadingSavedDatasets")}</p>
+          )}
+
+          {loadingStats && (
+            <div className="alert alert-info" role="status">
+              {t("dataset.analyzing")}
+            </div>
+          )}
+          {(file || selectedDataset) && (
+            <button
+              className="primary-button compact-button"
+              disabled={loadingStats}
+              onClick={() => {
+                void handleAnalyzeDataset();
+              }}
+              type="button"
+            >
+              {loadingStats ? t("dataset.analyzing") : t("dataset.retry")}
+            </button>
+          )}
         </div>
 
-        {savedDatasets.length > 0 && (
-          <div className="controls-row">
-            <label>
-              {t("dataset.savedDatasets")}
-              <select
-                disabled={loadingDatasets || loadingStats}
-                value={selectedDataset?.id ?? ""}
-                onChange={(event) => {
-                  void handleSavedDatasetChange(event);
-                }}
+        <div>
+          {classBalance ? (
+            <div className="class-balance">
+              <span className="eyebrow">{t("dataset.classBalance")}</span>
+
+              <div
+                aria-label={t("dataset.classBalance")}
+                className="distribution-bar"
+                role="img"
               >
-                <option value="">{t("dataset.newDataset")}</option>
-                {savedDatasets.map((dataset) => (
-                  <option
-                    disabled={!dataset.reusable}
-                    key={dataset.id}
-                    value={dataset.id}
-                  >
-                    {dataset.filename} - {dataset.n_subjects}{" "}
-                    {t("common.patients")}
-                  </option>
+                {classBalance.entries.map((entry) => (
+                  <span
+                    className={`distribution-segment ${classVariant(
+                        entry.label,
+                      )}`}
+                    key={entry.label}
+                    style={{ width: `${entry.share * 100}%` }}
+                    title={`${className(entry.label)}: ${formatPercent(
+                        entry.share,
+                      )}`}
+                  />
                 ))}
-              </select>
-            </label>
-          </div>
-        )}
-
-        <label className="file-drop">
-          <input
-            accept=".csv"
-            onChange={(event) => {
-              void handleFileChange(event);
-            }}
-            type="file"
-          />
-          {file?.name || selectedDataset?.filename || t("dataset.selectCsv")}
-        </label>
-
-        {loadingDatasets && (
-          <p className="muted">{t("dataset.loadingSavedDatasets")}</p>
-        )}
-
-        {loadingStats && (
-          <div className="alert alert-info">{t("dataset.analyzing")}</div>
-        )}
-
-        {stats && (
-          <>
-            <div className="metric-grid dataset-summary-grid training-metrics-row">
-              <div>
-                <span>{t("common.rows")}</span>
-                <strong>{stats.rows}</strong>
               </div>
-              <div>
-                <span>{t("common.columns")}</span>
-                <strong>{stats.columns}</strong>
-              </div>
-              <div>
-                <span>{t("common.patients")}</span>
-                <strong>{stats.n_patients}</strong>
-              </div>
-              <div>
-                <span>{t("dataset.eegChannels")}</span>
-                <strong>{stats.eeg_columns.length}</strong>
-              </div>
-            </div>
 
-            {classBalance && (
-              <div className="class-balance">
-                <span className="eyebrow">{t("dataset.classBalance")}</span>
-
-                <div
-                  aria-label={t("dataset.classBalance")}
-                  className="distribution-bar"
-                  role="img"
-                >
-                  {classBalance.entries.map((entry) => (
+              <div className="distribution-legend">
+                {classBalance.entries.map((entry) => (
+                  <div className="distribution-legend-row" key={entry.label}>
                     <span
-                      className={`distribution-segment ${classVariant(entry.label)}`}
-                      key={entry.label}
-                      style={{ width: `${entry.share * 100}%` }}
-                      title={`${className(entry.label)}: ${formatPercent(entry.share)}`}
+                      aria-hidden="true"
+                      className={`legend-dot ${classVariant(entry.label)}`}
                     />
-                  ))}
-                </div>
-
-                <div className="distribution-legend">
-                  {classBalance.entries.map((entry) => (
-                    <div className="distribution-legend-row" key={entry.label}>
-                      <span
-                        className={`legend-dot ${classVariant(entry.label)}`}
-                      />
-                      <span className="distribution-label">
-                        {className(entry.label)}
-                      </span>
-                      <strong>{entry.count}</strong>
-                      <span>{formatPercent(entry.share)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {classBalance.ratio !== null && (
-                  <p className="muted class-balance-ratio">
-                    {t("dataset.classRatio", {
-                      ratio: classBalance.ratio.toFixed(2),
-                    })}
-                  </p>
-                )}
+                    <span className="distribution-label">
+                      {className(entry.label)}
+                    </span>
+                    <strong>{entry.count}</strong>
+                    <span>{formatPercent(entry.share)}</span>
+                  </div>
+                ))}
               </div>
-            )}
 
-            {stats.missing_required_columns.length > 0 && (
-              <div className="alert alert-error">
-                {t("dataset.missingColumns", {
-                  columns: stats.missing_required_columns.join(", "),
-                })}
-              </div>
-            )}
-          </>
-        )}
+              {classBalance.ratio !== null && (
+                <p className="muted class-balance-ratio">
+                  {t("dataset.classRatio", {
+                    ratio: classBalance.ratio.toFixed(2),
+                  })}
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <span className="eyebrow">{t("dataset.classBalance")}</span>
+              <p className="muted">{t("dataset.balanceEmpty")}</p>
+            </>
+          )}
+        </div>
       </div>
 
       {stats && (
         <div className="panel">
           <div className="section-heading-row">
-            <h3>{t("common.patients")}</h3>
-            <div className="controls-row compact-controls">
-              <label>
-                {t("dataset.filterClass")}
-                <select value={classFilter} onChange={handleClassFilterChange}>
-                  <option value="all">{t("dataset.all")}</option>
-                  <option value="adhd">{t("common.adhd")}</option>
-                  <option value="control">{t("common.control")}</option>
-                </select>
-              </label>
-              <label>
+            <span className="eyebrow">{t("common.patients")}</span>
+            <div className="patient-controls">
+              <div className="filter-links">
+                {(
+                  [
+                    ["all", t("dataset.all")],
+                    ["adhd", t("common.adhd")],
+                    ["control", t("common.control")],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    aria-pressed={classFilter === value}
+                    className={classFilter === value ? "active" : ""}
+                    key={value}
+                    onClick={() => {
+                      onClassFilterChange(value);
+                    }}
+                    type="button"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <label className="patient-limit">
                 {t("common.patients")}
                 <input
                   max="100"
@@ -320,6 +346,15 @@ export function DatasetView({
             </div>
           ) : (
             <p className="muted">{t("dataset.noPatients")}</p>
+          )}
+
+          {stats.patients && (
+            <p className="muted patient-count">
+              {t("dataset.shownOfTotal", {
+                shown: filteredPatients.length,
+                total: stats.patients.length,
+              })}
+            </p>
           )}
         </div>
       )}

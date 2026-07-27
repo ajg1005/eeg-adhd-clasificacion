@@ -85,7 +85,6 @@
   "dataset": {
     "title": "Training dataset",
     "description": "Upload a CSV with several patients and review the statistics before moving to the training tab.",
-    "analyze": "Analyze dataset",
     "analyzing": "Analyzing...",
     "retry": "Retry analysis",
     "selectCsv": "Select EEG CSV",
@@ -93,10 +92,12 @@
     "loadingSavedDatasets": "Loading saved datasets...",
     "newDataset": "Upload new dataset",
     "eegChannels": "EEG channels",
+    "source": "Data source",
+    "balanceEmpty": "Analyse a dataset to see the class split.",
+    "shownOfTotal": "{{shown}} of {{total}}",
     "classBalance": "Class balance",
     "classRatio": "Imbalance of {{ratio}} to 1 between the majority and minority classes.",
     "missingColumns": "Missing columns: {{columns}}",
-    "filterClass": "Class",
     "all": "All",
     "noPatients": "No patients match the selected filter."
   },

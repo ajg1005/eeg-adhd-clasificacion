@@ -35,12 +35,9 @@ interface UseTrainingDatasetResult {
     event: ChangeEvent<HTMLSelectElement>,
   ) => Promise<void>;
   handleAnalyzeDataset: () => Promise<void>;
-  handleClassFilterChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  onClassFilterChange: (value: string) => void;
   handleMaxPatientsChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
-
-// Un CSV nuevo hay que subirlo antes de poder analizarlo; uno guardado ya esta
-// en el servidor y se analiza por id.
 type AnalysisSource =
   | { kind: "file"; file: File }
   | { kind: "saved"; dataset: SavedTrainingDataset };
@@ -55,8 +52,6 @@ async function analyzeSavedDataset(
     missingResultMessage: translate("errors.datasets.analysisEmpty"),
   });
 }
-
-// Estado compartido del dataset entre "Dataset entrenamiento" y "Entrenamiento".
 export function useTrainingDataset(): UseTrainingDatasetResult {
   const [file, setFile] = useState<File | null>(null);
   const [stats, setStats] = useState<TrainingDatasetStats | null>(null);
@@ -68,8 +63,6 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
   const [loadingStats, setLoadingStats] = useState(false);
   const [loadingDatasets, setLoadingDatasets] = useState(true);
   const [error, setError] = useState("");
-  // Ahora el analisis se lanza solo al elegir un origen, asi que es facil
-  // encadenar dos: solo el ultimo puede escribir en el estado.
   const analysisRequestRef = useRef(0);
 
   async function refreshSavedDatasets(): Promise<void> {
@@ -151,8 +144,6 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
       }
     }
   }
-
-  // Elegir el CSV ya era la decision: no hace falta confirmar con un boton.
   async function handleFileChange(
     event: ChangeEvent<HTMLInputElement>,
   ): Promise<void> {
@@ -184,8 +175,6 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
       await runAnalysis({ kind: "saved", dataset });
     }
   }
-
-  // El boton queda solo para reintentar si el analisis automatico ha fallado.
   async function handleAnalyzeDataset(): Promise<void> {
     if (selectedDataset) {
       await runAnalysis({ kind: "saved", dataset: selectedDataset });
@@ -200,10 +189,8 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
     setError(translate("errors.datasets.missingCsv"));
   }
 
-  function handleClassFilterChange(
-    event: ChangeEvent<HTMLSelectElement>,
-  ): void {
-    setClassFilter(event.target.value);
+  function onClassFilterChange(value: string): void {
+    setClassFilter(value);
   }
 
   function handleMaxPatientsChange(
@@ -226,7 +213,7 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
     handleFileChange,
     handleSavedDatasetChange,
     handleAnalyzeDataset,
-    handleClassFilterChange,
+    onClassFilterChange,
     handleMaxPatientsChange,
   };
 }
