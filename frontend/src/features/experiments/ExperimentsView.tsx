@@ -118,59 +118,73 @@ export function ExperimentsView({
     setLoadingList(true);
     setError("");
 
-    try {
-      const [items, bestModel] = await Promise.all([
-        getExperiments(),
-        getBestAvailableModel(),
-      ]);
-      const sorted = sortByBalancedAccuracy(items);
+    const [experimentsResult, bestModelResult] = await Promise.allSettled([
+      getExperiments(),
+      getBestAvailableModel(),
+    ]);
+
+    if (experimentsResult.status === "fulfilled") {
+      const sorted = sortByBalancedAccuracy(experimentsResult.value);
       const nextSelectedId = selectedId ?? sorted[0]?.id ?? null;
 
       setExperiments(sorted);
-      setBestAvailableModel(bestModel);
       setSelectedId(nextSelectedId);
 
       if (nextSelectedId !== null && nextSelectedId !== selectedId) {
         setSelectedExperiment(null);
         setLoadingDetail(true);
       }
-    } catch (caughtError) {
+    } else {
       setError(
-        errorMessage(caughtError, "errors.experiments.list"),
+        errorMessage(experimentsResult.reason, "errors.experiments.list"),
       );
-    } finally {
-      setLoadingList(false);
     }
+
+    if (bestModelResult.status === "fulfilled") {
+      setBestAvailableModel(bestModelResult.value);
+    } else if (experimentsResult.status === "fulfilled") {
+      setBestAvailableModel(null);
+      setError(
+        errorMessage(bestModelResult.reason, "errors.experiments.bestModel"),
+      );
+    }
+
+    setLoadingList(false);
   }
 
   useEffect(() => {
     let cancelled = false;
 
-    void Promise.all([getExperiments(), getBestAvailableModel()])
-      .then(([items, bestModel]) => {
+    void Promise.allSettled([getExperiments(), getBestAvailableModel()]).then(
+      ([experimentsResult, bestModelResult]) => {
         if (cancelled) {
           return;
         }
 
-        const sorted = sortByBalancedAccuracy(items);
-        const initialSelectedId = sorted[0]?.id ?? null;
-        setExperiments(sorted);
-        setBestAvailableModel(bestModel);
-        setSelectedId(initialSelectedId);
-        setLoadingDetail(initialSelectedId !== null);
-      })
-      .catch((caughtError: unknown) => {
-        if (!cancelled) {
+        if (experimentsResult.status === "fulfilled") {
+          const sorted = sortByBalancedAccuracy(experimentsResult.value);
+          const initialSelectedId = sorted[0]?.id ?? null;
+
+          setExperiments(sorted);
+          setSelectedId(initialSelectedId);
+          setLoadingDetail(initialSelectedId !== null);
+        } else {
           setError(
-            errorMessage(caughtError, "errors.experiments.list"),
+            errorMessage(experimentsResult.reason, "errors.experiments.list"),
           );
         }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoadingList(false);
+
+        if (bestModelResult.status === "fulfilled") {
+          setBestAvailableModel(bestModelResult.value);
+        } else if (experimentsResult.status === "fulfilled") {
+          setError(
+            errorMessage(bestModelResult.reason, "errors.experiments.bestModel"),
+          );
         }
-      });
+
+        setLoadingList(false);
+      },
+    );
 
     return () => {
       cancelled = true;
