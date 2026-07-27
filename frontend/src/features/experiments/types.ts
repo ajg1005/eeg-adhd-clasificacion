@@ -43,7 +43,6 @@ export interface ExperimentSummary {
   precision: number;
   recall: number;
   f1_score: number;
-  // null si el entrenamiento no llego a persistir un modelo final.
   trained_model_id?: number | null;
   dataset: ExperimentDataset;
 }
