@@ -192,8 +192,8 @@ export function TrainingView({
 
   return (
     <section className="training-layout interactive-training">
-      {error && <div className="alert alert-error">{error}</div>}
-      {taskError && <div className="alert alert-error">{taskError}</div>}
+      {error && <div className="alert alert-error" role="alert">{error}</div>}
+      {taskError && <div className="alert alert-error" role="alert">{taskError}</div>}
 
       {!file && !selectedDataset && (
         <div className="panel">
@@ -214,14 +214,6 @@ export function TrainingView({
           </p>
         </div>
       )}
-
-      <TrainingEegParamsPanel
-        eegParams={eegParams}
-        modelType={modelType}
-        onEegParamChange={updateEegParam}
-        options={options}
-      />
-
       <TrainingModelPanel
         currentModelParameters={currentModelParameters}
         currentModels={currentModels}
@@ -236,8 +228,12 @@ export function TrainingView({
         visibleTrainingParams={visibleTrainingParams}
       />
 
-      {/* Hermana de .training-layout, no hija del panel: sticky se recorta a la
-          caja del padre, y dentro del panel dejaria de pegarse al pasarlo. */}
+      <TrainingEegParamsPanel
+        eegParams={eegParams}
+        modelType={modelType}
+        onEegParamChange={updateEegParam}
+        options={options}
+      />
       <TrainingActionBar
         datasetName={file?.name ?? selectedDataset?.filename}
         durationSeconds={result?.training_time_seconds}

@@ -3,14 +3,11 @@ import { useTranslation } from "react-i18next";
 import type { TrainingTaskStatus as TaskStatusValue } from "../types";
 
 interface TrainingTaskStatusProps {
-  // Segundos que ha tardado el entrenamiento, solo cuando ya hay resultado.
   durationSeconds: number | undefined;
   status: TaskStatusValue;
   statusAt: Date | null;
 }
 
-// La paleta del proyecto no tiene verde: plata para lo que espera, cobre para lo
-// que avanza o ha terminado, y rosy-copper reservado a los fallos.
 const STATUS_VARIANT: Record<string, "pending" | "active" | "failed"> = {
   SUBMITTING: "pending",
   PENDING: "pending",
@@ -27,22 +24,23 @@ export function TrainingTaskStatus({
   status,
   statusAt,
 }: TrainingTaskStatusProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   if (!status) {
     return null;
   }
 
   const variant = STATUS_VARIANT[status] ?? "pending";
-  // Al terminar interesa cuanto ha tardado; mientras corre, desde cuando.
   const detail =
     status === "SUCCESS" && durationSeconds !== undefined
       ? `${durationSeconds.toFixed(1)} s`
-      : statusAt?.toLocaleTimeString();
+      : statusAt?.toLocaleTimeString(
+          i18n.resolvedLanguage === "en" ? "en-US" : "es-ES",
+        );
 
   return (
-    <span className="task-status">
-      <span className={`task-status-dot ${variant}`} />
+    <span aria-live="polite" className="task-status" role="status">
+      <span aria-hidden="true" className={`task-status-dot ${variant}`} />
       {t(`training.taskStatuses.${status}`, { defaultValue: status })}
       {detail && <span className="task-status-detail">{detail}</span>}
     </span>
