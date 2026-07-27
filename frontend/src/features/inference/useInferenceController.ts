@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ChangeEvent,
   type Dispatch,
@@ -93,6 +94,8 @@ export function useInferenceController(): UseInferenceControllerResult {
   const [loadingValidation, setLoadingValidation] = useState(false);
   const [loadingPrediction, setLoadingPrediction] = useState(false);
   const [modelFigures, setModelFigures] = useState<ModelFigure[]>([]);
+  const validationRequestRef = useRef<AbortController | null>(null);
+  const predictionRequestRef = useRef<AbortController | null>(null);
 
   const refreshModels = useCallback(
     async (
@@ -172,30 +175,56 @@ export function useInferenceController(): UseInferenceControllerResult {
       cancelled = true;
     };
   }, [selectedModelId]);
+  useEffect(
+    () => () => {
+      validationRequestRef.current?.abort();
+      predictionRequestRef.current?.abort();
+    },
+    [],
+  );
 
   async function revalidateFile(
     modelId: string,
     fileToValidate: File | null,
   ): Promise<void> {
+    validationRequestRef.current?.abort();
+    validationRequestRef.current = null;
+
     if (!modelId || !fileToValidate) {
+      setLoadingValidation(false);
       return;
     }
 
     setLoadingValidation(true);
+    const controller = new AbortController();
+    validationRequestRef.current = controller;
 
     try {
-      const result = await validateCsv(fileToValidate, modelId);
-      setValidation(result);
+      const result = await validateCsv(
+        fileToValidate,
+        modelId,
+        controller.signal,
+      );
+
+      if (!controller.signal.aborted) {
+        setValidation(result);
+      }
     } catch (caughtError) {
-      setError(errorMessage(caughtError, "errors.prediction.validate"));
+      if (!controller.signal.aborted) {
+        setError(errorMessage(caughtError, "errors.prediction.validate"));
+      }
     } finally {
-      setLoadingValidation(false);
+      if (validationRequestRef.current === controller) {
+        validationRequestRef.current = null;
+        setLoadingValidation(false);
+      }
     }
   }
 
   // Seleccionar por id, para poder llamarlo desde fuera del <select> (por
   // ejemplo al promocionar un experimento a inferencia).
   function selectModel(nextModelId: string): void {
+    predictionRequestRef.current?.abort();
     setSelectedModelId(nextModelId);
     setModelInfo(null);
     setPrediction(null);
@@ -215,6 +244,7 @@ export function useInferenceController(): UseInferenceControllerResult {
   ): Promise<void> {
     const selectedFile = event.target.files?.[0] ?? null;
 
+    predictionRequestRef.current?.abort();
     setFile(selectedFile);
     setValidation(null);
     setPrediction(null);
@@ -234,16 +264,27 @@ export function useInferenceController(): UseInferenceControllerResult {
       return;
     }
 
+    predictionRequestRef.current?.abort();
+    const controller = new AbortController();
+    predictionRequestRef.current = controller;
     setLoadingPrediction(true);
     setError("");
 
     try {
-      const result = await predictCsv(file, selectedModelId);
-      setPrediction(result);
+      const result = await predictCsv(file, selectedModelId, controller.signal);
+
+      if (!controller.signal.aborted) {
+        setPrediction(result);
+      }
     } catch (caughtError) {
-      setError(errorMessage(caughtError, "errors.prediction.failed"));
+      if (!controller.signal.aborted) {
+        setError(errorMessage(caughtError, "errors.prediction.failed"));
+      }
     } finally {
-      setLoadingPrediction(false);
+      if (predictionRequestRef.current === controller) {
+        predictionRequestRef.current = null;
+        setLoadingPrediction(false);
+      }
     }
   }
 

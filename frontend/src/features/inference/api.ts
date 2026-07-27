@@ -28,13 +28,14 @@ export function getModelInfo(modelId = "ml_best"): Promise<ModelInfo> {
 export function validateCsv(
   file: File,
   modelId = "ml_best",
+  signal?: AbortSignal,
 ): Promise<ValidationResult> {
   const formData = new FormData();
   formData.append("file", file);
 
   return requestJson<ValidationResult>(
     { route: "validate", query: { model_id: modelId } },
-    { method: "POST", body: formData },
+    { method: "POST", body: formData, signal },
     translate("errors.prediction.invalidCsv"),
   );
 }
@@ -42,13 +43,14 @@ export function validateCsv(
 export function predictCsv(
   file: File,
   modelId = "ml_best",
+  signal?: AbortSignal,
 ): Promise<PredictionResult> {
   const formData = new FormData();
   formData.append("file", file);
 
   return requestJson<PredictionResult>(
     { route: "predict", query: { model_id: modelId } },
-    { method: "POST", body: formData },
+    { method: "POST", body: formData, signal },
     translate("errors.prediction.runFailed"),
   );
 }
