@@ -83,10 +83,6 @@
   margin-bottom: 16px;
 }
 
-.training-metrics-row {
-  margin-top: 14px;
-}
-
 .segmented-control {
   display: inline-flex;
   gap: 26px;
@@ -196,7 +192,6 @@
   white-space: nowrap;
 }
 
-/* La primera columna es la clase (texto); el resto son metricas -> a la derecha. */
 .report-table th:not(:first-child),
 .report-table td:not(:first-child) {
   text-align: right;
@@ -211,7 +206,7 @@
   color: var(--silver);
   font-size: 0.72rem;
   font-weight: 400;
-  letter-spacing: 0.14em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
