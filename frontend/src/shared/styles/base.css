@@ -1,5 +1,3 @@
-/* Tokens, reset y tipografia. Se carga primero desde app/App.css. */
-
 :root {
   --golden-chestnut: #be7c4d;
   --action-copper: #a85f34;
@@ -12,15 +10,13 @@
   --graphite-soft: rgba(53, 50, 56, 0.88);
   --border-soft: rgba(193, 180, 174, 0.22);
   --border-strong: rgba(193, 180, 174, 0.42);
-  /* v3: las secciones se separan con reglas de 1px, no con cajas. */
+
   --section-rule: rgba(193, 180, 174, 0.14);
   --field-rule: rgba(193, 180, 174, 0.3);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: var(--ink);
   background: var(--graphite-deep);
-  /* La interfaz es oscura: sin esto el navegador pinta en claro todo lo que
-     dibuja el sistema (barras de scroll, flechas de los number, la "X" de los
-     search, el marco del desplegable). */
+
   color-scheme: dark;
 }
 
@@ -46,9 +42,6 @@ select {
   font: inherit;
 }
 
-/* El desplegable nativo pinta su fondo a partir de las option, no del select.
-   Como los select son transparentes (v3), sin esto la lista sale con el fondo
-   claro del sistema y el texto no se lee. */
 option {
   background-color: var(--graphite-deep);
   color: var(--ink);
@@ -57,10 +50,10 @@ option {
 h1 {
   margin: 0;
   color: var(--ink);
-  font-size: clamp(2rem, 4vw, 2.7rem);
+  font-size: 2.7rem;
   font-weight: 300;
   line-height: 1.1;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
 h2 {
@@ -69,7 +62,7 @@ h2 {
   font-size: 1.25rem;
   font-weight: 300;
   line-height: 1.2;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
 h3 {
@@ -77,10 +70,9 @@ h3 {
   color: var(--silver);
   font-size: 1rem;
   font-weight: 300;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
-/* Texto solo para lectores de pantalla (la etiqueta del selector de idioma). */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -96,14 +88,13 @@ h3 {
   line-height: 1.5;
 }
 
-/* Etiqueta de seccion: 0.72rem, mayusculas, mucho tracking, plata. */
 .eyebrow {
   margin: 0;
   color: var(--silver);
   font-size: 0.72rem;
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0;
 }
 
 .alert {
@@ -135,4 +126,10 @@ h3 {
   border: 1px solid rgba(74, 163, 112, 0.65);
   background: rgba(74, 163, 112, 0.16);
   color: var(--ink);
+}
+
+@media (max-width: 860px) {
+  h1 {
+    font-size: 2rem;
+  }
 }

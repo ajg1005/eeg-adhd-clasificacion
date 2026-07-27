@@ -1,13 +1,3 @@
-/* Vocabulario compartido: lo que usan dos o mas dominios. Antes de crear una
-   clase nueva en un fichero de feature, mira si algo de aqui ya sirve. */
-
-.grid-layout {
-  display: grid;
-  grid-template-columns: 0.95fr 1.05fr;
-  gap: 18px;
-  align-items: start;
-}
-
 .panel {
   border-bottom: 1px solid var(--section-rule);
   padding: 52px 0;
@@ -27,15 +17,6 @@
   margin-bottom: 0;
 }
 
-/* Fila que solo contiene la accion, sin encabezado a la izquierda. */
-.section-heading-row-end {
-  justify-content: flex-end;
-}
-
-/* Sin tarjetas: el fondo del contenedor asoma por un hueco de 1px y hace de
-   regla vertical. Con column-gap la separacion no depende del nº de columnas,
-   asi que no aparece una regla suelta al empezar cada fila.
-*/
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -58,16 +39,20 @@
   font-size: 0.72rem;
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0;
 }
 
 .metric-grid strong {
   color: var(--ink);
   font-size: 1.5rem;
   font-weight: 300;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1.1;
   overflow-wrap: anywhere;
+}
+
+.metric-grid .accent strong {
+  color: var(--golden-chestnut);
 }
 
 .metrics-wide {
@@ -116,12 +101,6 @@
   margin-bottom: 12px;
 }
 
-.compact-controls {
-  margin-bottom: 0;
-}
-
-/* .model-selector comparte el estilo de campo con .controls-row: van juntos
-   para no duplicar la regla. */
 .model-selector {
   display: flex;
   justify-content: space-between;
@@ -157,6 +136,7 @@
 }
 
 .file-drop {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -173,8 +153,16 @@
   color: var(--ink);
 }
 
+.file-drop:focus-within {
+  outline: 2px solid var(--golden-chestnut);
+  outline-offset: 3px;
+}
+
 .file-drop input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
 }
 
 .patient-table-wrap {
@@ -203,26 +191,23 @@
   font-size: 0.72rem;
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
 }
 
-.patient-table tbody tr {
+.experiments-table tbody tr {
   cursor: pointer;
 }
 
-.patient-table tbody tr:hover,
-.patient-table .selected-row {
+.experiments-table tbody tr:hover,
+.experiments-table .selected-row {
   background: rgba(190, 124, 77, 0.14);
 }
 
-.patient-table tbody tr:focus-visible {
+.experiments-table tbody tr:focus-visible {
   outline: 2px solid var(--golden-chestnut);
   outline-offset: -2px;
 }
 
-/* Reparto de una magnitud entre clases: barra de 3px + leyenda con recuento y
-   porcentaje. Lo usan el balance del dataset y la distribucion de ventanas de
-   la prediccion, asi que ambos hablan el mismo idioma visual. */
 .distribution-bar {
   display: flex;
   width: 100%;
@@ -236,8 +221,6 @@
   height: 100%;
 }
 
-/* Cobre para TDAH, plata para Control: el color de acento marca la clase que
-   interesa. Cualquier otra etiqueta que devuelva el backend cae en .other. */
 .distribution-segment.adhd,
 .legend-dot.adhd {
   background: var(--golden-chestnut);
@@ -293,7 +276,6 @@
   border-radius: 999px;
 }
 
-/* Metadatos a la derecha de un encabezado. Lo usan entrenamiento y experimentos. */
 .importance-meta {
   display: flex;
   flex-wrap: wrap;
@@ -308,10 +290,6 @@
 }
 
 @media (max-width: 860px) {
-  .grid-layout {
-    grid-template-columns: 1fr;
-  }
-
   .section-heading-row {
     display: grid;
   }
@@ -321,7 +299,7 @@
     grid-template-columns: 1fr;
   }
 
-  /* En una columna el hueco tiene que ser horizontal para que separe algo. */
+
   .metric-grid {
     row-gap: 1px;
   }
