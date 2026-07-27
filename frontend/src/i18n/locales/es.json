@@ -1,11 +1,7 @@
 {
   "app": {
     "brand": "Clasificador EEG",
-    "title": "Clasificador EEG para apoyo al análisis de TDAH",
-    "subtitle": "Carga datasets EEG, entrena modelos, consulta experimentos guardados y ejecuta predicciones sobre archivos CSV de pacientes.",
-    "language": "Idioma",
-    "api": "API",
-    "serverUnavailable": "No se puede conectar con el servidor"
+    "language": "Idioma"
   },
   "tabs": {
     "groups": {
