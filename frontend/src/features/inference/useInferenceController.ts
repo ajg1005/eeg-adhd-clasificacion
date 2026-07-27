@@ -10,7 +10,6 @@ import {
 } from "react";
 
 import type { TabId } from "../../app/tabs";
-import { getHealth } from "../../app/api";
 import {
   getModelFigures,
   getModelInfo,
@@ -18,7 +17,6 @@ import {
   predictCsv,
   validateCsv,
 } from "./api";
-import type { ApiStatus } from "../../app/types";
 import type {
   CvMetrics,
   MetricChartDatum,
@@ -35,7 +33,6 @@ const DEFAULT_MODEL_ID = "ml_best";
 
 interface UseInferenceControllerResult {
   activeTab: TabId;
-  apiStatus: ApiStatus;
   decisionScore: number | null;
   error: string;
   file: File | null;
@@ -83,7 +80,6 @@ function chooseModelId(
 // del paciente y predicción.
 export function useInferenceController(): UseInferenceControllerResult {
   const [activeTab, setActiveTab] = useState<TabId>("dataset");
-  const [apiStatus, setApiStatus] = useState<ApiStatus>("checking");
   const [models, setModels] = useState<ModelRegistryItem[]>([]);
   const [selectedModelId, setSelectedModelId] = useState("");
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
@@ -116,13 +112,12 @@ export function useInferenceController(): UseInferenceControllerResult {
   useEffect(() => {
     let cancelled = false;
 
-    void Promise.all([getHealth(), getModels()])
-      .then(([, availableModels]) => {
+    void getModels()
+      .then((availableModels) => {
         if (cancelled) {
           return;
         }
 
-        setApiStatus("ok");
         setModels(availableModels);
         setSelectedModelId((currentModelId) =>
           chooseModelId(availableModels, null, currentModelId),
@@ -130,10 +125,7 @@ export function useInferenceController(): UseInferenceControllerResult {
       })
       .catch((caughtError: unknown) => {
         if (!cancelled) {
-          setApiStatus("error");
-          setError(
-            errorMessage(caughtError, "errors.health"),
-          );
+          setError(errorMessage(caughtError, "errors.models.list"));
         }
       });
 
@@ -150,14 +142,10 @@ export function useInferenceController(): UseInferenceControllerResult {
 
     let cancelled = false;
 
-    void Promise.all([
-      getModelInfo(selectedModelId),
-      getModelFigures(selectedModelId),
-    ])
-      .then(([info, figures]) => {
+    void getModelInfo(selectedModelId)
+      .then((info) => {
         if (!cancelled) {
           setModelInfo(info);
-          setModelFigures(figures);
         }
       })
       .catch((caughtError: unknown) => {
@@ -168,6 +156,18 @@ export function useInferenceController(): UseInferenceControllerResult {
               "errors.models.info",
             ),
           );
+        }
+      });
+
+    void getModelFigures(selectedModelId)
+      .then((figures) => {
+        if (!cancelled) {
+          setModelFigures(figures);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setModelFigures([]);
         }
       });
 
@@ -288,7 +288,8 @@ export function useInferenceController(): UseInferenceControllerResult {
     }
   }
 
-  const activeModelInfo = selectedModelId ? modelInfo : null;
+  const activeModelInfo =
+    modelInfo?.model_id === selectedModelId ? modelInfo : null;
   const metrics =
     activeModelInfo?.metrics?.cv_metrics ?? activeModelInfo?.metrics ?? null;
 
@@ -315,7 +316,6 @@ export function useInferenceController(): UseInferenceControllerResult {
 
   return {
     activeTab,
-    apiStatus,
     decisionScore,
     error,
     file,
@@ -327,7 +327,7 @@ export function useInferenceController(): UseInferenceControllerResult {
     loadingValidation,
     metrics,
     metricsChartData,
-    modelFigures: selectedModelId ? modelFigures : [],
+    modelFigures: activeModelInfo ? modelFigures : [],
     modelInfo: activeModelInfo,
     models,
     prediction,

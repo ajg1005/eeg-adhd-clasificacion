@@ -37,7 +37,6 @@
     "control": "Control"
   },
   "errors": {
-    "health": "No se pudo conectar con la API",
     "forbiddenUrl": "URL de API no permitida",
     "invalidDatasetId": "Identificador de dataset no válido",
     "invalidExperimentId": "Identificador de experimento no válido",
