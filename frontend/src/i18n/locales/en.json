@@ -108,7 +108,6 @@
     "trainingSelector": "Model to train",
     "unavailable": "Unavailable",
     "noAvailableModels": "No models are available for inference",
-    "trained": "Selected inference model",
     "features": "Features",
     "frequency": "Frequency",
     "epochSize": "Window size",
@@ -116,6 +115,7 @@
     "featureCount": "Feature count",
     "loadingInfo": "Loading model information...",
     "cvMetrics": "CV metrics",
+    "cvMetricsDescription": "Per-window mean over the training cross-validation.",
     "noMetrics": "No metrics available.",
     "figures": "Model figures"
   },

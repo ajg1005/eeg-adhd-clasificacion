@@ -108,7 +108,6 @@
     "trainingSelector": "Modelo a entrenar",
     "unavailable": "No disponible",
     "noAvailableModels": "No hay modelos disponibles para inferencia",
-    "trained": "Modelo de inferencia seleccionado",
     "features": "Características",
     "frequency": "Frecuencia",
     "epochSize": "Tamaño de ventana",
@@ -116,6 +115,7 @@
     "featureCount": "Nº características",
     "loadingInfo": "Cargando información del modelo...",
     "cvMetrics": "Métricas CV",
+    "cvMetricsDescription": "Media por ventana sobre la validación cruzada del entrenamiento.",
     "noMetrics": "No hay métricas disponibles.",
     "figures": "Figuras del modelo"
   },
