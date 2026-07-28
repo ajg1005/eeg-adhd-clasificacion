@@ -1,10 +1,7 @@
 {
   "app": {
-    "title": "Clasificador EEG para apoyo al análisis de TDAH",
-    "subtitle": "Carga datasets EEG, entrena modelos, consulta experimentos guardados y ejecuta predicciones sobre archivos CSV de pacientes.",
-    "language": "Idioma",
-    "api": "API",
-    "serverUnavailable": "No se puede conectar con el servidor"
+    "brand": "Clasificador EEG",
+    "language": "Idioma"
   },
   "tabs": {
     "groups": {
@@ -31,30 +28,81 @@
     "time": "Tiempo",
     "configuration": "Configuración",
     "patient": "Paciente",
-    "class": "Clase"
+    "class": "Clase",
+    "adhd": "TDAH",
+    "control": "Control"
+  },
+  "errors": {
+    "forbiddenUrl": "URL de API no permitida",
+    "invalidDatasetId": "Identificador de dataset no válido",
+    "invalidExperimentId": "Identificador de experimento no válido",
+    "invalidTaskId": "Identificador de tarea no válido",
+    "models": {
+      "list": "No se pudieron cargar los modelos disponibles",
+      "info": "No se pudo cargar la información del modelo",
+      "figures": "No se pudieron cargar las figuras del modelo"
+    },
+    "datasets": {
+      "list": "No se pudieron cargar los datasets guardados",
+      "save": "No se pudo guardar el dataset",
+      "analysisStart": "No se pudo iniciar el análisis",
+      "analyze": "No se pudo analizar el dataset",
+      "analysisEmpty": "El análisis ha terminado sin devolver resultados",
+      "missingCsv": "Sube primero un CSV EEG."
+    },
+    "experiments": {
+      "bestModel": "No se pudo cargar el mejor modelo disponible",
+      "history": "No se pudo cargar el historial de experimentos",
+      "list": "No se pudieron cargar los experimentos",
+      "detail": "No se pudo cargar el experimento"
+    },
+    "training": {
+      "params": "No se pudieron cargar los parámetros de entrenamiento",
+      "options": "No se pudieron cargar las opciones de entrenamiento",
+      "run": "No se pudo entrenar el modelo",
+      "start": "No se pudo iniciar el entrenamiento",
+      "failed": "No se pudo completar el entrenamiento",
+      "empty": "El entrenamiento ha terminado sin devolver resultados",
+      "statusCheck": "No se pudo consultar el estado del entrenamiento"
+    },
+    "prediction": {
+      "invalidCsv": "CSV no válido",
+      "runFailed": "Error durante la predicción",
+      "failed": "No se pudo realizar la predicción",
+      "validate": "No se pudo validar el CSV",
+      "noModel": "No hay ningún modelo disponible para realizar la predicción.",
+      "missingFile": "Primero sube un archivo CSV."
+    },
+    "task": {
+      "status": "No se pudo consultar la tarea"
+    }
   },
   "dataset": {
     "title": "Dataset de entrenamiento",
     "description": "Carga un CSV con varios pacientes y revisa las estadísticas antes de pasar a la pestaña de entrenamiento.",
-    "analyze": "Analizar dataset",
     "analyzing": "Analizando...",
+    "retry": "Reintentar análisis",
     "selectCsv": "Seleccionar CSV EEG",
     "savedDatasets": "Datasets guardados",
     "loadingSavedDatasets": "Cargando datasets guardados...",
-    "readyToAnalyze": "Dataset seleccionado. Analízalo antes de entrenar para comprobar pacientes, filas y canales EEG.",
     "newDataset": "Subir nuevo dataset",
     "eegChannels": "Canales EEG",
+    "source": "Origen de los datos",
+    "balanceEmpty": "Analiza un dataset para ver el reparto de clases.",
+    "shownOfTotal": "{{shown}} de {{total}}",
+    "classBalance": "Balance de clases",
+    "classRatio": "Desequilibrio {{ratio}} a 1 entre la clase mayoritaria y la minoritaria.",
     "missingColumns": "Faltan columnas: {{columns}}",
-    "filterClass": "Clase",
     "all": "Todos",
     "noPatients": "No hay pacientes para el filtro seleccionado."
   },
   "model": {
+    "title": "Modelo de inferencia",
+    "description": "Métricas de validación cruzada y figuras del modelo seleccionado para predecir.",
     "inferenceSelector": "Modelo entrenado para inferencia",
     "trainingSelector": "Modelo a entrenar",
     "unavailable": "No disponible",
     "noAvailableModels": "No hay modelos disponibles para inferencia",
-    "trained": "Modelo de inferencia seleccionado",
     "features": "Características",
     "frequency": "Frecuencia",
     "epochSize": "Tamaño de ventana",
@@ -62,10 +110,13 @@
     "featureCount": "Nº características",
     "loadingInfo": "Cargando información del modelo...",
     "cvMetrics": "Métricas CV",
+    "cvMetricsDescription": "Media por ventana sobre la validación cruzada del entrenamiento.",
     "noMetrics": "No hay métricas disponibles.",
     "figures": "Figuras del modelo"
   },
   "prediction": {
+    "title": "Predicción",
+    "description": "Un CSV por paciente. La clase final se obtiene por voto mayoritario de las ventanas analizadas.",
     "patientFile": "Archivo del paciente",
     "selectCsv": "Seleccionar CSV",
     "validating": "Validando el CSV con los canales esperados por el modelo...",
@@ -75,27 +126,27 @@
     "processing": "Clasificando las ventanas de la señal...",
     "processingHint": "Se están segmentando las señales y agregando la predicción por ventanas.",
     "result": "Resultado",
-    "classification": "Clasificación",
     "confidence": "Confianza",
     "meanConfidence": "Confianza media",
-    "controlWindows": "Ventanas Control",
-    "adhdWindows": "Ventanas TDAH",
+    "majorityVote": "Voto mayoritario · {{count}} de {{total}} ventanas",
     "distributionTitle": "Distribución de ventanas predichas",
-    "distributionDescription": "La clase final se obtiene por voto mayoritario de las ventanas temporales analizadas.",
     "controlLabel": "Control",
     "adhdLabel": "TDAH",
     "summary": "Se han analizado {{epochs}} ventanas de la señal con el modelo {{model}}.",
-    "empty": "Todavía no hay predicción ejecutada."
+    "empty": "Todavía no hay predicción ejecutada.",
+    "disclaimer": "Resultado orientativo de apoyo al análisis. No constituye un diagnóstico clínico.",
+    "timelineTitle": "Predicción a lo largo de la señal",
+    "timelineScale": "cada barra ≈ {{count}} ventanas",
+    "timelineScaleSingle": "una barra por ventana"
   },
   "experiments": {
     "title": "Experimentos guardados",
-    "description": "Historial de entrenamientos persistidos en la base de datos.",
+    "description": "Historial de entrenamientos persistidos en la base de datos, ordenados por exactitud balanceada.",
+    "useForInference": "Usar en inferencia",
     "bestAvailableTitle": "Mejor modelo entrenado",
-    "bestAvailableDescription": "Modelo con mayor exactitud balanceada entre los entrenamientos guardados con modelo final.",
     "bestAvailableEmpty": "Todavía no hay ningún modelo final entrenado.",
     "loadingList": "Cargando experimentos...",
     "empty": "Todavía no hay experimentos guardados.",
-    "date": "Fecha",
     "modelType": "Tipo",
     "detail": "Detalle",
     "experiment": "Experimento #{{id}}",
@@ -115,11 +166,11 @@
     "f1Score": "F1-score"
   },
   "training": {
+    "title": "Entrenamiento",
+    "description": "Configura la señal y el modelo, lanza el entrenamiento y revisa los resultados por paciente.",
     "missingFile": "Sube primero un CSV en la pestaña \"Dataset entrenamiento\".",
     "uploadFirst": "Antes de entrenar, sube un CSV en la pestaña",
-    "datasetNotAnalyzed": "Has cargado {{file}} pero todavía no has analizado el dataset. Vuelve a Dataset entrenamiento y pulsa \"Analizar dataset\".",
-    "datasetLoaded": "Dataset cargado",
-    "file": "Archivo",
+    "datasetNotAnalyzed": "Has cargado {{file}} pero el análisis no ha llegado a terminar. Vuelve a Dataset entrenamiento y reinténtalo.",
     "paramsTitle": "Parámetros de entrenamiento",
     "mlParamsDescription": "Configuración para segmentar la señal y extraer características antes de entrenar el modelo clásico.",
     "dlParamsDescription": "Configuración para preparar las ventanas de señal antes de entrenar el modelo de deep learning.",
@@ -131,7 +182,6 @@
     "persistError": "El entrenamiento ha finalizado, pero no se ha podido guardar en la base de datos.",
     "modelSaveWarning": "El entrenamiento se guardó, pero no se pudo guardar el modelo para inferencia.",
     "modelSaved": "Modelo guardado y disponible para inferencia.",
-    "trainingHint": "El entrenamiento se está ejecutando en segundo plano.",
     "confusionMatrix": "Matriz de confusión",
     "actual": "Real",
     "predicted": "Predicho",
@@ -224,14 +274,15 @@
       "f1-score": "F1-score",
       "support": "Muestras"
     },
-    "taskStatus": "Estado: {{status}}.",
     "taskStatuses": {
       "SUBMITTING": "Enviando",
       "PENDING": "En cola",
+      "RECEIVED": "Recibido",
       "STARTED": "En ejecución",
       "RETRY": "Reintentando",
       "SUCCESS": "Completado",
-      "FAILURE": "Fallido"
+      "FAILURE": "Fallido",
+      "REVOKED": "Cancelado"
     }
   }
 }

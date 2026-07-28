@@ -1,10 +1,7 @@
 {
   "app": {
-    "title": "EEG classifier for ADHD analysis support",
-    "subtitle": "Load EEG datasets, train models, review saved experiments and run predictions on patient CSV files.",
-    "language": "Language",
-    "api": "API",
-    "serverUnavailable": "Cannot connect to the server"
+    "brand": "EEG Classifier",
+    "language": "Language"
   },
   "tabs": {
     "groups": {
@@ -31,30 +28,81 @@
     "time": "Time",
     "configuration": "Configuration",
     "patient": "Patient",
-    "class": "Class"
+    "class": "Class",
+    "adhd": "ADHD",
+    "control": "Control"
+  },
+  "errors": {
+    "forbiddenUrl": "API URL not allowed",
+    "invalidDatasetId": "Invalid dataset identifier",
+    "invalidExperimentId": "Invalid experiment identifier",
+    "invalidTaskId": "Invalid task identifier",
+    "models": {
+      "list": "Could not load the available models",
+      "info": "Could not load the model information",
+      "figures": "Could not load the model figures"
+    },
+    "datasets": {
+      "list": "Could not load the saved datasets",
+      "save": "Could not save the dataset",
+      "analysisStart": "Could not start the analysis",
+      "analyze": "Could not analyse the dataset",
+      "analysisEmpty": "The analysis finished without returning results",
+      "missingCsv": "Upload an EEG CSV first."
+    },
+    "experiments": {
+      "bestModel": "Could not load the best available model",
+      "history": "Could not load the experiment history",
+      "list": "Could not load the experiments",
+      "detail": "Could not load the experiment"
+    },
+    "training": {
+      "params": "Could not load the training parameters",
+      "options": "Could not load the training options",
+      "run": "Could not train the model",
+      "start": "Could not start the training",
+      "failed": "Could not complete the training",
+      "empty": "The training finished without returning results",
+      "statusCheck": "Could not check the training status"
+    },
+    "prediction": {
+      "invalidCsv": "Invalid CSV",
+      "runFailed": "Error during the prediction",
+      "failed": "Could not run the prediction",
+      "validate": "Could not validate the CSV",
+      "noModel": "There is no model available to run the prediction.",
+      "missingFile": "Upload a CSV file first."
+    },
+    "task": {
+      "status": "Could not check the task"
+    }
   },
   "dataset": {
     "title": "Training dataset",
     "description": "Upload a CSV with several patients and review the statistics before moving to the training tab.",
-    "analyze": "Analyze dataset",
     "analyzing": "Analyzing...",
+    "retry": "Retry analysis",
     "selectCsv": "Select EEG CSV",
     "savedDatasets": "Saved datasets",
     "loadingSavedDatasets": "Loading saved datasets...",
-    "readyToAnalyze": "Dataset selected. Analyze it before training to check patients, rows and EEG channels.",
     "newDataset": "Upload new dataset",
     "eegChannels": "EEG channels",
+    "source": "Data source",
+    "balanceEmpty": "Analyse a dataset to see the class split.",
+    "shownOfTotal": "{{shown}} of {{total}}",
+    "classBalance": "Class balance",
+    "classRatio": "Imbalance of {{ratio}} to 1 between the majority and minority classes.",
     "missingColumns": "Missing columns: {{columns}}",
-    "filterClass": "Class",
     "all": "All",
     "noPatients": "No patients match the selected filter."
   },
   "model": {
+    "title": "Inference model",
+    "description": "Cross-validation metrics and figures for the model selected to predict.",
     "inferenceSelector": "Trained model for inference",
     "trainingSelector": "Model to train",
     "unavailable": "Unavailable",
     "noAvailableModels": "No models are available for inference",
-    "trained": "Selected inference model",
     "features": "Features",
     "frequency": "Frequency",
     "epochSize": "Window size",
@@ -62,10 +110,13 @@
     "featureCount": "Feature count",
     "loadingInfo": "Loading model information...",
     "cvMetrics": "CV metrics",
+    "cvMetricsDescription": "Per-window mean over the training cross-validation.",
     "noMetrics": "No metrics available.",
     "figures": "Model figures"
   },
   "prediction": {
+    "title": "Prediction",
+    "description": "One CSV per patient. The final class comes from a majority vote of the analysed windows.",
     "patientFile": "Patient file",
     "selectCsv": "Select CSV",
     "validating": "Validating the CSV against the channels expected by the model...",
@@ -75,27 +126,27 @@
     "processing": "Classifying the signal windows...",
     "processingHint": "The signal is being segmented and the final class is being aggregated from window predictions.",
     "result": "Result",
-    "classification": "Classification",
     "confidence": "Confidence",
     "meanConfidence": "Mean confidence",
-    "controlWindows": "Control windows",
-    "adhdWindows": "ADHD windows",
+    "majorityVote": "Majority vote · {{count}} of {{total}} windows",
     "distributionTitle": "Predicted window distribution",
-    "distributionDescription": "The final class is obtained by majority vote across the analyzed temporal windows.",
     "controlLabel": "Control",
     "adhdLabel": "ADHD",
     "summary": "{{epochs}} signal windows were analyzed with model {{model}}.",
-    "empty": "No prediction has been run yet."
+    "empty": "No prediction has been run yet.",
+    "disclaimer": "Indicative result intended to support analysis. It does not constitute a clinical diagnosis.",
+    "timelineTitle": "Prediction along the signal",
+    "timelineScale": "each bar ≈ {{count}} windows",
+    "timelineScaleSingle": "one bar per window"
   },
   "experiments": {
     "title": "Saved experiments",
-    "description": "History of training runs persisted in the database.",
+    "description": "History of training runs persisted in the database, sorted by balanced accuracy.",
+    "useForInference": "Use for inference",
     "bestAvailableTitle": "Best trained model",
-    "bestAvailableDescription": "Model with the highest balanced accuracy among saved runs with a final model.",
     "bestAvailableEmpty": "There are no final trained models yet.",
     "loadingList": "Loading experiments...",
     "empty": "There are no saved experiments yet.",
-    "date": "Date",
     "modelType": "Type",
     "detail": "Detail",
     "experiment": "Experiment #{{id}}",
@@ -115,11 +166,11 @@
     "f1Score": "F1-score"
   },
   "training": {
+    "title": "Training",
+    "description": "Configure the signal and the model, launch training and review the per-patient results.",
     "missingFile": "Upload a CSV in the \"Training dataset\" tab first.",
     "uploadFirst": "Before training, upload a CSV in the tab",
-    "datasetNotAnalyzed": "{{file}} has been uploaded but the dataset has not been analyzed yet. Go back to Training dataset and click \"Analyze dataset\".",
-    "datasetLoaded": "Loaded dataset",
-    "file": "File",
+    "datasetNotAnalyzed": "{{file}} has been uploaded but the analysis did not finish. Go back to Training dataset and retry it.",
     "paramsTitle": "Training parameters",
     "mlParamsDescription": "Configuration used to segment the signal and extract features before training the classic model.",
     "dlParamsDescription": "Configuration used to prepare signal windows before training the deep learning model.",
@@ -131,7 +182,6 @@
     "persistError": "Training has finished, but it could not be saved in the database.",
     "modelSaveWarning": "The training run was saved, but the model could not be stored for inference.",
     "modelSaved": "Model saved and available for inference.",
-    "trainingHint": "Training is running in the background.",
     "confusionMatrix": "Confusion matrix",
     "actual": "Actual",
     "predicted": "Predicted",
@@ -224,14 +274,15 @@
       "f1-score": "F1-score",
       "support": "Samples"
     },
-    "taskStatus": "Status: {{status}}.",
     "taskStatuses": {
       "SUBMITTING": "Submitting",
       "PENDING": "Queued",
+      "RECEIVED": "Received",
       "STARTED": "Running",
       "RETRY": "Retrying",
       "SUCCESS": "Completed",
-      "FAILURE": "Failed"
+      "FAILURE": "Failed",
+      "REVOKED": "Cancelled"
     }
   }
 }

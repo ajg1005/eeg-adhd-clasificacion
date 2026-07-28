@@ -1,0 +1,106 @@
+.dataset-summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.dataset-summary-grid strong {
+  font-size: 2.3rem;
+  letter-spacing: 0;
+}
+
+.dataset-source-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.dataset-source-row > div > .eyebrow {
+  display: block;
+  margin-bottom: 22px;
+}
+
+.dataset-source-row .controls-row {
+  margin-bottom: 20px;
+}
+
+.dataset-source-row .controls-row select {
+  width: 100%;
+}
+
+.dataset-missing-columns {
+  margin: 26px 0 0;
+}
+
+.patient-controls {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.filter-links {
+  display: flex;
+  gap: 22px;
+}
+
+.filter-links button {
+  border: 0;
+  border-bottom: 1px solid transparent;
+  padding: 0 0 3px;
+  background: transparent;
+  color: var(--silver);
+  font-size: 0.85rem;
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.filter-links button.active,
+.filter-links button:hover {
+  border-color: var(--golden-chestnut);
+  color: var(--ink);
+}
+
+.patient-limit {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  color: var(--silver);
+  font-size: 0.85rem;
+  font-weight: 300;
+}
+
+.patient-limit input {
+  width: 68px;
+  border: 0;
+  border-bottom: 1px solid var(--field-rule);
+  padding: 4px 0;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 300;
+}
+
+.patient-count {
+  margin: 20px 0 0;
+  font-size: 0.85rem;
+}
+
+.class-balance {
+  margin: 0;
+}
+
+.class-balance .eyebrow {
+  display: block;
+  margin-bottom: 22px;
+}
+
+.class-balance-ratio {
+  margin: 26px 0 0;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 860px) {
+  .dataset-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

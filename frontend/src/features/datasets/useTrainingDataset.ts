@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
   type ChangeEvent,
   type Dispatch,
@@ -8,7 +9,6 @@ import {
 
 import {
   getSavedTrainingDatasets,
-
   startDatasetAnalysis,
   uploadTrainingDataset,
 } from "./api";
@@ -17,6 +17,7 @@ import type {
   SavedTrainingDataset,
   TrainingDatasetStats,
 } from "./types";
+import { errorMessage, translate } from "../../shared/utils/errors";
 
 interface UseTrainingDatasetResult {
   file: File | null;
@@ -29,18 +30,17 @@ interface UseTrainingDatasetResult {
   loadingDatasets: boolean;
   error: string;
   setError: Dispatch<SetStateAction<string>>;
-  handleFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleSavedDatasetChange: (
     event: ChangeEvent<HTMLSelectElement>,
   ) => Promise<void>;
   handleAnalyzeDataset: () => Promise<void>;
-  handleClassFilterChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  onClassFilterChange: (value: string) => void;
   handleMaxPatientsChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
+type AnalysisSource =
+  | { kind: "file"; file: File }
+  | { kind: "saved"; dataset: SavedTrainingDataset };
 
 async function analyzeSavedDataset(
   datasetId: number,
@@ -48,11 +48,10 @@ async function analyzeSavedDataset(
   const { task_id: taskId } = await startDatasetAnalysis(datasetId);
 
   return waitForTaskResult<TrainingDatasetStats>(taskId, {
-    failureMessage: "No se pudo analizar el dataset",
-    missingResultMessage: "El análisis ha terminado sin devolver resultados",
+    failureMessage: translate("errors.datasets.analyze"),
+    missingResultMessage: translate("errors.datasets.analysisEmpty"),
   });
 }
-// Estado compartido del dataset entre "Dataset entrenamiento" y "Entrenamiento".
 export function useTrainingDataset(): UseTrainingDatasetResult {
   const [file, setFile] = useState<File | null>(null);
   const [stats, setStats] = useState<TrainingDatasetStats | null>(null);
@@ -64,14 +63,13 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
   const [loadingStats, setLoadingStats] = useState(false);
   const [loadingDatasets, setLoadingDatasets] = useState(true);
   const [error, setError] = useState("");
+  const analysisRequestRef = useRef(0);
 
   async function refreshSavedDatasets(): Promise<void> {
     try {
       setSavedDatasets(await getSavedTrainingDatasets());
     } catch (caughtError) {
-      setError(
-        errorMessage(caughtError, "No se pudieron cargar los datasets guardados"),
-      );
+      setError(errorMessage(caughtError, "errors.datasets.list"));
     } finally {
       setLoadingDatasets(false);
     }
@@ -88,12 +86,7 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
       })
       .catch((caughtError: unknown) => {
         if (!cancelled) {
-          setError(
-            errorMessage(
-              caughtError,
-              "No se pudieron cargar los datasets guardados",
-            ),
-          );
+          setError(errorMessage(caughtError, "errors.datasets.list"));
         }
       })
       .finally(() => {
@@ -107,12 +100,63 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
     };
   }, []);
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>): void {
+  async function runAnalysis(source: AnalysisSource): Promise<void> {
+    const requestId = analysisRequestRef.current + 1;
+    analysisRequestRef.current = requestId;
+    const isCurrent = (): boolean => analysisRequestRef.current === requestId;
+
+    setLoadingStats(true);
+    setError("");
+
+    try {
+      let datasetId = source.kind === "saved" ? source.dataset.id : 0;
+
+      if (source.kind === "file") {
+        const saved = await uploadTrainingDataset(source.file);
+
+        if (!isCurrent()) {
+          return;
+        }
+
+        setSelectedDataset(saved);
+        datasetId = saved.id;
+      }
+
+      const analyzed = await analyzeSavedDataset(datasetId);
+
+      if (!isCurrent()) {
+        return;
+      }
+
+      setStats(analyzed);
+
+      if (source.kind === "file") {
+        setLoadingDatasets(true);
+        await refreshSavedDatasets();
+      }
+    } catch (caughtError) {
+      if (isCurrent()) {
+        setError(errorMessage(caughtError, "errors.datasets.analyze"));
+      }
+    } finally {
+      if (isCurrent()) {
+        setLoadingStats(false);
+      }
+    }
+  }
+  async function handleFileChange(
+    event: ChangeEvent<HTMLInputElement>,
+  ): Promise<void> {
     const selectedFile = event.target.files?.[0] ?? null;
+
     setFile(selectedFile);
     setSelectedDataset(null);
     setStats(null);
     setError("");
+
+    if (selectedFile) {
+      await runAnalysis({ kind: "file", file: selectedFile });
+    }
   }
 
   async function handleSavedDatasetChange(
@@ -127,51 +171,26 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
     setStats(null);
     setError("");
 
-    if (!dataset) {
-      return;
-    }
-
-    setLoadingStats(true);
-
-    try {
-      setStats(await analyzeSavedDataset(dataset.id));
-    } catch (caughtError) {
-      setError(errorMessage(caughtError, "No se pudo analizar el dataset"));
-    } finally {
-      setLoadingStats(false);
+    if (dataset) {
+      await runAnalysis({ kind: "saved", dataset });
     }
   }
-
   async function handleAnalyzeDataset(): Promise<void> {
-    if (!file && !selectedDataset) {
-      setError("Sube primero un CSV EEG.");
+    if (selectedDataset) {
+      await runAnalysis({ kind: "saved", dataset: selectedDataset });
       return;
     }
 
-    setLoadingStats(true);
-    setError("");
-
-    try {
-      if (selectedDataset) {
-        setStats(await analyzeSavedDataset(selectedDataset.id));
-      } else if (file) {
-        const saved = await uploadTrainingDataset(file);
-        setSelectedDataset(saved);
-        setStats(await analyzeSavedDataset(saved.id));
-        setLoadingDatasets(true);
-        await refreshSavedDatasets();
-      }
-    } catch (caughtError) {
-      setError(errorMessage(caughtError, "No se pudo analizar el dataset"));
-    } finally {
-      setLoadingStats(false);
+    if (file) {
+      await runAnalysis({ kind: "file", file });
+      return;
     }
+
+    setError(translate("errors.datasets.missingCsv"));
   }
 
-  function handleClassFilterChange(
-    event: ChangeEvent<HTMLSelectElement>,
-  ): void {
-    setClassFilter(event.target.value);
+  function onClassFilterChange(value: string): void {
+    setClassFilter(value);
   }
 
   function handleMaxPatientsChange(
@@ -194,7 +213,7 @@ export function useTrainingDataset(): UseTrainingDatasetResult {
     handleFileChange,
     handleSavedDatasetChange,
     handleAnalyzeDataset,
-    handleClassFilterChange,
+    onClassFilterChange,
     handleMaxPatientsChange,
   };
 }

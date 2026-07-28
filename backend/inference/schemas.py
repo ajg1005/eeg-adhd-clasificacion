@@ -19,4 +19,6 @@ class PredictionResponse(FlexibleSchema):
     n_epochs: int
     epoch_count_by_class: dict[str, int]
     epoch_percentage_by_class: dict[str, float]
+    # Una etiqueta por ventana, en orden temporal.
+    epoch_predictions: list[str] = []
     metadata: dict[str, Any]

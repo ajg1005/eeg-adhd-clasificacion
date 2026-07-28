@@ -12,9 +12,11 @@ import type {
   TrainingResult,
   TrainingTaskStatus,
 } from "./types";
+import { TrainingActionBar } from "./components/TrainingActionBar";
 import { TrainingEegParamsPanel } from "./components/TrainingEegParamsPanel";
 import { TrainingModelPanel } from "./components/TrainingModelPanel";
 import { TrainingResultsPanel } from "./components/TrainingResultsPanel";
+import { errorMessage } from "../../shared/utils/errors";
 
 interface TrainingViewProps {
   file: File | null;
@@ -28,10 +30,7 @@ interface TrainingViewProps {
   stats: TrainingDatasetStats | null;
   taskError: string;
   taskStatus: TrainingTaskStatus;
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
+  taskStatusAt: Date | null;
 }
 
 function normalizeValue(value: string): JsonPrimitive {
@@ -68,6 +67,7 @@ export function TrainingView({
   stats,
   taskError,
   taskStatus,
+  taskStatusAt,
 }: TrainingViewProps) {
   const { t } = useTranslation();
   const [options, setOptions] = useState<TrainingOptions | null>(null);
@@ -103,7 +103,7 @@ export function TrainingView({
           setError(
             errorMessage(
               caughtError,
-              "No se pudieron cargar las opciones de entrenamiento",
+              "errors.training.options",
             ),
           );
         }
@@ -192,8 +192,8 @@ export function TrainingView({
 
   return (
     <section className="training-layout interactive-training">
-      {error && <div className="alert alert-error">{error}</div>}
-      {taskError && <div className="alert alert-error">{taskError}</div>}
+      {error && <div className="alert alert-error" role="alert">{error}</div>}
+      {taskError && <div className="alert alert-error" role="alert">{taskError}</div>}
 
       {!file && !selectedDataset && (
         <div className="panel">
@@ -214,30 +214,19 @@ export function TrainingView({
           </p>
         </div>
       )}
-
-      {(file || selectedDataset) && stats && (
-        <div className="panel">
-          <h3>{t("training.datasetLoaded")}</h3>
-          <div className="metric-grid training-metrics-row">
-            <div>
-              <span>{t("training.file")}</span>
-              <strong>{file?.name || selectedDataset?.filename}</strong>
-            </div>
-            <div>
-              <span>{t("common.patients")}</span>
-              <strong>{stats.n_patients}</strong>
-            </div>
-            <div>
-              <span>{t("common.rows")}</span>
-              <strong>{stats.rows}</strong>
-            </div>
-            <div>
-              <span>{t("dataset.eegChannels")}</span>
-              <strong>{stats.eeg_columns.length}</strong>
-            </div>
-          </div>
-        </div>
-      )}
+      <TrainingModelPanel
+        currentModelParameters={currentModelParameters}
+        currentModels={currentModels}
+        modelName={modelName}
+        modelParams={modelParams}
+        modelType={modelType}
+        onModelNameChange={handleModelNameChange}
+        onModelParamChange={updateModelParam}
+        onModelTypeChange={handleModelTypeChange}
+        onTrainingParamChange={updateTrainingParam}
+        trainingParams={trainingParams}
+        visibleTrainingParams={visibleTrainingParams}
+      />
 
       <TrainingEegParamsPanel
         eegParams={eegParams}
@@ -245,24 +234,16 @@ export function TrainingView({
         onEegParamChange={updateEegParam}
         options={options}
       />
-
-      <TrainingModelPanel
-        currentModelParameters={currentModelParameters}
-        currentModels={currentModels}
-        datasetSelected={Boolean(selectedDataset)}
-        file={file}
+      <TrainingActionBar
+        datasetName={file?.name ?? selectedDataset?.filename}
+        durationSeconds={result?.training_time_seconds}
         loadingTraining={loadingTraining}
-        modelName={modelName}
-        modelParams={modelParams}
-        modelType={modelType}
-        onModelNameChange={handleModelNameChange}
-        onModelParamChange={updateModelParam}
-        onModelTypeChange={handleModelTypeChange}
+        modelLabel={currentModel?.display_name ?? modelName}
         onRunTraining={handleRunTraining}
-        onTrainingParamChange={updateTrainingParam}
-        trainingParams={trainingParams}
+        patients={stats?.n_patients}
+        ready={Boolean(file || selectedDataset)}
         trainingStatus={taskStatus}
-        visibleTrainingParams={visibleTrainingParams}
+        trainingStatusAt={taskStatusAt}
       />
 
       <TrainingResultsPanel

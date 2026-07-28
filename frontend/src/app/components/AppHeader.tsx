@@ -1,32 +1,30 @@
-import { BrainCircuit } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import type { ApiStatus } from "../types";
+import { Tabs } from "../../shared/components/Tabs";
+import { TAB_GROUPS } from "../tabs";
+import type { TabId } from "../tabs";
 
 interface AppHeaderProps {
-  apiStatus: ApiStatus;
+  activeTab: TabId;
+  onTabChange: (tab: TabId) => void;
 }
 
-export function AppHeader({ apiStatus }: AppHeaderProps) {
+export function AppHeader({ activeTab, onTabChange }: AppHeaderProps) {
   const { i18n, t } = useTranslation();
-  const showApiError = apiStatus === "error";
 
   return (
     <header className="app-header">
-      <div className="header-copy">
-        <div className="brand-mark">
-          <span className="brand-icon" aria-hidden="true">
-            <BrainCircuit size={20} strokeWidth={2.4} />
-          </span>
-          <p className="eyebrow">EEG ADHD Classifier</p>
-        </div>
-        <h1>{t("app.title")}</h1>
-        <p className="subtitle">{t("app.subtitle")}</p>
-      </div>
+      <div className="app-header-inner">
+        <span className="brand-name">{t("app.brand")}</span>
 
-      <div className="header-actions">
+        <Tabs
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          tabGroups={TAB_GROUPS}
+        />
+
         <label className="language-selector">
-          <span>{t("app.language")}</span>
+          <span className="sr-only">{t("app.language")}</span>
           <select
             onChange={(event) => {
               void i18n.changeLanguage(event.target.value);
@@ -37,11 +35,6 @@ export function AppHeader({ apiStatus }: AppHeaderProps) {
             <option value="en">EN</option>
           </select>
         </label>
-        {showApiError && (
-          <div className="api-pill api-pill-error">
-            {t("app.serverUnavailable")}
-          </div>
-        )}
       </div>
     </header>
   );

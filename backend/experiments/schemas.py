@@ -32,6 +32,9 @@ class ExperimentSummaryResponse(OrmSchema):
     precision: float
     recall: float
     f1_score: float
+    # Id del artefacto final, si se llego a persistir: es lo que permite usar el
+    # experimento en inferencia como trained_model_<id>.
+    trained_model_id: int | None = None
     dataset: ExperimentDatasetResponse
 
 

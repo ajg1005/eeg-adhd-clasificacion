@@ -1,7 +1,7 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
+  useRef,
   useState,
   type ChangeEvent,
   type Dispatch,
@@ -9,7 +9,6 @@ import {
 } from "react";
 
 import type { TabId } from "../../app/tabs";
-import { getHealth } from "../../app/api";
 import {
   getModelFigures,
   getModelInfo,
@@ -17,10 +16,8 @@ import {
   predictCsv,
   validateCsv,
 } from "./api";
-import type { ApiStatus } from "../../app/types";
 import type {
   CvMetrics,
-  MetricChartDatum,
   ModelFigure,
   ModelInfo,
   ModelMetrics,
@@ -28,22 +25,22 @@ import type {
   PredictionResult,
   ValidationResult,
 } from "./types";
+import { errorMessage, translate } from "../../shared/utils/errors";
 
 const DEFAULT_MODEL_ID = "ml_best";
 
 interface UseInferenceControllerResult {
   activeTab: TabId;
-  apiStatus: ApiStatus;
   decisionScore: number | null;
   error: string;
   file: File | null;
   handleFileChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleModelChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  selectModel: (modelId: string) => void;
   handlePrediction: () => Promise<void>;
   loadingPrediction: boolean;
   loadingValidation: boolean;
   metrics: CvMetrics | ModelMetrics | null;
-  metricsChartData: MetricChartDatum[];
   modelFigures: ModelFigure[];
   modelInfo: ModelInfo | null;
   models: ModelRegistryItem[];
@@ -54,10 +51,6 @@ interface UseInferenceControllerResult {
   selectedModelId: string;
   setActiveTab: Dispatch<SetStateAction<TabId>>;
   validation: ValidationResult | null;
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }
 
 function isModelEnabled(model: ModelRegistryItem): boolean {
@@ -80,11 +73,8 @@ function chooseModelId(
   return selectedCandidate ?? enabledModels[0]?.model_id ?? "";
 }
 
-// Controlador del flujo de inferencia: selección de modelo, validación del CSV
-// del paciente y predicción.
 export function useInferenceController(): UseInferenceControllerResult {
   const [activeTab, setActiveTab] = useState<TabId>("dataset");
-  const [apiStatus, setApiStatus] = useState<ApiStatus>("checking");
   const [models, setModels] = useState<ModelRegistryItem[]>([]);
   const [selectedModelId, setSelectedModelId] = useState("");
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
@@ -95,6 +85,8 @@ export function useInferenceController(): UseInferenceControllerResult {
   const [loadingValidation, setLoadingValidation] = useState(false);
   const [loadingPrediction, setLoadingPrediction] = useState(false);
   const [modelFigures, setModelFigures] = useState<ModelFigure[]>([]);
+  const validationRequestRef = useRef<AbortController | null>(null);
+  const predictionRequestRef = useRef<AbortController | null>(null);
 
   const refreshModels = useCallback(
     async (
@@ -111,17 +103,15 @@ export function useInferenceController(): UseInferenceControllerResult {
     [],
   );
 
-  // Datos estáticos del backend: se cargan al montar el hook.
   useEffect(() => {
     let cancelled = false;
 
-    void Promise.all([getHealth(), getModels()])
-      .then(([, availableModels]) => {
+    void getModels()
+      .then((availableModels) => {
         if (cancelled) {
           return;
         }
 
-        setApiStatus("ok");
         setModels(availableModels);
         setSelectedModelId((currentModelId) =>
           chooseModelId(availableModels, null, currentModelId),
@@ -129,10 +119,7 @@ export function useInferenceController(): UseInferenceControllerResult {
       })
       .catch((caughtError: unknown) => {
         if (!cancelled) {
-          setApiStatus("error");
-          setError(
-            errorMessage(caughtError, "No se pudo conectar con la API"),
-          );
+          setError(errorMessage(caughtError, "errors.models.list"));
         }
       });
 
@@ -141,7 +128,6 @@ export function useInferenceController(): UseInferenceControllerResult {
     };
   }, []);
 
-  // Info y figuras del modelo: se recargan cada vez que cambia el seleccionado.
   useEffect(() => {
     if (!selectedModelId) {
       return;
@@ -149,14 +135,10 @@ export function useInferenceController(): UseInferenceControllerResult {
 
     let cancelled = false;
 
-    void Promise.all([
-      getModelInfo(selectedModelId),
-      getModelFigures(selectedModelId),
-    ])
-      .then(([info, figures]) => {
+    void getModelInfo(selectedModelId)
+      .then((info) => {
         if (!cancelled) {
           setModelInfo(info);
-          setModelFigures(figures);
         }
       })
       .catch((caughtError: unknown) => {
@@ -164,9 +146,21 @@ export function useInferenceController(): UseInferenceControllerResult {
           setError(
             errorMessage(
               caughtError,
-              "No se pudo cargar la información del modelo",
+              "errors.models.info",
             ),
           );
+        }
+      });
+
+    void getModelFigures(selectedModelId)
+      .then((figures) => {
+        if (!cancelled) {
+          setModelFigures(figures);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setModelFigures([]);
         }
       });
 
@@ -175,28 +169,54 @@ export function useInferenceController(): UseInferenceControllerResult {
     };
   }, [selectedModelId]);
 
+  useEffect(
+    () => () => {
+      validationRequestRef.current?.abort();
+      predictionRequestRef.current?.abort();
+    },
+    [],
+  );
+
   async function revalidateFile(
     modelId: string,
     fileToValidate: File | null,
   ): Promise<void> {
+    validationRequestRef.current?.abort();
+    validationRequestRef.current = null;
+
     if (!modelId || !fileToValidate) {
+      setLoadingValidation(false);
       return;
     }
 
+    const controller = new AbortController();
+    validationRequestRef.current = controller;
     setLoadingValidation(true);
 
     try {
-      const result = await validateCsv(fileToValidate, modelId);
-      setValidation(result);
+      const result = await validateCsv(
+        fileToValidate,
+        modelId,
+        controller.signal,
+      );
+
+      if (!controller.signal.aborted) {
+        setValidation(result);
+      }
     } catch (caughtError) {
-      setError(errorMessage(caughtError, "No se pudo validar el CSV"));
+      if (!controller.signal.aborted) {
+        setError(errorMessage(caughtError, "errors.prediction.validate"));
+      }
     } finally {
-      setLoadingValidation(false);
+      if (validationRequestRef.current === controller) {
+        validationRequestRef.current = null;
+        setLoadingValidation(false);
+      }
     }
   }
 
-  function handleModelChange(event: ChangeEvent<HTMLSelectElement>): void {
-    const nextModelId = event.target.value;
+  function selectModel(nextModelId: string): void {
+    predictionRequestRef.current?.abort();
     setSelectedModelId(nextModelId);
     setModelInfo(null);
     setPrediction(null);
@@ -207,11 +227,16 @@ export function useInferenceController(): UseInferenceControllerResult {
     void revalidateFile(nextModelId, file);
   }
 
+  function handleModelChange(event: ChangeEvent<HTMLSelectElement>): void {
+    selectModel(event.target.value);
+  }
+
   async function handleFileChange(
     event: ChangeEvent<HTMLInputElement>,
   ): Promise<void> {
     const selectedFile = event.target.files?.[0] ?? null;
 
+    predictionRequestRef.current?.abort();
     setFile(selectedFile);
     setValidation(null);
     setPrediction(null);
@@ -222,29 +247,41 @@ export function useInferenceController(): UseInferenceControllerResult {
 
   async function handlePrediction(): Promise<void> {
     if (!selectedModelId) {
-      setError("No hay ningún modelo disponible para realizar la predicción.");
+      setError(translate("errors.prediction.noModel"));
       return;
     }
 
     if (!file) {
-      setError("Primero sube un archivo CSV.");
+      setError(translate("errors.prediction.missingFile"));
       return;
     }
 
+    predictionRequestRef.current?.abort();
+    const controller = new AbortController();
+    predictionRequestRef.current = controller;
     setLoadingPrediction(true);
     setError("");
 
     try {
-      const result = await predictCsv(file, selectedModelId);
-      setPrediction(result);
+      const result = await predictCsv(file, selectedModelId, controller.signal);
+
+      if (!controller.signal.aborted) {
+        setPrediction(result);
+      }
     } catch (caughtError) {
-      setError(errorMessage(caughtError, "No se pudo realizar la predicción"));
+      if (!controller.signal.aborted) {
+        setError(errorMessage(caughtError, "errors.prediction.failed"));
+      }
     } finally {
-      setLoadingPrediction(false);
+      if (predictionRequestRef.current === controller) {
+        predictionRequestRef.current = null;
+        setLoadingPrediction(false);
+      }
     }
   }
 
-  const activeModelInfo = selectedModelId ? modelInfo : null;
+  const activeModelInfo =
+    modelInfo?.model_id === selectedModelId ? modelInfo : null;
   const metrics =
     activeModelInfo?.metrics?.cv_metrics ?? activeModelInfo?.metrics ?? null;
 
@@ -252,37 +289,19 @@ export function useInferenceController(): UseInferenceControllerResult {
     ? (prediction.decision_score ?? prediction.confidence ?? null)
     : null;
 
-  const metricsChartData = useMemo<MetricChartDatum[]>(() => {
-    if (!metrics) {
-      return [];
-    }
-
-    return [
-      { name: "Accuracy", value: metrics.accuracy_epoch_mean },
-      { name: "Balanced", value: metrics.balanced_accuracy_epoch_mean },
-      { name: "Precision", value: metrics.precision_epoch_mean },
-      { name: "Recall", value: metrics.recall_epoch_mean },
-      { name: "F1", value: metrics.f1_epoch_mean },
-    ].map((item) => ({
-      ...item,
-      value: Number((item.value ?? 0).toFixed(3)),
-    }));
-  }, [metrics]);
-
   return {
     activeTab,
-    apiStatus,
     decisionScore,
     error,
     file,
     handleFileChange,
     handleModelChange,
+    selectModel,
     handlePrediction,
     loadingPrediction,
     loadingValidation,
     metrics,
-    metricsChartData,
-    modelFigures: selectedModelId ? modelFigures : [],
+    modelFigures: activeModelInfo ? modelFigures : [],
     modelInfo: activeModelInfo,
     models,
     prediction,

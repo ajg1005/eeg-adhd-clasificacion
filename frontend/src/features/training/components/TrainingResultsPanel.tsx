@@ -55,8 +55,6 @@ function formatReportCell(column: ReportColumn, value: unknown): string {
   if (typeof value !== "number" && typeof value !== "string") {
     return "-";
   }
-
-  // El soporte es un recuento de muestras; el resto son métricas en [0, 1].
   return column === "support" ? String(value) : Number(value).toFixed(3);
 }
 
@@ -98,8 +96,6 @@ function ClassificationReportTable({
     </table>
   );
 }
-
-// Sombreado secuencial: cuanto mayor el recuento, más opaca la celda.
 function confusionCellStyle(value: number, max: number): CSSProperties {
   const intensity = max > 0 ? value / max : 0;
   const alpha = (0.12 + intensity * 0.68).toFixed(3);
@@ -207,7 +203,7 @@ export function TrainingResultsPanel({
   const evaluationMode = result.configuration.evaluation_mode;
 
   return (
-    <div className="panel training-section">
+    <div className="panel">
       <h2>{t("training.results")}</h2>
       {evaluationMode && (
         <p className="muted">
@@ -217,13 +213,13 @@ export function TrainingResultsPanel({
         </p>
       )}
       {result.persisted === false && (
-        <div className="alert alert-error">{t("training.persistError")}</div>
+        <div className="alert alert-error" role="alert">{t("training.persistError")}</div>
       )}
       {result.persisted !== false && result.model_saved === false && (
-        <div className="alert alert-warning">{t("training.modelSaveWarning")}</div>
+        <div className="alert alert-warning" role="status">{t("training.modelSaveWarning")}</div>
       )}
       {result.model_saved && result.trained_model_id && (
-        <div className="alert alert-success">{t("training.modelSaved")}</div>
+        <div className="alert alert-success" role="status">{t("training.modelSaved")}</div>
       )}
 
       <div className="metric-grid metrics-wide training-result-grid">
@@ -243,7 +239,7 @@ export function TrainingResultsPanel({
           <span>{t("metrics.f1Score")}</span>
           <strong>{result.f1_score.toFixed(3)}</strong>
         </div>
-        <div>
+        <div className="accent">
           <span>{t("metrics.balancedAccuracy")}</span>
           <strong>{result.balanced_accuracy.toFixed(3)}</strong>
         </div>

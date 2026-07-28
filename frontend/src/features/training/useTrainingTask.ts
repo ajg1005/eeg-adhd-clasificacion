@@ -8,6 +8,7 @@ import type {
   TrainingResult,
   TrainingTaskStatus,
 } from "./types";
+import { errorMessage, translate } from "../../shared/utils/errors";
 
 const TASK_STORAGE_KEY = "eeg-adhd-training-task-id";
 const TERMINAL_STATUSES = new Set<TaskStatus>([
@@ -24,11 +25,8 @@ interface UseTrainingTaskResult {
     payload: TrainingPayload,
   ) => Promise<void>;
   status: TrainingTaskStatus;
+  statusAt: Date | null;
   trainingInProgress: boolean;
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }
 
 export function useTrainingTask(
@@ -38,9 +36,22 @@ export function useTrainingTask(
     window.sessionStorage.getItem(TASK_STORAGE_KEY),
   );
   const [status, setStatus] = useState<TrainingTaskStatus>(null);
+  const [statusAt, setStatusAt] = useState<Date | null>(null);
   const [result, setResult] = useState<TrainingResult | null>(null);
   const [error, setError] = useState("");
   const onSuccessRef = useRef(onSuccess);
+  // Avoid updating the timestamp when polling repeats the same status.
+  const statusRef = useRef<TrainingTaskStatus>(null);
+
+  const applyStatus = useCallback((next: TrainingTaskStatus): void => {
+    if (statusRef.current === next) {
+      return;
+    }
+
+    statusRef.current = next;
+    setStatus(next);
+    setStatusAt(new Date());
+  }, []);
 
   useEffect(() => {
     onSuccessRef.current = onSuccess;
@@ -55,15 +66,14 @@ export function useTrainingTask(
     const controller = new AbortController();
 
     void waitForTaskResult<TrainingResult>(activeTaskId, {
-      failureMessage: "No se pudo completar el entrenamiento",
-      missingResultMessage:
-        "El entrenamiento ha terminado sin devolver resultados",
+      failureMessage: translate("errors.training.failed"),
+      missingResultMessage: translate("errors.training.empty"),
       onPollError: (caughtError) => {
         if (!controller.signal.aborted) {
           setError(
             errorMessage(
               caughtError,
-              "No se pudo consultar el estado del entrenamiento",
+              "errors.training.statusCheck",
             ),
           );
         }
@@ -73,7 +83,7 @@ export function useTrainingTask(
           return;
         }
 
-        setStatus(task.status);
+        applyStatus(task.status);
         setError("");
 
         if (TERMINAL_STATUSES.has(task.status)) {
@@ -94,7 +104,7 @@ export function useTrainingTask(
           setError(
             errorMessage(
               caughtError,
-              "No se pudo completar el entrenamiento",
+              "errors.training.failed",
             ),
           );
         }
@@ -103,7 +113,7 @@ export function useTrainingTask(
     return () => {
       controller.abort();
     };
-  }, [taskId]);
+  }, [applyStatus, taskId]);
 
   const startTraining = useCallback(
     async (
@@ -112,7 +122,7 @@ export function useTrainingTask(
     ): Promise<void> => {
       window.sessionStorage.removeItem(TASK_STORAGE_KEY);
       setTaskId(null);
-      setStatus("SUBMITTING");
+      applyStatus("SUBMITTING");
       setResult(null);
       setError("");
 
@@ -120,15 +130,15 @@ export function useTrainingTask(
         const task = await runTraining(file, payload);
         window.sessionStorage.setItem(TASK_STORAGE_KEY, task.task_id);
         setTaskId(task.task_id);
-        setStatus(task.status);
+        applyStatus(task.status);
       } catch (caughtError) {
-        setStatus("FAILURE");
+        applyStatus("FAILURE");
         setError(
-          errorMessage(caughtError, "No se pudo iniciar el entrenamiento"),
+          errorMessage(caughtError, "errors.training.start"),
         );
       }
     },
-    [],
+    [applyStatus],
   );
 
   const trainingInProgress =
@@ -140,6 +150,7 @@ export function useTrainingTask(
     result,
     startTraining,
     status,
+    statusAt,
     trainingInProgress,
   };
 }

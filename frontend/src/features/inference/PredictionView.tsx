@@ -6,6 +6,7 @@ import type {
   PredictionResult,
   ValidationResult,
 } from "./types";
+import { PredictionTimeline } from "./components/PredictionTimeline";
 import { formatPercent } from "../../shared/utils/formatters";
 
 interface PredictionViewProps {
@@ -64,8 +65,7 @@ function PredictionDistribution({
 
   return (
     <div className="prediction-distribution">
-      <h3>{t("prediction.distributionTitle")}</h3>
-      <p className="muted">{t("prediction.distributionDescription")}</p>
+      <span className="eyebrow">{t("prediction.distributionTitle")}</span>
 
       <div
         aria-label={t("prediction.distributionTitle")}
@@ -82,10 +82,10 @@ function PredictionDistribution({
         ))}
       </div>
 
-      <div className="distribution-legend">
+      <div className="distribution-legend distribution-legend-inline">
         {classes.map((item) => (
           <div className="distribution-legend-row" key={item.className}>
-            <span className={`legend-dot ${item.className}`} />
+            <span aria-hidden="true" className={`legend-dot ${item.className}`} />
             <span className="distribution-label">{item.label}</span>
             <strong>
               {item.count}/{prediction.n_epochs}
@@ -113,123 +113,160 @@ export function PredictionView({
   const { t } = useTranslation();
 
   return (
-    <section className="grid-layout">
-      <div className="panel">
-        <h2>{t("prediction.patientFile")}</h2>
+    <>
+      <section className="panel prediction-intake">
+        <div>
+          <span className="eyebrow">{t("model.inferenceSelector")}</span>
+          {modelInfo ? (
+            <>
+              <p className="prediction-model-name">
+                {modelInfo.display_name || modelInfo.model_name}
+              </p>
+              <p className="muted prediction-model-specs">
+                {[
+                  `${String(modelInfo.sfreq ?? "?")} Hz`,
+                  `${t("model.epochSize").toLowerCase()} ${String(modelInfo.epoch_size ?? "?")}`,
+                  `${t("model.epochStep").toLowerCase()} ${String(modelInfo.step_size ?? "?")}`,
+                  `${modelInfo.channels.length} ${t("dataset.eegChannels").toLowerCase()}`,
+                ].join(" · ")}
+              </p>
+            </>
+          ) : (
+            <p className="muted">{t("model.loadingInfo")}</p>
+          )}
+        </div>
 
-        <label className="file-drop">
-          <span>{t("prediction.selectCsv")}</span>
-          <input
-            type="file"
-            accept=".csv"
-            onChange={(event) => {
-              void onFileChange(event);
-            }}
-          />
-        </label>
+        <div>
+          <span className="eyebrow">{t("prediction.patientFile")}</span>
 
-        {file && (
-          <div className="file-info">
-            <strong>{file.name}</strong>
-            <span>{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
-          </div>
-        )}
+          <label className="file-drop">
+            <span>{t("prediction.selectCsv")}</span>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(event) => {
+                void onFileChange(event);
+              }}
+            />
+          </label>
 
-        {loadingValidation && (
-          <div className="alert alert-info">{t("prediction.validating")}</div>
-        )}
-
-        {validation && (
-          <div className="alert alert-success">
-            {t("prediction.validCsv", {
-              channels: validation.available_channels.length,
-              rows: validation.rows,
-            })}
-          </div>
-        )}
-
-        {modelInfo && validation && (
-          <div className="channel-validation">
-            <p className="muted">{t("prediction.expectedChannels")}</p>
-            <div className="channel-list">
-              {modelInfo.channels.map((channel) => (
-                <span
-                  className={
-                    validation.available_channels.includes(channel)
-                      ? "channel-ok"
-                      : ""
-                  }
-                  key={channel}
-                >
-                  {channel}
-                </span>
-              ))}
+          {file && (
+            <div className="file-info">
+              <strong>{file.name}</strong>
+              <span>{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
             </div>
-          </div>
-        )}
+          )}
 
-        <button
-          className="primary-button"
-          disabled={
-            !modelAvailable ||
-            !file ||
-            loadingPrediction ||
-            loadingValidation
-          }
-          onClick={() => {
-            void onPredict();
-          }}
-          type="button"
-        >
-          {loadingPrediction ? t("prediction.processing") : t("prediction.run")}
-        </button>
+          {loadingValidation && (
+            <div className="alert alert-info" role="status">
+              {t("prediction.validating")}
+            </div>
+          )}
 
-        {loadingPrediction && (
-          <p className="muted">{t("prediction.processingHint")}</p>
-        )}
-      </div>
+          {validation && (
+            <div className="alert alert-success" role="status">
+              {t("prediction.validCsv", {
+                channels: validation.available_channels.length,
+                rows: validation.rows,
+              })}
+            </div>
+          )}
 
-      <div className="panel">
-        <h2>{t("prediction.result")}</h2>
+          {modelInfo && validation && (
+            <div className="channel-validation">
+              <p className="muted">{t("prediction.expectedChannels")}</p>
+              <div className="channel-list">
+                {modelInfo.channels.map((channel) => (
+                  <span
+                    className={
+                      validation.available_channels.includes(channel)
+                        ? "channel-ok"
+                        : ""
+                    }
+                    key={channel}
+                  >
+                    {channel}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {loadingPrediction && (
+            <p className="muted">{t("prediction.processingHint")}</p>
+          )}
+        </div>
+      </section>
+
+      <section aria-live="polite" className="panel">
+        <span className="eyebrow prediction-result-label">
+          {t("prediction.result")}
+        </span>
 
         {prediction ? (
           <>
-            <div className="result-main">
+            <div className="prediction-verdict">
               <div>
-                <span>{t("prediction.classification")}</span>
-                <strong>{prediction.prediction_label}</strong>
+                <h2 className="prediction-label">
+                  {prediction.prediction_label}
+                </h2>
+                <p className="muted">
+                  {t("prediction.majorityVote", {
+                    count: classWindowCount(
+                      prediction,
+                      prediction.prediction_label,
+                    ),
+                    total: prediction.n_epochs,
+                  })}
+                </p>
               </div>
-              <div>
-                <span>{t("prediction.meanConfidence")}</span>
+              <div className="prediction-confidence">
+                <span className="eyebrow">{t("prediction.meanConfidence")}</span>
                 <strong>{formatPercent(decisionScore)}</strong>
-              </div>
-              <div>
-                <span>{t("prediction.controlWindows")}</span>
-                <strong>
-                  {classWindowCount(prediction, "Control")}/{prediction.n_epochs}
-                </strong>
-              </div>
-              <div>
-                <span>{t("prediction.adhdWindows")}</span>
-                <strong>
-                  {classWindowCount(prediction, "ADHD")}/{prediction.n_epochs}
-                </strong>
               </div>
             </div>
 
-            <p className="muted">
+            <PredictionDistribution prediction={prediction} />
+
+            {prediction.epoch_predictions && (
+              <PredictionTimeline
+                epochPredictions={prediction.epoch_predictions}
+                modelInfo={modelInfo}
+              />
+            )}
+
+            <p className="muted prediction-summary">
               {t("prediction.summary", {
                 epochs: prediction.n_epochs,
                 model: prediction.model_name || modelInfo?.model_name,
               })}
             </p>
-
-            <PredictionDistribution prediction={prediction} />
           </>
         ) : (
           <p className="muted">{t("prediction.empty")}</p>
         )}
-      </div>
-    </section>
+        <div className="prediction-footer">
+          <p className="prediction-disclaimer">{t("prediction.disclaimer")}</p>
+          <button
+            className="primary-button"
+            disabled={
+              !modelAvailable ||
+              !file ||
+              !validation?.valid ||
+              loadingPrediction ||
+              loadingValidation
+            }
+            onClick={() => {
+              void onPredict();
+            }}
+            type="button"
+          >
+            {loadingPrediction
+              ? t("prediction.processing")
+              : t("prediction.run")}
+          </button>
+        </div>
+      </section>
+    </>
   );
 }

@@ -43,6 +43,7 @@ export interface ExperimentSummary {
   precision: number;
   recall: number;
   f1_score: number;
+  trained_model_id?: number | null;
   dataset: ExperimentDataset;
 }
 

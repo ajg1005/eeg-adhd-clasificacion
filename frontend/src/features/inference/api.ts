@@ -1,4 +1,5 @@
-import { apiUrl, requestJson } from "../../shared/api/client";
+import { requestJson, resolveApiAsset } from "../../shared/api/client";
+import { translate } from "../../shared/utils/errors";
 import type {
   ModelFigure,
   ModelInfo,
@@ -9,64 +10,63 @@ import type {
 
 export async function getModels(): Promise<ModelRegistryItem[]> {
   const data = await requestJson<{ models: ModelRegistryItem[] }>(
-    "/models",
+    { route: "models" },
     undefined,
-    "No se pudieron cargar los modelos disponibles",
+    translate("errors.models.list"),
   );
   return data.models;
 }
 
 export function getModelInfo(modelId = "ml_best"): Promise<ModelInfo> {
-  const params = new URLSearchParams({ model_id: modelId });
   return requestJson<ModelInfo>(
-    `/model/info?${params}`,
+    { route: "modelInfo", query: { model_id: modelId } },
     undefined,
-    "No se pudo cargar la información del modelo",
+    translate("errors.models.info"),
   );
 }
 
 export function validateCsv(
   file: File,
   modelId = "ml_best",
+  signal?: AbortSignal,
 ): Promise<ValidationResult> {
   const formData = new FormData();
   formData.append("file", file);
-  const params = new URLSearchParams({ model_id: modelId });
 
   return requestJson<ValidationResult>(
-    `/validate?${params}`,
-    { method: "POST", body: formData },
-    "CSV no válido",
+    { route: "validate", query: { model_id: modelId } },
+    { method: "POST", body: formData, signal },
+    translate("errors.prediction.invalidCsv"),
   );
 }
 
 export function predictCsv(
   file: File,
   modelId = "ml_best",
+  signal?: AbortSignal,
 ): Promise<PredictionResult> {
   const formData = new FormData();
   formData.append("file", file);
-  const params = new URLSearchParams({ model_id: modelId });
 
   return requestJson<PredictionResult>(
-    `/predict?${params}`,
-    { method: "POST", body: formData },
-    "Error durante la predicción",
+    { route: "predict", query: { model_id: modelId } },
+    { method: "POST", body: formData, signal },
+    translate("errors.prediction.runFailed"),
   );
 }
 
 export async function getModelFigures(
   modelId = "ml_best",
 ): Promise<ModelFigure[]> {
-  const params = new URLSearchParams({ model_id: modelId });
   const data = await requestJson<{ figures: ModelFigure[] }>(
-    `/model/figures?${params}`,
+    { route: "modelFigures", query: { model_id: modelId } },
     undefined,
-    "No se pudieron cargar las figuras del modelo",
+    translate("errors.models.figures"),
   );
 
-  return data.figures.map((figure) => ({
-    ...figure,
-    url: apiUrl(figure.url),
-  }));
+  return data.figures.flatMap((figure) => {
+    const url = resolveApiAsset(figure.url);
+
+    return url ? [{ ...figure, url }] : [];
+  });
 }

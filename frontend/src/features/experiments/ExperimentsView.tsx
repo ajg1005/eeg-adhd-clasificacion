@@ -21,6 +21,7 @@ import {
   signalParamLabel,
   trainingParamLabel,
 } from "../training/trainingLabels";
+import { errorMessage } from "../../shared/utils/errors";
 
 type ParameterLabel = (t: TFunction, name: string) => string;
 
@@ -31,8 +32,13 @@ interface ParameterGroupProps {
   title: string;
 }
 
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
+function sortByBalancedAccuracy(
+  items: ExperimentSummary[],
+): ExperimentSummary[] {
+  const score = (item: ExperimentSummary): number =>
+    Number.isFinite(item.balanced_accuracy) ? item.balanced_accuracy : -Infinity;
+
+  return [...items].sort((a, b) => score(b) - score(a));
 }
 
 function formatDate(value: string | null | undefined, language?: string): string {
@@ -84,7 +90,15 @@ function ParameterGroup({
   );
 }
 
-export function ExperimentsView() {
+interface ExperimentsViewProps {
+  availableModelIds: string[];
+  onUseForInference: (modelId: string) => void;
+}
+
+export function ExperimentsView({
+  availableModelIds,
+  onUseForInference,
+}: ExperimentsViewProps) {
   const { i18n, t } = useTranslation();
   const [experiments, setExperiments] = useState<ExperimentSummary[]>([]);
   const [bestAvailableModel, setBestAvailableModel] =
@@ -100,57 +114,73 @@ export function ExperimentsView() {
     setLoadingList(true);
     setError("");
 
-    try {
-      const [items, bestModel] = await Promise.all([
-        getExperiments(),
-        getBestAvailableModel(),
-      ]);
-      const nextSelectedId = selectedId ?? items[0]?.id ?? null;
+    const [experimentsResult, bestModelResult] = await Promise.allSettled([
+      getExperiments(),
+      getBestAvailableModel(),
+    ]);
 
-      setExperiments(items);
-      setBestAvailableModel(bestModel);
+    if (experimentsResult.status === "fulfilled") {
+      const sorted = sortByBalancedAccuracy(experimentsResult.value);
+      const nextSelectedId = selectedId ?? sorted[0]?.id ?? null;
+
+      setExperiments(sorted);
       setSelectedId(nextSelectedId);
 
       if (nextSelectedId !== null && nextSelectedId !== selectedId) {
         setSelectedExperiment(null);
         setLoadingDetail(true);
       }
-    } catch (caughtError) {
+    } else {
       setError(
-        errorMessage(caughtError, "No se pudieron cargar los experimentos"),
+        errorMessage(experimentsResult.reason, "errors.experiments.list"),
       );
-    } finally {
-      setLoadingList(false);
     }
+
+    if (bestModelResult.status === "fulfilled") {
+      setBestAvailableModel(bestModelResult.value);
+    } else if (experimentsResult.status === "fulfilled") {
+      setBestAvailableModel(null);
+      setError(
+        errorMessage(bestModelResult.reason, "errors.experiments.bestModel"),
+      );
+    }
+
+    setLoadingList(false);
   }
 
   useEffect(() => {
     let cancelled = false;
 
-    void Promise.all([getExperiments(), getBestAvailableModel()])
-      .then(([items, bestModel]) => {
+    void Promise.allSettled([getExperiments(), getBestAvailableModel()]).then(
+      ([experimentsResult, bestModelResult]) => {
         if (cancelled) {
           return;
         }
 
-        const initialSelectedId = items[0]?.id ?? null;
-        setExperiments(items);
-        setBestAvailableModel(bestModel);
-        setSelectedId(initialSelectedId);
-        setLoadingDetail(initialSelectedId !== null);
-      })
-      .catch((caughtError: unknown) => {
-        if (!cancelled) {
+        if (experimentsResult.status === "fulfilled") {
+          const sorted = sortByBalancedAccuracy(experimentsResult.value);
+          const initialSelectedId = sorted[0]?.id ?? null;
+
+          setExperiments(sorted);
+          setSelectedId(initialSelectedId);
+          setLoadingDetail(initialSelectedId !== null);
+        } else {
           setError(
-            errorMessage(caughtError, "No se pudieron cargar los experimentos"),
+            errorMessage(experimentsResult.reason, "errors.experiments.list"),
           );
         }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoadingList(false);
+
+        if (bestModelResult.status === "fulfilled") {
+          setBestAvailableModel(bestModelResult.value);
+        } else if (experimentsResult.status === "fulfilled") {
+          setError(
+            errorMessage(bestModelResult.reason, "errors.experiments.bestModel"),
+          );
         }
-      });
+
+        setLoadingList(false);
+      },
+    );
 
     return () => {
       cancelled = true;
@@ -173,7 +203,7 @@ export function ExperimentsView() {
       .catch((caughtError: unknown) => {
         if (!cancelled) {
           setError(
-            errorMessage(caughtError, "No se pudo cargar el experimento"),
+            errorMessage(caughtError, "errors.experiments.detail"),
           );
         }
       })
@@ -205,61 +235,72 @@ export function ExperimentsView() {
 
   return (
     <section className="training-layout">
-      {error && <div className="alert alert-error">{error}</div>}
-
-      <div className="panel best-model-overview">
-        <div className="section-heading-row">
-          <div>
-            <h2>{t("experiments.bestAvailableTitle")}</h2>
-            <p className="muted">{t("experiments.bestAvailableDescription")}</p>
-          </div>
-        </div>
-
+      {error && <div className="alert alert-error" role="alert">{error}</div>}
+      <div className="panel best-model-row">
         {loadingList && !bestAvailableModel ? (
           <p className="muted">{t("common.loading")}</p>
         ) : bestAvailableModel ? (
           <>
             <div className="best-model-identity">
-              <h3>{bestAvailableModel.display_name}</h3>
-              <p className="muted">
-                {bestAvailableModel.model_type.toUpperCase()} /{" "}
+              <span className="eyebrow accent">
+                {t("experiments.bestAvailableTitle")}
+              </span>
+              <h2>
+                {bestAvailableModel.display_name} ·{" "}
                 {t("experiments.experiment", {
                   id: bestAvailableModel.experiment_id,
-                })}{" "}
-                / {formatDate(bestAvailableModel.created_at, i18n.resolvedLanguage)}
+                })}
+              </h2>
+              <p className="muted">
+                {[
+                  bestAvailableModel.model_type.toUpperCase(),
+                  bestAvailableModel.dataset_filename,
+                  `${String(bestAvailableModel.n_subjects)} ${t("common.patients").toLowerCase()}`,
+                  formatDate(
+                    bestAvailableModel.created_at,
+                    i18n.resolvedLanguage,
+                  ),
+                ].join(" · ")}
               </p>
             </div>
 
-            <div className="metric-grid best-model-summary-grid">
-              <div>
+            <div className="best-model-figures">
+              <div className="headline-metric accent">
                 <span>{t("metrics.balancedAccuracy")}</span>
-                <strong>{formatMetric(bestAvailableModel.balanced_accuracy)}</strong>
+                <strong>
+                  {formatMetric(bestAvailableModel.balanced_accuracy)}
+                </strong>
               </div>
-              <div>
+              <div className="headline-metric">
                 <span>{t("metrics.f1")}</span>
                 <strong>{formatMetric(bestAvailableModel.f1_score)}</strong>
               </div>
-              <div>
-                <span>{t("common.dataset")}</span>
-                <strong>{bestAvailableModel.dataset_filename}</strong>
-              </div>
-              <div>
-                <span>{t("common.patients")}</span>
-                <strong>{bestAvailableModel.n_subjects}</strong>
-              </div>
+              {availableModelIds.includes(bestAvailableModel.model_id) && (
+                <button
+                  className="primary-button compact-button"
+                  onClick={() => {
+                    onUseForInference(bestAvailableModel.model_id);
+                  }}
+                  type="button"
+                >
+                  {t("experiments.useForInference")}
+                </button>
+              )}
             </div>
           </>
         ) : (
-          <p className="muted">{t("experiments.bestAvailableEmpty")}</p>
+          <div>
+            <span className="eyebrow">
+              {t("experiments.bestAvailableTitle")}
+            </span>
+            <p className="muted">{t("experiments.bestAvailableEmpty")}</p>
+          </div>
         )}
       </div>
 
       <div className="panel">
         <div className="section-heading-row">
-          <div>
-            <h2>{t("experiments.title")}</h2>
-            <p className="muted">{t("experiments.description")}</p>
-          </div>
+          <span className="eyebrow">{t("experiments.title")}</span>
           <button
             className="primary-button compact-button"
             disabled={loadingList}
@@ -282,12 +323,13 @@ export function ExperimentsView() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>{t("experiments.date")}</th>
                   <th>{t("common.model")}</th>
                   <th>{t("experiments.modelType")}</th>
-                  <th>{t("common.dataset")}</th>
-                  <th>{t("metrics.balanced")}</th>
+                  <th className="metric-column-accent">
+                    {t("metrics.balanced")}
+                  </th>
                   <th>F1</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -301,6 +343,12 @@ export function ExperimentsView() {
                   ]
                     .filter(Boolean)
                     .join(" ");
+                  const modelId =
+                    experiment.trained_model_id != null
+                      ? `trained_model_${experiment.trained_model_id}`
+                      : null;
+                  const usable = modelId !== null &&
+                    availableModelIds.includes(modelId);
 
                   return (
                     <tr
@@ -319,9 +367,10 @@ export function ExperimentsView() {
                       tabIndex={0}
                     >
                       <td>#{experiment.id}</td>
-                      <td>{formatDate(experiment.created_at, i18n.resolvedLanguage)}</td>
                       <td className="experiment-model-cell">
-                        <strong>{experiment.display_name}</strong>
+                        <strong className={isBestAvailable ? "best-row-name" : undefined}>
+                          {experiment.display_name}
+                        </strong>
                         {isBestAvailable && (
                           <span className="best-row-badge">
                             {t("experiments.bestBadge")}
@@ -333,9 +382,28 @@ export function ExperimentsView() {
                           {experiment.model_type.toUpperCase()}
                         </span>
                       </td>
-                      <td>{experiment.dataset.filename}</td>
-                      <td>{formatMetric(experiment.balanced_accuracy)}</td>
+                      <td
+                        className={
+                          isBestAvailable ? "metric-column-accent" : undefined
+                        }
+                      >
+                        {formatMetric(experiment.balanced_accuracy)}
+                      </td>
                       <td>{formatMetric(experiment.f1_score)}</td>
+                      <td className="experiment-action-cell">
+                        {usable && (
+                          <button
+                            className="row-action"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onUseForInference(modelId);
+                            }}
+                            type="button"
+                          >
+                            {t("experiments.useForInference")}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
