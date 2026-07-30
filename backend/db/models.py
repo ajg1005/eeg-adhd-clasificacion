@@ -14,6 +14,19 @@ class Base(DeclarativeBase):
     """Base declarativa de SQLAlchemy."""
 
 
+class User(Base):
+    """Usuario con acceso autenticado a la aplicacion."""
+
+    __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("email", name="uq_users_email"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+
 class Dataset(Base):
     """Dataset EEG subido, identificado por hash y metadatos resumidos."""
 
