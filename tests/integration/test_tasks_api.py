@@ -27,7 +27,7 @@ import pytest
         ),
     ],
 )
-def test_task_status(client, monkeypatch, status, result, expected):
+def test_task_status(auth_client, monkeypatch, status, result, expected):
     task = SimpleNamespace(
         status=status,
         result=result,
@@ -36,7 +36,7 @@ def test_task_status(client, monkeypatch, status, result, expected):
     )
     monkeypatch.setattr("backend.api.tasks.celery_app.AsyncResult", lambda _: task)
 
-    response = client.get("/tasks/task-123")
+    response = auth_client.get("/tasks/task-123")
 
     assert response.status_code == 200
     assert response.json() == expected

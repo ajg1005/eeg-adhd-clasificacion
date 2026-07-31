@@ -73,14 +73,14 @@ def _register_trained_model(
 
 # comprueba que /models lista los modelos base y los registrados tras entrenar
 def test_models_endpoint_lists_static_and_registered_trained_models(
-    client,
+    auth_client,
     eeg_dataframe_factory,
     tmp_path,
 ):
     experiment_id = _save_training_experiment(eeg_dataframe_factory)
     trained_model_id = _register_trained_model(experiment_id, tmp_path)
 
-    response = client.get("/models")
+    response = auth_client.get("/models")
 
     assert response.status_code == 200
     models = {model["model_id"]: model for model in response.json()["models"]}
@@ -96,7 +96,7 @@ def test_models_endpoint_lists_static_and_registered_trained_models(
 
 # comprueba que un registro sin artefacto disponible queda deshabilitado
 def test_models_endpoint_marks_missing_artifact_as_disabled(
-    client,
+    auth_client,
     eeg_dataframe_factory,
     tmp_path,
 ):
@@ -108,7 +108,7 @@ def test_models_endpoint_marks_missing_artifact_as_disabled(
         create_artifact=False,
     )
 
-    response = client.get("/models")
+    response = auth_client.get("/models")
 
     assert response.status_code == 200
     models = {model["model_id"]: model for model in response.json()["models"]}
@@ -119,7 +119,7 @@ def test_models_endpoint_marks_missing_artifact_as_disabled(
 
 
 def test_best_model_endpoint_returns_highest_ranked_available_artifact(
-    client,
+    auth_client,
     eeg_dataframe_factory,
     tmp_path,
 ):
@@ -146,7 +146,7 @@ def test_best_model_endpoint_returns_highest_ranked_available_artifact(
         tmp_path,
     )
 
-    response = client.get("/models/best")
+    response = auth_client.get("/models/best")
 
     assert response.status_code == 200
     data = response.json()
@@ -157,12 +157,12 @@ def test_best_model_endpoint_returns_highest_ranked_available_artifact(
     assert data["dataset_filename"] == "training.csv"
 
 
-def test_best_model_endpoint_returns_null_without_registered_models(client, monkeypatch):
+def test_best_model_endpoint_returns_null_without_registered_models(auth_client, monkeypatch):
     monkeypatch.setattr(
         "backend.model_registry.repository.list_trained_models_ranked",
         lambda: [],
     )
-    response = client.get("/models/best")
+    response = auth_client.get("/models/best")
 
     assert response.status_code == 200
     assert response.json() is None
@@ -170,8 +170,8 @@ def test_best_model_endpoint_returns_null_without_registered_models(client, monk
 
 # comprueba que /model/info devuelve metadatos del modelo seleccionado
 @requires_ml_model
-def test_model_info_endpoint_returns_metadata(client):
-    response = client.get("/model/info", params={"model_id": "ml_best"})
+def test_model_info_endpoint_returns_metadata(auth_client):
+    response = auth_client.get("/model/info", params={"model_id": "ml_best"})
 
     assert response.status_code == 200
     data = response.json()
@@ -180,7 +180,7 @@ def test_model_info_endpoint_returns_metadata(client):
 
 
 # comprueba que /model/info devuelve 404 para un modelo que no existe
-def test_model_info_endpoint_rejects_unknown_model(client):
-    response = client.get("/model/info", params={"model_id": "unknown"})
+def test_model_info_endpoint_rejects_unknown_model(auth_client):
+    response = auth_client.get("/model/info", params={"model_id": "unknown"})
 
     assert response.status_code == 404

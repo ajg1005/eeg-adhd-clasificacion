@@ -4,8 +4,8 @@ import pandas as pd
 
 
 # comprueba que /training/options expone tipos de modelo ML y DL
-def test_training_options_endpoint(client):
-    response = client.get("/training/options")
+def test_training_options_endpoint(auth_client):
+    response = auth_client.get("/training/options")
 
     assert response.status_code == 200
     data = response.json()
@@ -14,8 +14,8 @@ def test_training_options_endpoint(client):
 
 
 # comprueba que /training/dataset/stats analiza correctamente un CSV valido
-def test_training_dataset_stats_endpoint(client, post_csv, valid_eeg_dataset_csv_path):
-    response = post_csv(client, valid_eeg_dataset_csv_path, "/training/dataset/stats")
+def test_training_dataset_stats_endpoint(auth_client, post_csv, valid_eeg_dataset_csv_path):
+    response = post_csv(auth_client, valid_eeg_dataset_csv_path, "/training/dataset/stats")
 
     assert response.status_code == 200
     data = response.json()
@@ -26,10 +26,10 @@ def test_training_dataset_stats_endpoint(client, post_csv, valid_eeg_dataset_csv
 
 # comprueba que /training/dataset/stats lista las columnas que faltan
 def test_training_dataset_stats_reports_missing_columns(
-    client, post_csv, invalid_missing_columns_csv_path
+    auth_client, post_csv, invalid_missing_columns_csv_path
 ):
     response = post_csv(
-        client, invalid_missing_columns_csv_path, "/training/dataset/stats"
+        auth_client, invalid_missing_columns_csv_path, "/training/dataset/stats"
     )
 
     assert response.status_code == 200
@@ -37,27 +37,27 @@ def test_training_dataset_stats_reports_missing_columns(
 
 
 def test_training_dataset_upload_lists_saved_dataset(
-    client, post_csv, valid_eeg_dataset_csv_path
+    auth_client, post_csv, valid_eeg_dataset_csv_path
 ):
-    upload_response = post_csv(client, valid_eeg_dataset_csv_path, "/training/datasets")
+    upload_response = post_csv(auth_client, valid_eeg_dataset_csv_path, "/training/datasets")
 
     assert upload_response.status_code == 200
     uploaded = upload_response.json()
     assert uploaded["filename"] == valid_eeg_dataset_csv_path.name
     assert uploaded["reusable"] is True
 
-    list_response = client.get("/training/datasets")
+    list_response = auth_client.get("/training/datasets")
     assert list_response.status_code == 200
     assert any(
         dataset["id"] == uploaded["id"] for dataset in list_response.json()["datasets"]
     )
 
-    stats_response = client.get(f"/training/datasets/{uploaded['id']}/stats")
+    stats_response = auth_client.get(f"/training/datasets/{uploaded['id']}/stats")
     assert stats_response.status_code == 200
     assert stats_response.json()["n_patients"] == 4
 
 
-def test_dataset_analysis_is_queued(client, monkeypatch):
+def test_dataset_analysis_is_queued(auth_client, monkeypatch):
     queued_dataset_ids = []
 
     class TaskResult:
@@ -69,7 +69,7 @@ def test_dataset_analysis_is_queued(client, monkeypatch):
 
     monkeypatch.setattr("backend.datasets.router.analyze_dataset.delay", enqueue)
 
-    response = client.post("/training/datasets/7/analysis")
+    response = auth_client.post("/training/datasets/7/analysis")
 
     assert response.status_code == 202
     assert response.json() == {"task_id": "dataset-task-1", "status": "PENDING"}
@@ -77,7 +77,7 @@ def test_dataset_analysis_is_queued(client, monkeypatch):
 
 
 # comprueba que /training/run guarda el CSV y encola el entrenamiento
-def test_training_run_queues_ml_training(client, eeg_dataframe_factory, monkeypatch):
+def test_training_run_queues_ml_training(auth_client, eeg_dataframe_factory, monkeypatch):
     queued = {}
 
     class TaskResult:
@@ -94,7 +94,7 @@ def test_training_run_queues_ml_training(client, eeg_dataframe_factory, monkeypa
 
     rows = eeg_dataframe_factory(samples_per_patient=32)
     csv_bytes = pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
-    response = client.post(
+    response = auth_client.post(
         "/training/run",
         data={
             "model_type": "ml",
@@ -128,7 +128,7 @@ def test_training_run_queues_ml_training(client, eeg_dataframe_factory, monkeypa
 
 # comprueba que la tarea ejecuta el flujo ML completo y persiste sus resultados
 def test_training_task_ml_returns_metrics_and_feature_importance(
-    client, eeg_dataframe_factory
+    auth_client, eeg_dataframe_factory
 ):
     from backend.datasets.service import save_training_dataset
     from backend.training.tasks import execute_training_task
@@ -159,7 +159,7 @@ def test_training_task_ml_returns_metrics_and_feature_importance(
     assert data["feature_importance"]["method"] == "permutation_importance"
     assert data["feature_importance"]["top_features"]
 
-    detail_response = client.get(f"/experiments/{data['experiment_id']}")
+    detail_response = auth_client.get(f"/experiments/{data['experiment_id']}")
     assert detail_response.status_code == 200
     detail = detail_response.json()
     assert detail["model_name"] == "random_forest"
@@ -167,7 +167,7 @@ def test_training_task_ml_returns_metrics_and_feature_importance(
     assert detail["dataset"]["filename"] == "training.csv"
     assert detail["fold_results"]
 
-    list_response = client.get("/experiments?model_type=ml")
+    list_response = auth_client.get("/experiments?model_type=ml")
     assert list_response.status_code == 200
     assert any(
         experiment["id"] == data["experiment_id"]
@@ -176,13 +176,13 @@ def test_training_task_ml_returns_metrics_and_feature_importance(
 
 
 # comprueba que /training/run rechaza un dataset con una sola clase
-def test_training_run_rejects_single_class_dataset(client, eeg_dataframe_factory):
+def test_training_run_rejects_single_class_dataset(auth_client, eeg_dataframe_factory):
     rows = eeg_dataframe_factory(
         patients=[("control_1", 0), ("control_2", 0)],
         samples_per_patient=32,
     )
     csv_bytes = pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
-    response = client.post(
+    response = auth_client.post(
         "/training/run",
         data={
             "model_type": "ml",
@@ -198,8 +198,8 @@ def test_training_run_rejects_single_class_dataset(client, eeg_dataframe_factory
     assert "Control y TDAH" in response.json()["detail"]
 
 
-def test_experiment_detail_returns_404_for_unknown_id(client):
-    response = client.get("/experiments/999999")
+def test_experiment_detail_returns_404_for_unknown_id(auth_client):
+    response = auth_client.get("/experiments/999999")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Experimento no encontrado."

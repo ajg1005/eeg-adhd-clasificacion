@@ -44,6 +44,32 @@ def client():
 
 
 @pytest.fixture(scope="session")
+def auth_client(client):
+    email = f"integration-{uuid.uuid4().hex}@example.com"
+    password = "password-segura"
+    register_response = client.post(
+        "/auth/register",
+        json={"email": email, "password": password},
+    )
+    assert register_response.status_code == 201
+
+    login_response = client.post(
+        "/auth/login",
+        data={"username": email, "password": password},
+    )
+    assert login_response.status_code == 200
+
+    from backend.main import app
+
+    token = login_response.json()["access_token"]
+    with TestClient(
+        app,
+        headers={"Authorization": f"Bearer {token}"},
+    ) as authenticated_client:
+        yield authenticated_client
+
+
+@pytest.fixture(scope="session")
 def fixtures_dir():
     return FIXTURES_DIR
 

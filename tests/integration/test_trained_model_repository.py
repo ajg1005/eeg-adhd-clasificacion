@@ -48,7 +48,7 @@ def _artifact() -> dict[str, Any]:
     }
 
 
-def test_save_and_get_trained_model_roundtrip(client, eeg_dataframe_factory):
+def test_save_and_get_trained_model_roundtrip(auth_client, eeg_dataframe_factory):
     df = pd.DataFrame(eeg_dataframe_factory(samples_per_patient=16))
     file_bytes = df.to_csv(index=False).encode("utf-8")
     experiment_id = save_experiment(file_bytes, "training.csv", df, _training_result())
@@ -64,7 +64,7 @@ def test_save_and_get_trained_model_roundtrip(client, eeg_dataframe_factory):
     assert trained_model.model_metadata["model_name"] == "random_forest"
 
 
-def test_experiments_expose_trained_model_id(client, eeg_dataframe_factory):
+def test_experiments_expose_trained_model_id(auth_client, eeg_dataframe_factory):
     """La UI construye trained_model_<id> para promocionar un experimento a
     inferencia: sin este campo no hay forma de emparejarlos."""
     df = pd.DataFrame(eeg_dataframe_factory(samples_per_patient=16))
@@ -77,13 +77,13 @@ def test_experiments_expose_trained_model_id(client, eeg_dataframe_factory):
 
     listed = {
         item["id"]: item
-        for item in client.get("/experiments").json()["experiments"]
+        for item in auth_client.get("/experiments").json()["experiments"]
     }
 
     assert listed[with_artifact]["trained_model_id"] == trained_model_id
     # El paso de persistir el modelo final va en try/except: puede no existir.
     assert listed[without_artifact]["trained_model_id"] is None
 
-    detail = client.get(f"/experiments/{with_artifact}").json()
+    detail = auth_client.get(f"/experiments/{with_artifact}").json()
 
     assert detail["trained_model_id"] == trained_model_id
