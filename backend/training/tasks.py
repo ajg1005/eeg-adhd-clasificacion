@@ -8,17 +8,19 @@ from backend.worker.celery_app import celery_app
 @celery_app.task(name="training.run")
 def execute_training_task(
     dataset_id: int,
+    owner_id: int,
     model_type: str,
     model_name: str,
     eeg_params: dict[str, Any],
     model_params: dict[str, Any],
     training_params: dict[str, Any],
 ) -> dict[str, Any]:
-    file_bytes, filename = get_saved_dataset_file(dataset_id)
+    file_bytes, filename = get_saved_dataset_file(dataset_id, owner_id)
 
     return run_training(
         file_bytes=file_bytes,
         filename=filename,
+        owner_id=owner_id,
         model_type=model_type,
         model_name=model_name,
         eeg_params=eeg_params,

@@ -4,12 +4,12 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from backend.datasets import repository
 from scripts.constants import (
     REQUIRED_COLUMNS,
     REQUIRED_EEG_COLUMNS,
     normalize_class_to_label,
 )
-from backend.datasets import repository
 from scripts.validators import validate_training_dataframe
 
 
@@ -33,27 +33,45 @@ def get_dataset_stats(file_bytes: bytes, preview_rows: int = 5) -> dict[str, Any
     }
 
 
-def get_saved_datasets(limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
-    return repository.list_datasets(limit=limit, offset=offset)
+def get_saved_datasets(
+    user_id: int,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[dict[str, Any]]:
+    return repository.list_datasets(user_id, limit=limit, offset=offset)
 
 
-def save_training_dataset(file_bytes: bytes, filename: str) -> dict[str, Any]:
+def save_training_dataset(
+    file_bytes: bytes,
+    filename: str,
+    user_id: int,
+) -> dict[str, Any]:
     df = read_csv(file_bytes)
     validate_training_dataframe(df)
     return repository.save_dataset(
         file_bytes=file_bytes,
         filename=filename,
         dataframe=df,
+        user_id=user_id,
     )
 
 
-def get_saved_dataset_stats(dataset_id: int, preview_rows: int = 5) -> dict[str, Any]:
-    file_bytes, _ = repository.load_dataset_file(dataset_id)
+def get_saved_dataset_stats(
+    dataset_id: int,
+    user_id: int,
+    preview_rows: int = 5,
+) -> dict[str, Any]:
+    file_bytes, _ = repository.load_dataset_file(dataset_id, user_id)
     return get_dataset_stats(file_bytes, preview_rows=preview_rows)
 
 
-def get_saved_dataset_file(dataset_id: int) -> tuple[bytes, str]:
-    return repository.load_dataset_file(dataset_id)
+def get_saved_dataset_file(dataset_id: int, user_id: int) -> tuple[bytes, str]:
+    return repository.load_dataset_file(dataset_id, user_id)
+
+
+def ensure_saved_dataset_access(dataset_id: int, user_id: int) -> None:
+    if not repository.user_can_access_dataset(dataset_id, user_id):
+        raise ValueError("Dataset no encontrado.")
 
 
 def _missing_required_columns(df: pd.DataFrame) -> list[str]:

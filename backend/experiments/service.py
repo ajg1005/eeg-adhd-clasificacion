@@ -11,8 +11,15 @@ def save_experiment(
     filename: str,
     dataframe: pd.DataFrame,
     result: dict[str, Any],
+    owner_id: int,
 ) -> int:
-    return repository.save_experiment(file_bytes, filename, dataframe, result)
+    return repository.save_experiment(
+        file_bytes,
+        filename,
+        dataframe,
+        result,
+        owner_id,
+    )
 
 
 def list_experiments(

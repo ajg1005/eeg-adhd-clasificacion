@@ -14,6 +14,7 @@ def save_experiment(
     filename: str,
     dataframe: pd.DataFrame,
     result: dict[str, Any],
+    owner_id: int,
 ) -> int:
     """Guarda un experimento completo y sus resultados por fold."""
     with SessionLocal() as session:
@@ -22,8 +23,9 @@ def save_experiment(
             file_bytes,
             filename,
             dataframe,
+            owner_id,
         )
-        experiment = _experiment_from_result(dataset.id, result)
+        experiment = _experiment_from_result(dataset.id, owner_id, result)
         session.add(experiment)
         session.flush()
 
@@ -77,10 +79,15 @@ def get_experiment(experiment_id: int) -> Experiment | None:
         )
 
 
-def _experiment_from_result(dataset_id: int, result: dict[str, Any]) -> Experiment:
+def _experiment_from_result(
+    dataset_id: int,
+    owner_id: int,
+    result: dict[str, Any],
+) -> Experiment:
     configuration = result.get("configuration", {})
     return Experiment(
         dataset_id=dataset_id,
+        owner_id=owner_id,
         model_type=str(configuration.get("model_type", "")),
         model_name=str(configuration.get("model_name", "")),
         evaluation_mode=str(configuration.get("evaluation_mode", "")),

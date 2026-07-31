@@ -14,8 +14,12 @@ def test_training_options_endpoint(auth_client):
 
 
 # comprueba que /training/dataset/stats analiza correctamente un CSV valido
-def test_training_dataset_stats_endpoint(auth_client, post_csv, valid_eeg_dataset_csv_path):
-    response = post_csv(auth_client, valid_eeg_dataset_csv_path, "/training/dataset/stats")
+def test_training_dataset_stats_endpoint(
+    auth_client, post_csv, valid_eeg_dataset_csv_path
+):
+    response = post_csv(
+        auth_client, valid_eeg_dataset_csv_path, "/training/dataset/stats"
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -39,7 +43,9 @@ def test_training_dataset_stats_reports_missing_columns(
 def test_training_dataset_upload_lists_saved_dataset(
     auth_client, post_csv, valid_eeg_dataset_csv_path
 ):
-    upload_response = post_csv(auth_client, valid_eeg_dataset_csv_path, "/training/datasets")
+    upload_response = post_csv(
+        auth_client, valid_eeg_dataset_csv_path, "/training/datasets"
+    )
 
     assert upload_response.status_code == 200
     uploaded = upload_response.json()
@@ -57,27 +63,71 @@ def test_training_dataset_upload_lists_saved_dataset(
     assert stats_response.json()["n_patients"] == 4
 
 
-def test_dataset_analysis_is_queued(auth_client, monkeypatch):
-    queued_dataset_ids = []
+def test_saved_datasets_are_isolated_between_users(
+    auth_client,
+    auth_client_factory,
+    post_csv,
+    valid_eeg_dataset_csv_path,
+):
+    upload_response = post_csv(
+        auth_client,
+        valid_eeg_dataset_csv_path,
+        "/training/datasets",
+    )
+    dataset_id = upload_response.json()["id"]
+    other_client, _ = auth_client_factory()
+
+    list_response = other_client.get("/training/datasets")
+    stats_response = other_client.get(f"/training/datasets/{dataset_id}/stats")
+
+    assert all(
+        dataset["id"] != dataset_id for dataset in list_response.json()["datasets"]
+    )
+    assert stats_response.status_code == 400
+    assert stats_response.json()["detail"] == "Dataset no encontrado."
+
+    second_upload = post_csv(
+        other_client,
+        valid_eeg_dataset_csv_path,
+        "/training/datasets",
+    )
+    assert second_upload.json()["id"] == dataset_id
+    assert other_client.get(f"/training/datasets/{dataset_id}/stats").status_code == 200
+
+
+def test_dataset_analysis_is_queued(auth_client, auth_user, monkeypatch):
+    checked_access = []
+    queued = []
 
     class TaskResult:
         id = "dataset-task-1"
 
-    def enqueue(dataset_id):
-        queued_dataset_ids.append(dataset_id)
+    def check_access(dataset_id, user_id):
+        checked_access.append((dataset_id, user_id))
+
+    def enqueue(dataset_id, user_id):
+        queued.append((dataset_id, user_id))
         return TaskResult()
 
+    monkeypatch.setattr(
+        "backend.datasets.router.ensure_saved_dataset_access",
+        check_access,
+    )
     monkeypatch.setattr("backend.datasets.router.analyze_dataset.delay", enqueue)
 
     response = auth_client.post("/training/datasets/7/analysis")
 
+    expected_call = (7, auth_user["id"])
     assert response.status_code == 202
     assert response.json() == {"task_id": "dataset-task-1", "status": "PENDING"}
-    assert queued_dataset_ids == [7]
+    assert checked_access == [expected_call]
+    assert queued == [expected_call]
 
 
 # comprueba que /training/run guarda el CSV y encola el entrenamiento
-def test_training_run_queues_ml_training(auth_client, eeg_dataframe_factory, monkeypatch):
+def test_training_run_queues_ml_training(
+    auth_client, auth_user, eeg_dataframe_factory, monkeypatch
+):
     queued = {}
 
     class TaskResult:
@@ -119,6 +169,7 @@ def test_training_run_queues_ml_training(auth_client, eeg_dataframe_factory, mon
         "status": "PENDING",
     }
     assert queued["dataset_id"] > 0
+    assert queued["owner_id"] == auth_user["id"]
     assert queued["model_type"] == "ml"
     assert queued["model_name"] == "random_forest"
     assert queued["eeg_params"]["epoch_size"] == 16
@@ -128,17 +179,22 @@ def test_training_run_queues_ml_training(auth_client, eeg_dataframe_factory, mon
 
 # comprueba que la tarea ejecuta el flujo ML completo y persiste sus resultados
 def test_training_task_ml_returns_metrics_and_feature_importance(
-    auth_client, eeg_dataframe_factory
+    auth_client, auth_user, eeg_dataframe_factory
 ):
     from backend.datasets.service import save_training_dataset
     from backend.training.tasks import execute_training_task
 
     rows = eeg_dataframe_factory(samples_per_patient=32)
     csv_bytes = pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
-    dataset = save_training_dataset(csv_bytes, "training.csv")
+    dataset = save_training_dataset(
+        csv_bytes,
+        "training.csv",
+        user_id=auth_user["id"],
+    )
 
     data = execute_training_task.run(
         dataset_id=dataset["id"],
+        owner_id=auth_user["id"],
         model_type="ml",
         model_name="random_forest",
         eeg_params={

@@ -7,7 +7,7 @@ def test_execute_training_task_loads_dataset_and_runs_training(monkeypatch):
 
     monkeypatch.setattr(
         "backend.training.tasks.get_saved_dataset_file",
-        lambda dataset_id: (b"csv-data", "dataset.csv"),
+        lambda dataset_id, owner_id: (b"csv-data", "dataset.csv"),
     )
 
     def fake_run_training(**kwargs):
@@ -21,6 +21,7 @@ def test_execute_training_task_loads_dataset_and_runs_training(monkeypatch):
 
     result = execute_training_task.run(
         dataset_id=7,
+        owner_id=11,
         model_type="ml",
         model_name="random_forest",
         eeg_params={"epoch_size": 512},
@@ -32,6 +33,7 @@ def test_execute_training_task_loads_dataset_and_runs_training(monkeypatch):
     assert captured == {
         "file_bytes": b"csv-data",
         "filename": "dataset.csv",
+        "owner_id": 11,
         "model_type": "ml",
         "model_name": "random_forest",
         "eeg_params": {"epoch_size": 512},

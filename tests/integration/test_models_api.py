@@ -7,6 +7,7 @@ from tests.conftest import requires_ml_model
 
 def _save_training_experiment(
     eeg_dataframe_factory,
+    owner_id,
     model_name="random_forest",
     *,
     balanced_accuracy=0.79,
@@ -33,7 +34,7 @@ def _save_training_experiment(
             "training_params": {},
         },
     }
-    return save_experiment(file_bytes, "training.csv", df, result)
+    return save_experiment(file_bytes, "training.csv", df, result, owner_id)
 
 
 def _register_trained_model(
@@ -63,7 +64,9 @@ def _register_trained_model(
             "n_features": 0,
             "n_epochs_training": 8,
             "n_subjects_training": 4,
-            "file_size_bytes": artifact_path.stat().st_size if artifact_path.exists() else None,
+            "file_size_bytes": artifact_path.stat().st_size
+            if artifact_path.exists()
+            else None,
             "threshold": None,
             "model_metadata": {"model_name": model_name},
             "is_selected": False,
@@ -74,10 +77,11 @@ def _register_trained_model(
 # comprueba que /models lista los modelos base y los registrados tras entrenar
 def test_models_endpoint_lists_static_and_registered_trained_models(
     auth_client,
+    auth_user,
     eeg_dataframe_factory,
     tmp_path,
 ):
-    experiment_id = _save_training_experiment(eeg_dataframe_factory)
+    experiment_id = _save_training_experiment(eeg_dataframe_factory, auth_user["id"])
     trained_model_id = _register_trained_model(experiment_id, tmp_path)
 
     response = auth_client.get("/models")
@@ -97,10 +101,15 @@ def test_models_endpoint_lists_static_and_registered_trained_models(
 # comprueba que un registro sin artefacto disponible queda deshabilitado
 def test_models_endpoint_marks_missing_artifact_as_disabled(
     auth_client,
+    auth_user,
     eeg_dataframe_factory,
     tmp_path,
 ):
-    experiment_id = _save_training_experiment(eeg_dataframe_factory, model_name="xgboost")
+    experiment_id = _save_training_experiment(
+        eeg_dataframe_factory,
+        auth_user["id"],
+        model_name="xgboost",
+    )
     trained_model_id = _register_trained_model(
         experiment_id,
         tmp_path,
@@ -120,11 +129,13 @@ def test_models_endpoint_marks_missing_artifact_as_disabled(
 
 def test_best_model_endpoint_returns_highest_ranked_available_artifact(
     auth_client,
+    auth_user,
     eeg_dataframe_factory,
     tmp_path,
 ):
     missing_experiment_id = _save_training_experiment(
         eeg_dataframe_factory,
+        auth_user["id"],
         model_name="xgboost",
         balanced_accuracy=0.95,
         f1_score=0.94,
@@ -138,6 +149,7 @@ def test_best_model_endpoint_returns_highest_ranked_available_artifact(
 
     available_experiment_id = _save_training_experiment(
         eeg_dataframe_factory,
+        auth_user["id"],
         balanced_accuracy=0.87,
         f1_score=0.86,
     )
@@ -157,7 +169,9 @@ def test_best_model_endpoint_returns_highest_ranked_available_artifact(
     assert data["dataset_filename"] == "training.csv"
 
 
-def test_best_model_endpoint_returns_null_without_registered_models(auth_client, monkeypatch):
+def test_best_model_endpoint_returns_null_without_registered_models(
+    auth_client, monkeypatch
+):
     monkeypatch.setattr(
         "backend.model_registry.repository.list_trained_models_ranked",
         lambda: [],

@@ -8,29 +8,42 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.core.config import BASE_DIR, DATASETS_DIR
-from scripts.constants import normalize_class_to_label
 from backend.db.engine import SessionLocal
-from backend.db.models import Dataset
+from backend.db.models import Dataset, DatasetAccess
+from scripts.constants import normalize_class_to_label
 
 
 def save_dataset(
     file_bytes: bytes,
     filename: str,
     dataframe: pd.DataFrame,
+    user_id: int,
 ) -> dict[str, Any]:
-    """Guarda o reutiliza un dataset de entrenamiento identificado por hash."""
+    """Guarda o reutiliza un dataset y concede acceso al usuario."""
     with SessionLocal() as session:
-        dataset = get_or_create_dataset(session, file_bytes, filename, dataframe)
+        dataset = get_or_create_dataset(
+            session,
+            file_bytes,
+            filename,
+            dataframe,
+            user_id,
+        )
         session.commit()
         session.refresh(dataset)
         return _dataset_to_dict(dataset)
 
 
-def list_datasets(limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
-    """Lista datasets guardados para poder reutilizarlos en entrenamientos."""
+def list_datasets(
+    user_id: int,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[dict[str, Any]]:
+    """Lista unicamente los datasets accesibles para el usuario."""
     with SessionLocal() as session:
         stmt = (
             select(Dataset)
+            .join(DatasetAccess, DatasetAccess.dataset_id == Dataset.id)
+            .where(DatasetAccess.user_id == user_id)
             .order_by(Dataset.created_at.desc(), Dataset.id.desc())
             .offset(max(0, offset))
             .limit(max(1, min(limit, 200)))
@@ -38,10 +51,26 @@ def list_datasets(limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
         return [_dataset_to_dict(dataset) for dataset in session.scalars(stmt).all()]
 
 
-def load_dataset_file(dataset_id: int) -> tuple[bytes, str]:
-    """Devuelve los bytes y el nombre de un CSV persistido."""
+def user_can_access_dataset(dataset_id: int, user_id: int) -> bool:
     with SessionLocal() as session:
-        dataset = session.get(Dataset, dataset_id)
+        stmt = select(DatasetAccess.user_id).where(
+            DatasetAccess.dataset_id == dataset_id,
+            DatasetAccess.user_id == user_id,
+        )
+        return session.scalar(stmt) is not None
+
+
+def load_dataset_file(dataset_id: int, user_id: int) -> tuple[bytes, str]:
+    """Devuelve un CSV solo cuando el usuario tiene acceso al dataset."""
+    with SessionLocal() as session:
+        dataset = session.scalar(
+            select(Dataset)
+            .join(DatasetAccess, DatasetAccess.dataset_id == Dataset.id)
+            .where(
+                Dataset.id == dataset_id,
+                DatasetAccess.user_id == user_id,
+            )
+        )
         if dataset is None:
             raise ValueError("Dataset no encontrado.")
         if not dataset.storage_path:
@@ -59,45 +88,60 @@ def get_or_create_dataset(
     file_bytes: bytes,
     filename: str,
     dataframe: pd.DataFrame,
-):
-    """Obtiene un dataset por hash o crea su registro y archivo persistente."""
+    user_id: int,
+) -> Dataset:
+    """Obtiene un dataset por hash y concede acceso al usuario."""
     dataset_hash = hashlib.sha256(file_bytes).hexdigest()
 
-    existing = session.scalar(
+    dataset = session.scalar(
         select(Dataset).where(Dataset.dataset_hash == dataset_hash)
     )
-    if existing is not None:
-        _ensure_dataset_file(existing, file_bytes, filename)
-        session.flush()
-        return existing
-
-    storage_path = _write_dataset_file(dataset_hash, file_bytes)
-    dataset = Dataset(
-        dataset_hash=dataset_hash,
-        filename=filename or "training.csv",
-        original_filename=filename or "training.csv",
-        storage_path=storage_path,
-        file_size_bytes=len(file_bytes),
-        rows=int(len(dataframe)),
-        columns=int(len(dataframe.columns)),
-        n_subjects=int(dataframe["ID"].nunique()) if "ID" in dataframe.columns else 0,
-        class_distribution=_class_distribution(dataframe),
-        eeg_columns=[
-            column
-            for column in dataframe.columns
-            if column not in {"Class", "ID"}
-        ],
-    )
-    session.add(dataset)
-    try:
-        session.flush()
-    except IntegrityError:
-        # Otra peticion concurrente ya inserto el mismo dataset.
-        session.rollback()
-        return session.scalar(
-            select(Dataset).where(Dataset.dataset_hash == dataset_hash)
+    if dataset is None:
+        storage_path = _write_dataset_file(dataset_hash, file_bytes)
+        dataset = Dataset(
+            dataset_hash=dataset_hash,
+            filename=filename or "training.csv",
+            original_filename=filename or "training.csv",
+            storage_path=storage_path,
+            file_size_bytes=len(file_bytes),
+            rows=int(len(dataframe)),
+            columns=int(len(dataframe.columns)),
+            n_subjects=(
+                int(dataframe["ID"].nunique()) if "ID" in dataframe.columns else 0
+            ),
+            class_distribution=_class_distribution(dataframe),
+            eeg_columns=[
+                column
+                for column in dataframe.columns
+                if column not in {"Class", "ID"}
+            ],
         )
+        session.add(dataset)
+        try:
+            session.flush()
+        except IntegrityError:
+            # Otra peticion concurrente ya inserto el mismo contenido.
+            session.rollback()
+            dataset = session.scalar(
+                select(Dataset).where(Dataset.dataset_hash == dataset_hash)
+            )
+            if dataset is None:
+                raise
+    else:
+        _ensure_dataset_file(dataset, file_bytes, filename)
+
+    _grant_dataset_access(session, dataset.id, user_id)
+    session.flush()
     return dataset
+
+
+def _grant_dataset_access(
+    session: Session,
+    dataset_id: int,
+    user_id: int,
+) -> None:
+    if session.get(DatasetAccess, (user_id, dataset_id)) is None:
+        session.add(DatasetAccess(user_id=user_id, dataset_id=dataset_id))
 
 
 def _ensure_dataset_file(
