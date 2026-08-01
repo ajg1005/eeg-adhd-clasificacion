@@ -31,6 +31,27 @@ class User(Base):
         cascade="all, delete-orphan",
     )
     experiments: Mapped[list["Experiment"]] = relationship(back_populates="owner")
+    background_jobs: Mapped[list["BackgroundJob"]] = relationship(
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
+
+
+class BackgroundJob(Base):
+    """Trabajo de Celery registrado para controlar su propietario."""
+
+    __tablename__ = "background_jobs"
+
+    id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    owner_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    task_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+    owner: Mapped[User] = relationship(back_populates="background_jobs")
 
 
 class Dataset(Base):
