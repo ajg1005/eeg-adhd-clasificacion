@@ -128,11 +128,11 @@ def test_models_endpoint_marks_missing_artifact_as_disabled(
 
 
 def test_best_model_endpoint_returns_highest_ranked_available_artifact(
-    auth_client,
-    auth_user,
+    auth_client_factory,
     eeg_dataframe_factory,
     tmp_path,
 ):
+    auth_client, auth_user = auth_client_factory()
     missing_experiment_id = _save_training_experiment(
         eeg_dataframe_factory,
         auth_user["id"],
@@ -174,7 +174,7 @@ def test_best_model_endpoint_returns_null_without_registered_models(
 ):
     monkeypatch.setattr(
         "backend.model_registry.repository.list_trained_models_ranked",
-        lambda: [],
+        lambda owner_id: [],
     )
     response = auth_client.get("/models/best")
 
@@ -198,3 +198,46 @@ def test_model_info_endpoint_rejects_unknown_model(auth_client):
     response = auth_client.get("/model/info", params={"model_id": "unknown"})
 
     assert response.status_code == 404
+
+
+def test_trained_models_are_isolated_by_owner(
+    auth_client_factory,
+    eeg_dataframe_factory,
+    post_csv,
+    sample_prediction_csv_path,
+    tmp_path,
+):
+    owner_client, owner = auth_client_factory()
+    other_client, _ = auth_client_factory()
+    experiment_id = _save_training_experiment(
+        eeg_dataframe_factory,
+        owner["id"],
+    )
+    trained_model_id = _register_trained_model(experiment_id, tmp_path)
+    model_id = f"trained_model_{trained_model_id}"
+
+    owner_models = {
+        model["model_id"] for model in owner_client.get("/models").json()["models"]
+    }
+    other_models = {
+        model["model_id"] for model in other_client.get("/models").json()["models"]
+    }
+
+    assert model_id in owner_models
+    assert model_id not in other_models
+    assert other_client.get("/models/best").json() is None
+
+    info_response = other_client.get(
+        "/model/info",
+        params={"model_id": model_id},
+    )
+    assert info_response.status_code == 404
+    assert info_response.json()["detail"] == "Modelo no encontrado."
+
+    validation_response = post_csv(
+        other_client,
+        sample_prediction_csv_path,
+        f"/validate?model_id={model_id}",
+    )
+    assert validation_response.status_code == 400
+    assert validation_response.json()["detail"] == "Modelo no encontrado."

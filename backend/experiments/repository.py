@@ -38,6 +38,7 @@ def save_experiment(
 
 
 def list_experiments(
+    owner_id: int,
     model_type: str | None = None,
     model_name: str | None = None,
     limit: int = 50,
@@ -47,6 +48,7 @@ def list_experiments(
     with SessionLocal() as session:
         stmt = (
             select(Experiment)
+            .where(Experiment.owner_id == owner_id)
             # trained_model se carga aqui: la sesion se cierra al salir del with
             # y accederlo luego dejaria la instancia desasociada.
             .options(
@@ -65,18 +67,22 @@ def list_experiments(
         return list(session.scalars(stmt).all())
 
 
-def get_experiment(experiment_id: int) -> Experiment | None:
+def get_experiment(experiment_id: int, owner_id: int) -> Experiment | None:
     """Devuelve un experimento con su dataset y resultados por fold."""
     with SessionLocal() as session:
-        return session.get(
-            Experiment,
-            experiment_id,
-            options=[
+        stmt = (
+            select(Experiment)
+            .where(
+                Experiment.id == experiment_id,
+                Experiment.owner_id == owner_id,
+            )
+            .options(
                 selectinload(Experiment.dataset),
                 selectinload(Experiment.fold_results),
                 selectinload(Experiment.trained_model),
-            ],
+            )
         )
+        return session.scalar(stmt)
 
 
 def _experiment_from_result(

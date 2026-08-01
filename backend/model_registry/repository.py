@@ -38,11 +38,13 @@ def get_trained_model_by_experiment(experiment_id: int):
         )
 
 
-def list_trained_models(limit: int = 100, offset: int = 0):
-    """Lista modelos entrenados registrados para inferencia."""
+def list_trained_models(owner_id: int, limit: int = 100, offset: int = 0):
+    """Lista los modelos registrados que pertenecen al usuario."""
     with SessionLocal() as session:
         stmt = (
             select(TrainedModel)
+            .join(TrainedModel.experiment)
+            .where(Experiment.owner_id == owner_id)
             .order_by(TrainedModel.created_at.desc(), TrainedModel.id.desc())
             .offset(max(0, offset))
             .limit(max(1, min(limit, 200)))
@@ -50,12 +52,13 @@ def list_trained_models(limit: int = 100, offset: int = 0):
         return list(session.scalars(stmt).all())
 
 
-def list_trained_models_ranked():
-    """Lista modelos registrados ordenados por el resultado de su experimento."""
+def list_trained_models_ranked(owner_id: int):
+    """Ordena los modelos del usuario por el resultado de su experimento."""
     with SessionLocal() as session:
         stmt = (
             select(TrainedModel)
             .join(TrainedModel.experiment)
+            .where(Experiment.owner_id == owner_id)
             .options(
                 selectinload(TrainedModel.experiment).selectinload(Experiment.dataset)
             )
@@ -69,7 +72,15 @@ def list_trained_models_ranked():
         return list(session.scalars(stmt).all())
 
 
-def get_trained_model(trained_model_id: int):
-    """Devuelve un modelo entrenado por id."""
+def get_trained_model(trained_model_id: int, owner_id: int):
+    """Devuelve un modelo entrenado si pertenece al usuario."""
     with SessionLocal() as session:
-        return session.get(TrainedModel, trained_model_id)
+        stmt = (
+            select(TrainedModel)
+            .join(TrainedModel.experiment)
+            .where(
+                TrainedModel.id == trained_model_id,
+                Experiment.owner_id == owner_id,
+            )
+        )
+        return session.scalar(stmt)

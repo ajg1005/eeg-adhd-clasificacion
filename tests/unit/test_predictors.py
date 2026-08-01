@@ -101,7 +101,7 @@ def _trained_model_record(tmp_path, *, model_family="machine_learning"):
 
 def test_get_model_config_rejects_unknown_model():
     with pytest.raises(ValueError, match="Modelo no encontrado"):
-        get_model_config("missing")
+        get_model_config("missing", owner_id=11)
 
 
 def test_get_model_config_resolves_registered_trained_model(monkeypatch, tmp_path):
@@ -109,10 +109,12 @@ def test_get_model_config_resolves_registered_trained_model(monkeypatch, tmp_pat
     monkeypatch.setattr(
         predictors,
         "get_trained_model",
-        lambda trained_model_id: record if trained_model_id == 7 else None,
+        lambda trained_model_id, owner_id: (
+            record if trained_model_id == 7 and owner_id == 11 else None
+        ),
     )
 
-    config = get_model_config("trained_model_7")
+    config = get_model_config("trained_model_7", owner_id=11)
 
     assert config["model_id"] == "trained_model_7"
     assert config["display_name"] == "Random Forest - experimento #3"
@@ -127,12 +129,16 @@ def test_get_predictor_creates_predictor_for_registered_ml_model(monkeypatch, tm
     monkeypatch.setattr(
         predictors,
         "get_trained_model",
-        lambda trained_model_id: record if trained_model_id == 7 else None,
+        lambda trained_model_id, owner_id: (
+            record if trained_model_id == 7 and owner_id == 11 else None
+        ),
     )
 
     get_predictor.cache_clear()
     try:
-        predictor = get_predictor("trained_model_7")
+        predictor = get_predictor("trained_model_7", owner_id=11)
+        with pytest.raises(ValueError, match="Modelo no encontrado"):
+            get_predictor("trained_model_7", owner_id=12)
     finally:
         get_predictor.cache_clear()
 
@@ -142,10 +148,14 @@ def test_get_predictor_creates_predictor_for_registered_ml_model(monkeypatch, tm
 
 
 def test_get_model_config_rejects_missing_registered_model(monkeypatch):
-    monkeypatch.setattr(predictors, "get_trained_model", lambda trained_model_id: None)
+    monkeypatch.setattr(
+        predictors,
+        "get_trained_model",
+        lambda trained_model_id, owner_id: None,
+    )
 
     with pytest.raises(ValueError, match="Modelo no encontrado"):
-        get_model_config("trained_model_999")
+        get_model_config("trained_model_999", owner_id=11)
 
 
 def test_ml_predictor_info_uses_artifact_metadata(monkeypatch):

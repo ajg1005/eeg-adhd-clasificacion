@@ -107,3 +107,35 @@ def test_experiments_expose_trained_model_id(
     detail = auth_client.get(f"/experiments/{with_artifact}").json()
 
     assert detail["trained_model_id"] == trained_model_id
+
+
+def test_experiments_are_isolated_by_owner(
+    auth_client_factory,
+    eeg_dataframe_factory,
+):
+    owner_client, owner = auth_client_factory()
+    other_client, _ = auth_client_factory()
+    df = pd.DataFrame(eeg_dataframe_factory(samples_per_patient=16))
+    experiment_id = save_experiment(
+        df.to_csv(index=False).encode("utf-8"),
+        "private-training.csv",
+        df,
+        _training_result(),
+        owner["id"],
+    )
+
+    owner_ids = {
+        experiment["id"]
+        for experiment in owner_client.get("/experiments").json()["experiments"]
+    }
+    other_ids = {
+        experiment["id"]
+        for experiment in other_client.get("/experiments").json()["experiments"]
+    }
+
+    assert experiment_id in owner_ids
+    assert experiment_id not in other_ids
+
+    detail_response = other_client.get(f"/experiments/{experiment_id}")
+    assert detail_response.status_code == 404
+    assert detail_response.json()["detail"] == "Experimento no encontrado."
