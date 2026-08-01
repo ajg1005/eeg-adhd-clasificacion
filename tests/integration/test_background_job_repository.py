@@ -1,6 +1,7 @@
 import uuid
 
 from backend.worker.job_repository import (
+    delete_background_job,
     register_background_job,
     user_can_access_background_job,
 )
@@ -22,3 +23,7 @@ def test_background_job_is_only_accessible_by_its_owner(
     assert user_can_access_background_job(task_id, owner["id"]) is True
     assert user_can_access_background_job(task_id, other_user["id"]) is False
     assert user_can_access_background_job("missing-task", owner["id"]) is False
+
+    delete_background_job(task_id, owner["id"])
+
+    assert user_can_access_background_job(task_id, owner["id"]) is False

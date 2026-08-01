@@ -19,6 +19,7 @@ from backend.datasets.service import (
 )
 from backend.datasets.tasks import analyze_dataset
 from backend.db.models import User
+from backend.worker.job_service import enqueue_background_job
 
 router = APIRouter(prefix="/training", tags=["datasets"])
 
@@ -64,7 +65,11 @@ def queue_dataset_analysis(
     try:
         user_id = int(current_user.id)
         ensure_saved_dataset_access(dataset_id, user_id)
-        task = analyze_dataset.delay(dataset_id, user_id)
+        task = enqueue_background_job(
+            analyze_dataset,
+            user_id,
+            args=(dataset_id, user_id),
+        )
         return {"task_id": task.id, "status": "PENDING"}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

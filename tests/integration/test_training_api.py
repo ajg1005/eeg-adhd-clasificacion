@@ -97,7 +97,7 @@ def test_saved_datasets_are_isolated_between_users(
 
 def test_dataset_analysis_is_queued(auth_client, auth_user, monkeypatch):
     checked_access = []
-    queued = []
+    queued = {}
 
     class TaskResult:
         id = "dataset-task-1"
@@ -105,15 +105,25 @@ def test_dataset_analysis_is_queued(auth_client, auth_user, monkeypatch):
     def check_access(dataset_id, user_id):
         checked_access.append((dataset_id, user_id))
 
-    def enqueue(dataset_id, user_id):
-        queued.append((dataset_id, user_id))
+    def enqueue(task, owner_id, *, args=(), kwargs=None):
+        queued.update(
+            {
+                "task_name": task.name,
+                "owner_id": owner_id,
+                "args": args,
+                "kwargs": kwargs,
+            }
+        )
         return TaskResult()
 
     monkeypatch.setattr(
         "backend.datasets.router.ensure_saved_dataset_access",
         check_access,
     )
-    monkeypatch.setattr("backend.datasets.router.analyze_dataset.delay", enqueue)
+    monkeypatch.setattr(
+        "backend.datasets.router.enqueue_background_job",
+        enqueue,
+    )
 
     response = auth_client.post("/training/datasets/7/analysis")
 
@@ -121,7 +131,12 @@ def test_dataset_analysis_is_queued(auth_client, auth_user, monkeypatch):
     assert response.status_code == 202
     assert response.json() == {"task_id": "dataset-task-1", "status": "PENDING"}
     assert checked_access == [expected_call]
-    assert queued == [expected_call]
+    assert queued == {
+        "task_name": "datasets.analyze",
+        "owner_id": auth_user["id"],
+        "args": expected_call,
+        "kwargs": None,
+    }
 
 
 # comprueba que /training/run guarda el CSV y encola el entrenamiento
@@ -133,12 +148,19 @@ def test_training_run_queues_ml_training(
     class TaskResult:
         id = "training-task-1"
 
-    def enqueue(**kwargs):
-        queued.update(kwargs)
+    def enqueue(task, owner_id, *, args=(), kwargs=None):
+        queued.update(
+            {
+                "task_name": task.name,
+                "request_owner_id": owner_id,
+                "args": args,
+                **(kwargs or {}),
+            }
+        )
         return TaskResult()
 
     monkeypatch.setattr(
-        "backend.training.router.execute_training_task.delay",
+        "backend.training.router.enqueue_background_job",
         enqueue,
     )
 
@@ -168,6 +190,9 @@ def test_training_run_queues_ml_training(
         "task_id": "training-task-1",
         "status": "PENDING",
     }
+    assert queued["task_name"] == "training.run"
+    assert queued["request_owner_id"] == auth_user["id"]
+    assert queued["args"] == ()
     assert queued["dataset_id"] > 0
     assert queued["owner_id"] == auth_user["id"]
     assert queued["model_type"] == "ml"

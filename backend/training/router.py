@@ -13,6 +13,7 @@ from backend.db.models import User
 from backend.training.schemas import TrainingOptionsResponse, TrainingTaskResponse
 from backend.training.service import get_training_options
 from backend.training.tasks import execute_training_task
+from backend.worker.job_service import enqueue_background_job
 
 
 router = APIRouter(prefix="/training", tags=["training"])
@@ -70,14 +71,18 @@ async def training_run(
         else:
             ensure_saved_dataset_access(dataset_id, owner_id)
 
-        task = execute_training_task.delay(
-            dataset_id=dataset_id,
-            owner_id=owner_id,
-            model_type=model_type,
-            model_name=model_name,
-            eeg_params=_json_dict(eeg_params),
-            model_params=_json_dict(model_params),
-            training_params=_json_dict(training_params),
+        task = enqueue_background_job(
+            execute_training_task,
+            owner_id,
+            kwargs={
+                "dataset_id": dataset_id,
+                "owner_id": owner_id,
+                "model_type": model_type,
+                "model_name": model_name,
+                "eeg_params": _json_dict(eeg_params),
+                "model_params": _json_dict(model_params),
+                "training_params": _json_dict(training_params),
+            },
         )
 
         return {
