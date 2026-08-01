@@ -10,22 +10,29 @@ from backend.inference.predictors import (
 
 
 # Listar modelos disponibles para el selector
-def list_models() -> list[dict]:
-    """Devuelve los modelos base y los entrenados disponibles para inferencia."""
+def list_models(owner_id: int) -> list[dict]:
+    """Devuelve los modelos base y los modelos entrenados por el usuario."""
     return [
         *list_enabled_models(),
-        *[_trained_model_item(model) for model in repository.list_trained_models()],
+        *[
+            _trained_model_item(model)
+            for model in repository.list_trained_models(owner_id)
+        ],
     ]
 
 
 def _trained_model_item(model) -> dict:
     artifact_path = _resolve_path(model.artifact_path)
-    display_name = f"{catalog.display_name(model.model_name)} - experimento #{model.experiment_id}"
+    display_name = (
+        f"{catalog.display_name(model.model_name)} - experimento #{model.experiment_id}"
+    )
 
     return {
         "model_id": f"trained_model_{model.id}",
         "display_name": display_name,
-        "model_family": catalog.model_family(model.model_name, default=model.model_family),
+        "model_family": catalog.model_family(
+            model.model_name, default=model.model_family
+        ),
         "description": "Modelo entrenado desde la aplicacion",
         "enabled": artifact_path.exists(),
     }
@@ -36,9 +43,9 @@ def _resolve_path(path_value: str) -> Path:
     return path if path.is_absolute() else BASE_DIR / path
 
 
-def get_best_available_model() -> dict | None:
-    """Devuelve el modelo entrenado con mejor resultado y artefacto disponible."""
-    for model in repository.list_trained_models_ranked():
+def get_best_available_model(owner_id: int) -> dict | None:
+    """Devuelve el mejor modelo disponible del usuario."""
+    for model in repository.list_trained_models_ranked(owner_id):
         if not _resolve_path(model.artifact_path).exists():
             continue
 
@@ -62,15 +69,15 @@ def get_best_available_model() -> dict | None:
 
 
 # Devolver informacion y metricas del modelo seleccionado
-def get_model_info(model_id: str) -> dict:
+def get_model_info(model_id: str, owner_id: int) -> dict:
     """Devuelve metadatos, metricas y configuracion del modelo activo.
 
     Lo usa la pestana Modelo para mostrar al usuario que es lo que tiene
     cargado: tipo, hiperparametros y metricas de validacion.
     """
-    return get_predictor(model_id).info()
+    return get_predictor(model_id, owner_id).info()
 
 
-def get_model_figures(model_id: str) -> list[dict]:
+def get_model_figures(model_id: str, owner_id: int) -> list[dict]:
     """Devuelve las figuras de evaluacion que el frontend tiene que renderizar."""
-    return get_model_config(model_id).get("figures", [])
+    return get_model_config(model_id, owner_id).get("figures", [])

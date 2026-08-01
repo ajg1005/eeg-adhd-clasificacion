@@ -7,6 +7,7 @@ from tests.conftest import requires_ml_model
 
 def _save_training_experiment(
     eeg_dataframe_factory,
+    owner_id,
     model_name="random_forest",
     *,
     balanced_accuracy=0.79,
@@ -33,7 +34,7 @@ def _save_training_experiment(
             "training_params": {},
         },
     }
-    return save_experiment(file_bytes, "training.csv", df, result)
+    return save_experiment(file_bytes, "training.csv", df, result, owner_id)
 
 
 def _register_trained_model(
@@ -63,7 +64,9 @@ def _register_trained_model(
             "n_features": 0,
             "n_epochs_training": 8,
             "n_subjects_training": 4,
-            "file_size_bytes": artifact_path.stat().st_size if artifact_path.exists() else None,
+            "file_size_bytes": artifact_path.stat().st_size
+            if artifact_path.exists()
+            else None,
             "threshold": None,
             "model_metadata": {"model_name": model_name},
             "is_selected": False,
@@ -73,14 +76,15 @@ def _register_trained_model(
 
 # comprueba que /models lista los modelos base y los registrados tras entrenar
 def test_models_endpoint_lists_static_and_registered_trained_models(
-    client,
+    auth_client,
+    auth_user,
     eeg_dataframe_factory,
     tmp_path,
 ):
-    experiment_id = _save_training_experiment(eeg_dataframe_factory)
+    experiment_id = _save_training_experiment(eeg_dataframe_factory, auth_user["id"])
     trained_model_id = _register_trained_model(experiment_id, tmp_path)
 
-    response = client.get("/models")
+    response = auth_client.get("/models")
 
     assert response.status_code == 200
     models = {model["model_id"]: model for model in response.json()["models"]}
@@ -96,11 +100,16 @@ def test_models_endpoint_lists_static_and_registered_trained_models(
 
 # comprueba que un registro sin artefacto disponible queda deshabilitado
 def test_models_endpoint_marks_missing_artifact_as_disabled(
-    client,
+    auth_client,
+    auth_user,
     eeg_dataframe_factory,
     tmp_path,
 ):
-    experiment_id = _save_training_experiment(eeg_dataframe_factory, model_name="xgboost")
+    experiment_id = _save_training_experiment(
+        eeg_dataframe_factory,
+        auth_user["id"],
+        model_name="xgboost",
+    )
     trained_model_id = _register_trained_model(
         experiment_id,
         tmp_path,
@@ -108,7 +117,7 @@ def test_models_endpoint_marks_missing_artifact_as_disabled(
         create_artifact=False,
     )
 
-    response = client.get("/models")
+    response = auth_client.get("/models")
 
     assert response.status_code == 200
     models = {model["model_id"]: model for model in response.json()["models"]}
@@ -119,12 +128,14 @@ def test_models_endpoint_marks_missing_artifact_as_disabled(
 
 
 def test_best_model_endpoint_returns_highest_ranked_available_artifact(
-    client,
+    auth_client_factory,
     eeg_dataframe_factory,
     tmp_path,
 ):
+    auth_client, auth_user = auth_client_factory()
     missing_experiment_id = _save_training_experiment(
         eeg_dataframe_factory,
+        auth_user["id"],
         model_name="xgboost",
         balanced_accuracy=0.95,
         f1_score=0.94,
@@ -138,6 +149,7 @@ def test_best_model_endpoint_returns_highest_ranked_available_artifact(
 
     available_experiment_id = _save_training_experiment(
         eeg_dataframe_factory,
+        auth_user["id"],
         balanced_accuracy=0.87,
         f1_score=0.86,
     )
@@ -146,7 +158,7 @@ def test_best_model_endpoint_returns_highest_ranked_available_artifact(
         tmp_path,
     )
 
-    response = client.get("/models/best")
+    response = auth_client.get("/models/best")
 
     assert response.status_code == 200
     data = response.json()
@@ -157,12 +169,14 @@ def test_best_model_endpoint_returns_highest_ranked_available_artifact(
     assert data["dataset_filename"] == "training.csv"
 
 
-def test_best_model_endpoint_returns_null_without_registered_models(client, monkeypatch):
+def test_best_model_endpoint_returns_null_without_registered_models(
+    auth_client, monkeypatch
+):
     monkeypatch.setattr(
         "backend.model_registry.repository.list_trained_models_ranked",
-        lambda: [],
+        lambda owner_id: [],
     )
-    response = client.get("/models/best")
+    response = auth_client.get("/models/best")
 
     assert response.status_code == 200
     assert response.json() is None
@@ -170,8 +184,8 @@ def test_best_model_endpoint_returns_null_without_registered_models(client, monk
 
 # comprueba que /model/info devuelve metadatos del modelo seleccionado
 @requires_ml_model
-def test_model_info_endpoint_returns_metadata(client):
-    response = client.get("/model/info", params={"model_id": "ml_best"})
+def test_model_info_endpoint_returns_metadata(auth_client):
+    response = auth_client.get("/model/info", params={"model_id": "ml_best"})
 
     assert response.status_code == 200
     data = response.json()
@@ -180,7 +194,50 @@ def test_model_info_endpoint_returns_metadata(client):
 
 
 # comprueba que /model/info devuelve 404 para un modelo que no existe
-def test_model_info_endpoint_rejects_unknown_model(client):
-    response = client.get("/model/info", params={"model_id": "unknown"})
+def test_model_info_endpoint_rejects_unknown_model(auth_client):
+    response = auth_client.get("/model/info", params={"model_id": "unknown"})
 
     assert response.status_code == 404
+
+
+def test_trained_models_are_isolated_by_owner(
+    auth_client_factory,
+    eeg_dataframe_factory,
+    post_csv,
+    sample_prediction_csv_path,
+    tmp_path,
+):
+    owner_client, owner = auth_client_factory()
+    other_client, _ = auth_client_factory()
+    experiment_id = _save_training_experiment(
+        eeg_dataframe_factory,
+        owner["id"],
+    )
+    trained_model_id = _register_trained_model(experiment_id, tmp_path)
+    model_id = f"trained_model_{trained_model_id}"
+
+    owner_models = {
+        model["model_id"] for model in owner_client.get("/models").json()["models"]
+    }
+    other_models = {
+        model["model_id"] for model in other_client.get("/models").json()["models"]
+    }
+
+    assert model_id in owner_models
+    assert model_id not in other_models
+    assert other_client.get("/models/best").json() is None
+
+    info_response = other_client.get(
+        "/model/info",
+        params={"model_id": model_id},
+    )
+    assert info_response.status_code == 404
+    assert info_response.json()["detail"] == "Modelo no encontrado."
+
+    validation_response = post_csv(
+        other_client,
+        sample_prediction_csv_path,
+        f"/validate?model_id={model_id}",
+    )
+    assert validation_response.status_code == 400
+    assert validation_response.json()["detail"] == "Modelo no encontrado."

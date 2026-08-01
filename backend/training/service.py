@@ -106,6 +106,7 @@ def run_training(
     file_bytes: bytes,
     model_type: str,
     model_name: str,
+    owner_id: int,
     filename: str = "training.csv",
     eeg_params: dict[str, Any] | None = None,
     model_params: dict[str, Any] | None = None,
@@ -165,6 +166,7 @@ def run_training(
             filename=filename,
             dataframe=df,
             result=result,
+            owner_id=owner_id,
         )
     except Exception:
         logger.exception("No se pudo persistir el experimento; se devuelven las metricas igualmente.")

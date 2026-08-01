@@ -26,6 +26,33 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
 
+    dataset_accesses: Mapped[list["DatasetAccess"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    experiments: Mapped[list["Experiment"]] = relationship(back_populates="owner")
+    background_jobs: Mapped[list["BackgroundJob"]] = relationship(
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
+
+
+class BackgroundJob(Base):
+    """Trabajo de Celery registrado para controlar su propietario."""
+
+    __tablename__ = "background_jobs"
+
+    id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    owner_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    task_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+    owner: Mapped[User] = relationship(back_populates="background_jobs")
+
 
 class Dataset(Base):
     """Dataset EEG subido, identificado por hash y metadatos resumidos."""
@@ -50,6 +77,30 @@ class Dataset(Base):
         back_populates="dataset",
         cascade="all, delete-orphan",
     )
+    dataset_accesses: Mapped[list["DatasetAccess"]] = relationship(
+        back_populates="dataset",
+        cascade="all, delete-orphan",
+    )
+
+
+class DatasetAccess(Base):
+    """Relaciona un dataset deduplicado con los usuarios que pueden utilizarlo."""
+
+    __tablename__ = "dataset_accesses"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    dataset_id: Mapped[int] = mapped_column(
+        ForeignKey("datasets.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
+
+    user: Mapped[User] = relationship(back_populates="dataset_accesses")
+    dataset: Mapped[Dataset] = relationship(back_populates="dataset_accesses")
 
 
 class Experiment(Base):
@@ -60,6 +111,7 @@ class Experiment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)
     dataset_id: Mapped[int] = mapped_column(ForeignKey("datasets.id"), nullable=False, index=True)
+    owner_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True)
     model_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     model_name: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
     evaluation_mode: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -76,6 +128,7 @@ class Experiment(Base):
     classification_report: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
     dataset: Mapped[Dataset] = relationship(back_populates="experiments")
+    owner: Mapped[User | None] = relationship(back_populates="experiments")
     trained_model: Mapped["TrainedModel | None"] = relationship(
         back_populates="experiment",
         cascade="all, delete-orphan",

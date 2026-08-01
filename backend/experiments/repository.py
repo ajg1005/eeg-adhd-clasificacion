@@ -14,6 +14,7 @@ def save_experiment(
     filename: str,
     dataframe: pd.DataFrame,
     result: dict[str, Any],
+    owner_id: int,
 ) -> int:
     """Guarda un experimento completo y sus resultados por fold."""
     with SessionLocal() as session:
@@ -22,8 +23,9 @@ def save_experiment(
             file_bytes,
             filename,
             dataframe,
+            owner_id,
         )
-        experiment = _experiment_from_result(dataset.id, result)
+        experiment = _experiment_from_result(dataset.id, owner_id, result)
         session.add(experiment)
         session.flush()
 
@@ -36,6 +38,7 @@ def save_experiment(
 
 
 def list_experiments(
+    owner_id: int,
     model_type: str | None = None,
     model_name: str | None = None,
     limit: int = 50,
@@ -45,6 +48,7 @@ def list_experiments(
     with SessionLocal() as session:
         stmt = (
             select(Experiment)
+            .where(Experiment.owner_id == owner_id)
             # trained_model se carga aqui: la sesion se cierra al salir del with
             # y accederlo luego dejaria la instancia desasociada.
             .options(
@@ -63,24 +67,33 @@ def list_experiments(
         return list(session.scalars(stmt).all())
 
 
-def get_experiment(experiment_id: int) -> Experiment | None:
+def get_experiment(experiment_id: int, owner_id: int) -> Experiment | None:
     """Devuelve un experimento con su dataset y resultados por fold."""
     with SessionLocal() as session:
-        return session.get(
-            Experiment,
-            experiment_id,
-            options=[
+        stmt = (
+            select(Experiment)
+            .where(
+                Experiment.id == experiment_id,
+                Experiment.owner_id == owner_id,
+            )
+            .options(
                 selectinload(Experiment.dataset),
                 selectinload(Experiment.fold_results),
                 selectinload(Experiment.trained_model),
-            ],
+            )
         )
+        return session.scalar(stmt)
 
 
-def _experiment_from_result(dataset_id: int, result: dict[str, Any]) -> Experiment:
+def _experiment_from_result(
+    dataset_id: int,
+    owner_id: int,
+    result: dict[str, Any],
+) -> Experiment:
     configuration = result.get("configuration", {})
     return Experiment(
         dataset_id=dataset_id,
+        owner_id=owner_id,
         model_type=str(configuration.get("model_type", "")),
         model_name=str(configuration.get("model_name", "")),
         evaluation_mode=str(configuration.get("evaluation_mode", "")),

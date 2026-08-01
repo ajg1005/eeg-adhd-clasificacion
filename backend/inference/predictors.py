@@ -77,9 +77,9 @@ def load_json(path):
 
 
 # Buscar la configuracion del modelo seleccionado.
-def get_model_config(model_id: str) -> dict[str, Any]:
+def get_model_config(model_id: str, owner_id: int) -> dict[str, Any]:
     if model_id.startswith(TRAINED_MODEL_PREFIX):
-        model_config = _trained_model_config(model_id)
+        model_config = _trained_model_config(model_id, owner_id)
     else:
         try:
             model_config = MODEL_REGISTRY[model_id]
@@ -92,9 +92,9 @@ def get_model_config(model_id: str) -> dict[str, Any]:
     return model_config
 
 
-def _trained_model_config(model_id: str) -> dict[str, Any]:
+def _trained_model_config(model_id: str, owner_id: int) -> dict[str, Any]:
     trained_model_id = _parse_trained_model_id(model_id)
-    trained_model = get_trained_model(trained_model_id)
+    trained_model = get_trained_model(trained_model_id, owner_id)
     if trained_model is None:
         raise ValueError("Modelo no encontrado.")
 
@@ -103,7 +103,9 @@ def _trained_model_config(model_id: str) -> dict[str, Any]:
     metadata = dict(trained_model.model_metadata or {})
     if trained_model.threshold is not None and "threshold" not in metadata:
         metadata["threshold"] = float(trained_model.threshold)
-    family = catalog.model_family(trained_model.model_name, default=trained_model.model_family)
+    family = catalog.model_family(
+        trained_model.model_name, default=trained_model.model_family
+    )
 
     return {
         "model_id": model_id,
@@ -146,6 +148,7 @@ def _default_feature_mode(model_family: str) -> str | None:
         return "raw_epochs"
     return None
 
+
 def list_enabled_models() -> list[dict[str, Any]]:
     return [
         model_config
@@ -154,7 +157,9 @@ def list_enabled_models() -> list[dict[str, Any]]:
     ]
 
 
-def validate_dataframe(df: pd.DataFrame, expected_channels: list[str]) -> dict[str, Any]:
+def validate_dataframe(
+    df: pd.DataFrame, expected_channels: list[str]
+) -> dict[str, Any]:
     validate_eeg_dataframe(df, expected_channels)
 
     return {
@@ -207,7 +212,9 @@ class MLPredictor:
             raise FileNotFoundError(f"No existe el modelo: {self.model_path}")
 
         if not self.feature_columns_path.exists():
-            raise FileNotFoundError(f"No existe feature_columns.json: {self.feature_columns_path}")
+            raise FileNotFoundError(
+                f"No existe feature_columns.json: {self.feature_columns_path}"
+            )
 
         model = joblib.load(self.model_path)
         feature_columns = load_json(self.feature_columns_path)
@@ -237,7 +244,8 @@ class MLPredictor:
             "display_name": self.model_config["display_name"],
             "model_name": metadata.get("model_name"),
             "model_family": self.model_config["model_family"],
-            "feature_mode": self.model_config.get("feature_mode") or metadata.get("feature_mode"),
+            "feature_mode": self.model_config.get("feature_mode")
+            or metadata.get("feature_mode"),
             "sfreq": metadata.get("sfreq"),
             "epoch_size": metadata.get("epoch_size"),
             "step_size": metadata.get("step_size"),
@@ -392,7 +400,8 @@ class DLPredictor:
             "display_name": self.model_config["display_name"],
             "model_name": metadata.get("model_name"),
             "model_family": self.model_config["model_family"],
-            "feature_mode": self.model_config.get("feature_mode") or metadata.get("feature_mode"),
+            "feature_mode": self.model_config.get("feature_mode")
+            or metadata.get("feature_mode"),
             "sfreq": metadata.get("sfreq"),
             "epoch_size": metadata.get("epoch_size"),
             "step_size": metadata.get("step_size"),
@@ -485,7 +494,9 @@ def _config_path(path_value: str | Path | None, default: Path) -> Path:
     return Path(path_value)
 
 
-def _load_metadata(metadata_path: Path, inline_metadata: dict[str, Any] | None) -> dict[str, Any]:
+def _load_metadata(
+    metadata_path: Path, inline_metadata: dict[str, Any] | None
+) -> dict[str, Any]:
     if metadata_path.exists():
         return load_json(metadata_path)
     if inline_metadata:
@@ -493,15 +504,17 @@ def _load_metadata(metadata_path: Path, inline_metadata: dict[str, Any] | None) 
     raise FileNotFoundError(f"No existe metadata.json: {metadata_path}")
 
 
-def _load_metrics(metrics_path: Path, inline_metrics: dict[str, Any] | None) -> dict[str, Any] | None:
+def _load_metrics(
+    metrics_path: Path, inline_metrics: dict[str, Any] | None
+) -> dict[str, Any] | None:
     if metrics_path.exists():
         return load_json(metrics_path)
     return inline_metrics
 
 
 @lru_cache(maxsize=None)
-def get_predictor(model_id: str):
-    model_config = get_model_config(model_id)
+def get_predictor(model_id: str, owner_id: int):
+    model_config = get_model_config(model_id, owner_id)
     model_family = model_config.get("model_family")
 
     if model_family == "machine_learning":

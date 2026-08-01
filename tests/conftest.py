@@ -44,6 +44,73 @@ def client():
 
 
 @pytest.fixture(scope="session")
+def auth_user(client):
+    email = f"integration-{uuid.uuid4().hex}@example.com"
+    password = "password-segura"
+    register_response = client.post(
+        "/auth/register",
+        json={"email": email, "password": password},
+    )
+    assert register_response.status_code == 201
+
+    login_response = client.post(
+        "/auth/login",
+        data={"username": email, "password": password},
+    )
+    assert login_response.status_code == 200
+
+    return {
+        **register_response.json(),
+        "token": login_response.json()["access_token"],
+    }
+
+
+@pytest.fixture(scope="session")
+def auth_client(auth_user):
+    from backend.main import app
+
+    with TestClient(
+        app,
+        headers={"Authorization": f"Bearer {auth_user['token']}"},
+    ) as authenticated_client:
+        yield authenticated_client
+
+
+@pytest.fixture
+def auth_client_factory(client):
+    created_clients = []
+
+    def create_client():
+        email = f"integration-{uuid.uuid4().hex}@example.com"
+        password = "password-segura"
+        register_response = client.post(
+            "/auth/register",
+            json={"email": email, "password": password},
+        )
+        assert register_response.status_code == 201
+        login_response = client.post(
+            "/auth/login",
+            data={"username": email, "password": password},
+        )
+        assert login_response.status_code == 200
+
+        from backend.main import app
+
+        authenticated_client = TestClient(
+            app,
+            headers={
+                "Authorization": f"Bearer {login_response.json()['access_token']}"
+            },
+        )
+        created_clients.append(authenticated_client)
+        return authenticated_client, register_response.json()
+
+    yield create_client
+
+    for authenticated_client in created_clients:
+        authenticated_client.close()
+
+@pytest.fixture(scope="session")
 def fixtures_dir():
     return FIXTURES_DIR
 

@@ -11,22 +11,36 @@ def save_experiment(
     filename: str,
     dataframe: pd.DataFrame,
     result: dict[str, Any],
+    owner_id: int,
 ) -> int:
-    return repository.save_experiment(file_bytes, filename, dataframe, result)
+    return repository.save_experiment(
+        file_bytes,
+        filename,
+        dataframe,
+        result,
+        owner_id,
+    )
 
 
 def list_experiments(
+    owner_id: int,
     model_type: str | None = None,
     model_name: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ):
-    experiments = repository.list_experiments(model_type, model_name, limit, offset)
+    experiments = repository.list_experiments(
+        owner_id,
+        model_type,
+        model_name,
+        limit,
+        offset,
+    )
     return [_experiment_response(experiment) for experiment in experiments]
 
 
-def get_experiment(experiment_id: int):
-    experiment = repository.get_experiment(experiment_id)
+def get_experiment(experiment_id: int, owner_id: int):
+    experiment = repository.get_experiment(experiment_id, owner_id)
     if experiment is None:
         return None
 

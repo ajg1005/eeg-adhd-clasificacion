@@ -6,7 +6,7 @@ def test_analyze_dataset_task_returns_saved_stats(monkeypatch):
 
     monkeypatch.setattr(
         "backend.datasets.tasks.get_saved_dataset_stats",
-        lambda dataset_id: expected,
+        lambda dataset_id, user_id: expected,
     )
 
-    assert analyze_dataset.run(7) == expected
+    assert analyze_dataset.run(7, 11) == expected
