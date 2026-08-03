@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
 
 import { errorMessage } from "../../../shared/utils/errors";
+import { AuthForm } from "../components/AuthForm";
 import { AuthLayout } from "../components/AuthLayout";
 import { useAuth } from "../useAuth";
 
@@ -51,53 +52,20 @@ export function LoginPage() {
       }
       title={t("auth.login.title")}
     >
-      <form className="auth-form" onSubmit={(event) => {
-        void handleSubmit(event);
-      }}>
-        {error ? (
-          <div className="alert alert-error" role="alert">
-            {error}
-          </div>
-        ) : null}
-
-        <label>
-          <span>{t("auth.fields.email")}</span>
-          <input
-            autoComplete="email"
-            inputMode="email"
-            onChange={(event) => {
-              setEmail(event.target.value);
-            }}
-            required
-            type="email"
-            value={email}
-          />
-        </label>
-
-        <label>
-          <span>{t("auth.fields.password")}</span>
-          <input
-            autoComplete="current-password"
-            minLength={8}
-            onChange={(event) => {
-              setPassword(event.target.value);
-            }}
-            required
-            type="password"
-            value={password}
-          />
-        </label>
-
-        <button
-          className="primary-button auth-submit"
-          disabled={isSubmitting}
-          type="submit"
-        >
-          {isSubmitting
-            ? t("auth.login.submitting")
-            : t("auth.login.submit")}
-        </button>
-      </form>
+      <AuthForm
+        email={email}
+        error={error}
+        isSubmitting={isSubmitting}
+        onEmailChange={setEmail}
+        onPasswordChange={setPassword}
+        onSubmit={(event) => {
+          void handleSubmit(event);
+        }}
+        password={password}
+        passwordAutoComplete="current-password"
+        submitLabel={t("auth.login.submit")}
+        submittingLabel={t("auth.login.submitting")}
+      />
     </AuthLayout>
   );
 }

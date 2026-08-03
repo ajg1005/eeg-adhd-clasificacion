@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 
 import { errorMessage } from "../../../shared/utils/errors";
+import { AuthForm } from "../components/AuthForm";
 import { AuthLayout } from "../components/AuthLayout";
 import { useAuth } from "../useAuth";
 
@@ -49,43 +50,20 @@ export function RegisterPage() {
       }
       title={t("auth.register.title")}
     >
-      <form className="auth-form" onSubmit={(event) => {
-        void handleSubmit(event);
-      }}>
-        {error ? (
-          <div className="alert alert-error" role="alert">
-            {error}
-          </div>
-        ) : null}
-
-        <label>
-          <span>{t("auth.fields.email")}</span>
-          <input
-            autoComplete="email"
-            inputMode="email"
-            onChange={(event) => {
-              setEmail(event.target.value);
-            }}
-            required
-            type="email"
-            value={email}
-          />
-        </label>
-
-        <label>
-          <span>{t("auth.fields.password")}</span>
-          <input
-            autoComplete="new-password"
-            minLength={8}
-            onChange={(event) => {
-              setPassword(event.target.value);
-            }}
-            required
-            type="password"
-            value={password}
-          />
-        </label>
-
+      <AuthForm
+        email={email}
+        error={error}
+        isSubmitting={isSubmitting}
+        onEmailChange={setEmail}
+        onPasswordChange={setPassword}
+        onSubmit={(event) => {
+          void handleSubmit(event);
+        }}
+        password={password}
+        passwordAutoComplete="new-password"
+        submitLabel={t("auth.register.submit")}
+        submittingLabel={t("auth.register.submitting")}
+      >
         <label>
           <span>{t("auth.fields.passwordConfirmation")}</span>
           <input
@@ -99,17 +77,7 @@ export function RegisterPage() {
             value={passwordConfirmation}
           />
         </label>
-
-        <button
-          className="primary-button auth-submit"
-          disabled={isSubmitting}
-          type="submit"
-        >
-          {isSubmitting
-            ? t("auth.register.submitting")
-            : t("auth.register.submit")}
-        </button>
-      </form>
+      </AuthForm>
     </AuthLayout>
   );
 }
