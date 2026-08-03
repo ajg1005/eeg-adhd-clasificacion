@@ -49,22 +49,11 @@ function PublicOnly() {
   return user ? <Navigate replace to="/app" /> : <Outlet />;
 }
 
-function InitialRedirect() {
-  const { isLoading, user } = useAuth();
-
-  if (isLoading) {
-    return <SessionLoading />;
-  }
-
-  return <Navigate replace to={user ? "/app" : "/login"} />;
-}
-
 export function AppRouter() {
   return (
     <Routes>
-      <Route element={<InitialRedirect />} path="/" />
-
       <Route element={<PublicOnly />}>
+        <Route element={<Navigate replace to="/login" />} path="/" />
         <Route element={<LoginPage />} path="/login" />
         <Route element={<RegisterPage />} path="/register" />
       </Route>
