@@ -75,7 +75,49 @@
     },
     "task": {
       "status": "Could not check the task"
+    },
+    "auth": {
+      "login": "Could not sign in",
+      "register": "Could not create the account",
+      "profile": "Could not load the profile"
     }
+  },
+  "auth": {
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "passwordConfirmation": "Repeat password"
+    },
+    "login": {
+      "title": "Sign in",
+      "description": "Access your workspace.",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "Do not have an account yet?",
+      "createAccount": "Create account"
+    },
+    "register": {
+      "title": "Create account",
+      "description": "Create your access credentials.",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "passwordMismatch": "Passwords do not match."
+    },
+    "profile": {
+      "eyebrow": "Account",
+      "title": "Profile",
+      "description": "Information associated with the current session.",
+      "details": "Account details",
+      "back": "Back to application",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "createdAt": "Created at",
+      "identifier": "Identifier"
+    },
+    "logout": "Sign out"
   },
   "dataset": {
     "title": "Training dataset",
