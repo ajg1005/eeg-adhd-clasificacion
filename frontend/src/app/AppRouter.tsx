@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import App from "./App";
 import { LoginPage } from "../features/auth/pages/LoginPage";
+import { ProfilePage } from "../features/auth/pages/ProfilePage";
 import { RegisterPage } from "../features/auth/pages/RegisterPage";
 import { useAuth } from "../features/auth/useAuth";
 
@@ -70,6 +71,7 @@ export function AppRouter() {
 
       <Route element={<RequireAuth />}>
         <Route element={<App />} path="/app" />
+        <Route element={<ProfilePage />} path="/profile" />
       </Route>
 
       <Route element={<Navigate replace to="/" />} path="*" />

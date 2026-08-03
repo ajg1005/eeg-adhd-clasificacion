@@ -1,8 +1,11 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 
+import { useAuth } from "../../features/auth/useAuth";
 import { Tabs } from "../../shared/components/Tabs";
 import { TAB_GROUPS } from "../tabs";
 import type { TabId } from "../tabs";
+import { LanguageSelector } from "./LanguageSelector";
 
 interface AppHeaderProps {
   activeTab: TabId;
@@ -10,12 +13,15 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ activeTab, onTabChange }: AppHeaderProps) {
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
+  const { logout, user } = useAuth();
 
   return (
     <header className="app-header">
       <div className="app-header-inner">
-        <span className="brand-name">{t("app.brand")}</span>
+        <Link className="brand-name brand-link" to="/app">
+          {t("app.brand")}
+        </Link>
 
         <Tabs
           activeTab={activeTab}
@@ -23,18 +29,15 @@ export function AppHeader({ activeTab, onTabChange }: AppHeaderProps) {
           tabGroups={TAB_GROUPS}
         />
 
-        <label className="language-selector">
-          <span className="sr-only">{t("app.language")}</span>
-          <select
-            onChange={(event) => {
-              void i18n.changeLanguage(event.target.value);
-            }}
-            value={i18n.resolvedLanguage || "es"}
-          >
-            <option value="es">ES</option>
-            <option value="en">EN</option>
-          </select>
-        </label>
+        <div className="app-header-actions">
+          <LanguageSelector />
+          <Link className="account-link" title={user?.email} to="/profile">
+            {user?.email}
+          </Link>
+          <button className="text-button" onClick={logout} type="button">
+            {t("auth.logout")}
+          </button>
+        </div>
       </div>
     </header>
   );
