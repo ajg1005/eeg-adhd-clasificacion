@@ -7,6 +7,8 @@ services:
       sh -c "alembic upgrade head &&
       exec uvicorn backend.main:app --host 0.0.0.0 --port 8000"
     ports: !reset []
+    environment:
+      CORS_ORIGINS: https://eegscope.dev
     volumes: !override
       - results_data:/app/results
       - dataset_uploads:/app/data/uploads/datasets
@@ -19,27 +21,28 @@ services:
       - trained_models:/app/models/trained
 
   frontend:
+    build:
+      args:
+        VITE_API_BASE_URL: https://eegscope.dev/api
     ports: !reset []
 
   caddy:
     image: caddy:2.11.4-alpine
-    environment:
-      APP_DOMAIN: ${APP_DOMAIN:?Configura APP_DOMAIN en .env}
-      API_DOMAIN: ${API_DOMAIN:?Configura API_DOMAIN en .env}
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
     depends_on:
       - backend
       - frontend
     restart: unless-stopped
 
+  cloudflared:
+    image: cloudflare/cloudflared:2026.7.3
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Configura CLOUDFLARE_TUNNEL_TOKEN en .env}
+    depends_on:
+      - caddy
+    restart: unless-stopped
+
 volumes:
   results_data:
-  caddy_data:
-  caddy_config:
