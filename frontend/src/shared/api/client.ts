@@ -1,3 +1,7 @@
+import {
+  expireSession,
+  getAccessToken,
+} from "../../features/auth/session";
 import { translate } from "../utils/errors";
 
 const API_BASE_URL = (
@@ -11,6 +15,9 @@ const UUID_PATH_SEGMENT_PATTERN =
 
 const ABSOLUTE_URL_PATTERN = /^[a-z][a-z0-9+.-]*:/i;
 const STATIC_ROUTES = {
+  authLogin: "/auth/login",
+  authMe: "/auth/me",
+  authRegister: "/auth/register",
   bestModel: "/models/best",
   experiments: "/experiments",
   health: "/health",
@@ -93,6 +100,31 @@ function resolvePath(request: ApiRequest): string {
   return STATIC_ROUTES[request.route];
 }
 
+function requiresAuthentication(request: ApiRequest): boolean {
+  return !(
+    request.route === "authLogin" ||
+    request.route === "authRegister" ||
+    request.route === "health"
+  );
+}
+
+function authenticatedOptions(
+  request: ApiRequest,
+  options: RequestInit | undefined,
+): RequestInit {
+  const headers = new Headers(options?.headers);
+  const accessToken = getAccessToken();
+
+  if (accessToken && requiresAuthentication(request)) {
+    headers.set("Authorization", "Bearer " + accessToken);
+  }
+
+  return {
+    ...options,
+    headers,
+  };
+}
+
 function buildUrl(request: ApiRequest): string {
   const url = new URL(`${API_BASE_URL}${resolvePath(request)}`);
   if (url.origin !== API_ORIGIN) {
@@ -157,7 +189,7 @@ export async function requestJson<T>(
   let response: Response;
 
   try {
-    response = await fetch(url, options);
+    response = await fetch(url, authenticatedOptions(request, options));
   } catch (caughtError) {
     if (caughtError instanceof DOMException && caughtError.name === "AbortError") {
       throw caughtError;
@@ -167,6 +199,10 @@ export async function requestJson<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401 && requiresAuthentication(request)) {
+      expireSession();
+    }
+
     throw new Error(await readError(response, fallbackMessage));
   }
 

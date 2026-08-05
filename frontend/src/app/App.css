@@ -4,6 +4,7 @@
 @import "../features/training/training.css";
 @import "../features/experiments/experiments.css";
 @import "../features/inference/inference.css";
+@import "../features/auth/auth.css";
 
 .app-shell {
   width: min(1180px, calc(100% - 64px));
@@ -36,6 +37,36 @@
   font-weight: 500;
   letter-spacing: 0;
   white-space: nowrap;
+}
+
+.brand-link {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand-link:hover {
+  color: var(--golden-chestnut);
+}
+
+.app-header-actions {
+  display: flex;
+  min-width: 0;
+  gap: 16px;
+  align-items: center;
+}
+
+.account-link {
+  max-width: 180px;
+  overflow: hidden;
+  color: var(--silver);
+  font-size: 0.8rem;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-link:hover {
+  color: var(--ink);
 }
 
 .language-selector {
@@ -71,13 +102,7 @@
   text-wrap: pretty;
 }
 
-.tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  align-items: center;
-}
-
+.tabs,
 .tab-group {
   display: flex;
   flex-wrap: wrap;
@@ -148,5 +173,17 @@
 
   .view-heading {
     padding: 44px 0 32px;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-header-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .account-link {
+    max-width: min(48vw, 190px);
   }
 }
