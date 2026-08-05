@@ -1,0 +1,45 @@
+services:
+  db:
+    ports: !reset []
+
+  backend:
+    command: >
+      sh -c "alembic upgrade head &&
+      exec uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+    ports: !reset []
+    volumes: !override
+      - results_data:/app/results
+      - dataset_uploads:/app/data/uploads/datasets
+      - trained_models:/app/models/trained
+
+  worker:
+    volumes: !override
+      - results_data:/app/results
+      - dataset_uploads:/app/data/uploads/datasets
+      - trained_models:/app/models/trained
+
+  frontend:
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Configura APP_DOMAIN en .env}
+      API_DOMAIN: ${API_DOMAIN:?Configura API_DOMAIN en .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  results_data:
+  caddy_data:
+  caddy_config:
