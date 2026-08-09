@@ -1,0 +1,48 @@
+services:
+  db:
+    ports: !reset []
+
+  backend:
+    command: >
+      sh -c "alembic upgrade head &&
+      exec uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+    ports: !reset []
+    environment:
+      CORS_ORIGINS: https://eegscope.dev
+    volumes: !override
+      - results_data:/app/results
+      - dataset_uploads:/app/data/uploads/datasets
+      - trained_models:/app/models/trained
+
+  worker:
+    volumes: !override
+      - results_data:/app/results
+      - dataset_uploads:/app/data/uploads/datasets
+      - trained_models:/app/models/trained
+
+  frontend:
+    build:
+      args:
+        VITE_API_BASE_URL: https://eegscope.dev/api
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.7.3
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Configura CLOUDFLARE_TUNNEL_TOKEN en .env}
+    depends_on:
+      - caddy
+    restart: unless-stopped
+
+volumes:
+  results_data:

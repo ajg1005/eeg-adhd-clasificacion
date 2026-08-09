@@ -29,8 +29,12 @@ if not DATABASE_URL:
 
 
 CORS_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    origin.strip().rstrip("/")
+    for origin in os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if origin.strip()
 ]
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
