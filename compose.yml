@@ -30,7 +30,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    command: sh -c "alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     env_file:
@@ -40,6 +40,9 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
     volumes:
+      # El codigo en solo lectura para que --reload vea los cambios del host sin
+      # reconstruir la imagen. El worker de Celery no recarga: reinicialo a mano.
+      - ./backend:/app/backend:ro
       - ./results:/app/results
       - dataset_uploads:/app/data/uploads/datasets
       - trained_models:/app/models/trained
