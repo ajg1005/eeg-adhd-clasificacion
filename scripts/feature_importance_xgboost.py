@@ -13,26 +13,24 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from sklearn.inspection import permutation_importance
 from sklearn.utils.class_weight import compute_sample_weight
 
 from scripts.constants import RANDOM_STATE
-from scripts.data_load import load_dataset
-from scripts.epochs import create_epochs
-from scripts.feature_importance import aggregate_by_channel, load_json, stratified_subsample
-from scripts.feature_pipeline import align_feature_columns, build_features_from_config
+from scripts.feature_importance import (
+    aggregate_by_channel,
+    load_json,
+    prepare_importance_data,
+    stratified_subsample,
+)
 from scripts.paths import (
-    CSV_PATH,
     FIGURES_DIR,
     ML_FEATURE_COLUMNS_PATH as FEATURE_COLUMNS_PATH,
     ML_METADATA_PATH as METADATA_PATH,
     RESULTS_DIR,
 )
 from scripts.pipeline import create_ml_model
-from scripts.preprocessing import preprocess_dataset
-from scripts.split import make_group_shuffle_split
 
 TEST_SIZE = 0.2
 TEST_SAMPLE_SIZE = 0
@@ -87,36 +85,8 @@ def main():
     metadata = load_json(METADATA_PATH)
     feature_columns = load_json(FEATURE_COLUMNS_PATH)
 
-    df = load_dataset(CSV_PATH)
-    df_clean, eeg_cols = preprocess_dataset(df)
-
-    x_epochs, y_epochs, groups_epochs = create_epochs(
-        df=df_clean,
-        eeg_columns=eeg_cols,
-        epoch_size=metadata["epoch_size"],
-        step_size=metadata["step_size"],
-    )
-
-    x_features = align_feature_columns(
-        build_features_from_config(x_epochs, eeg_cols, metadata),
-        feature_columns,
-    )
-    y_epochs = np.asarray(y_epochs).astype(int)
-    groups_epochs = np.asarray(groups_epochs).astype(str)
-
-    print(f"Total epochs: {len(x_features)} | pacientes: {len(set(groups_epochs))}")
-
-    X_train, X_test, y_train, y_test, groups_train, groups_test = make_group_shuffle_split(
-        x_features,
-        y_epochs,
-        groups_epochs,
-        test_size=TEST_SIZE,
-        random_state=RANDOM_STATE,
-    )
-    overlap = len(set(groups_train) & set(groups_test))
-    print(
-        f"Split: {len(X_train)} train ({len(set(groups_train))} pacientes) | "
-        f"{len(X_test)} test ({len(set(groups_test))} pacientes) | overlap pacientes={overlap}"
+    X_train, X_test, y_train, y_test, _, _ = prepare_importance_data(
+        metadata, feature_columns, TEST_SIZE,
     )
 
     if DRY_RUN:

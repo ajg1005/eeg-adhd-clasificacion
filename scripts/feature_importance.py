@@ -94,16 +94,8 @@ def aggregate_by_channel(importance_df, channels):
     return pd.DataFrame(rows).sort_values("importance_sum", ascending=False).reset_index(drop=True)
 
 
-def main():
-
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"No existe {MODEL_PATH}. Ejecuta python -m scripts.export_model primero.")
-
-    print("Cargando modelo, metadata y dataset...")
-    pipeline = joblib.load(MODEL_PATH)
-    metadata = load_json(METADATA_PATH)
-    feature_columns = load_json(FEATURE_COLUMNS_PATH)
-
+def prepare_importance_data(metadata, feature_columns, test_size):
+    """Prepara las mismas entradas y particiones por sujeto para ambos modelos."""
     df = load_dataset(CSV_PATH)
     df_clean, eeg_cols = preprocess_dataset(df)
 
@@ -128,12 +120,29 @@ def main():
         x_features,
         y_epochs,
         groups_epochs,
-        test_size=TEST_SIZE,
+        test_size=test_size,
         random_state=RANDOM_STATE,
     )
     overlap = len(set(groups_train) & set(groups_test))
     print(f"Split: {len(X_train)} train ({len(set(groups_train))} pacientes) | "
           f"{len(X_test)} test ({len(set(groups_test))} pacientes) | overlap pacientes={overlap}")
+
+    return X_train, X_test, y_train, y_test, groups_train, groups_test
+
+
+def main():
+
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(f"No existe {MODEL_PATH}. Ejecuta python -m scripts.export_model primero.")
+
+    print("Cargando modelo, metadata y dataset...")
+    pipeline = joblib.load(MODEL_PATH)
+    metadata = load_json(METADATA_PATH)
+    feature_columns = load_json(FEATURE_COLUMNS_PATH)
+
+    X_train, X_test, y_train, y_test, _, _ = prepare_importance_data(
+        metadata, feature_columns, TEST_SIZE,
+    )
 
     if DRY_RUN:
         print("Dry-run OK: datos, caracteristicas y split cross-subject preparados correctamente.")
