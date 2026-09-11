@@ -1,128 +1,217 @@
-# EEG ADHD Classifier
+# EEGScope
 
 [![CI](https://github.com/ajg1005/eeg-adhd-clasificacion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ajg1005/eeg-adhd-clasificacion/actions/workflows/ci.yml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ajg1005_eeg-adhd-clasificacion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ajg1005_eeg-adhd-clasificacion)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=ajg1005_eeg-adhd-clasificacion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ajg1005_eeg-adhd-clasificacion)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ajg1005_eeg-adhd-clasificacion&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ajg1005_eeg-adhd-clasificacion)
+[![Licencia](https://img.shields.io/github/license/ajg1005/eeg-adhd-clasificacion)](LICENSE)
+[![Última release](https://img.shields.io/github/v/release/ajg1005/eeg-adhd-clasificacion?include_prereleases)](https://github.com/ajg1005/eeg-adhd-clasificacion/releases)
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+[![Abrir EEGScope](https://img.shields.io/badge/Abrir-EEGScope-2563EB)](https://app.eegscope.dev)
 
-Aplicación web para clasificar señales EEG como `ADHD` o `Control` mediante modelos de Machine Learning y Deep Learning.
+EEGScope es una aplicación web desarrollada como Trabajo de Fin de Grado en Ingeniería Informática en la Universidad de Burgos. Permite trabajar con señales EEG y comparar modelos de Machine Learning y Deep Learning para clasificarlas como TDAH o Control.
 
-## Introducción
+El repositorio incluye la aplicación, los scripts de investigación, los resultados experimentales y enlaces a las fuentes consultadas.
 
-Este proyecto desarrolla un sistema de apoyo académico para la clasificación de TDAH a partir de señales EEG. La aplicación permite cargar archivos CSV, explorar el dataset, entrenar modelos de forma interactiva y obtener predicciones usando modelos previamente entrenados.
+**[Página del proyecto](https://eegscope.dev) · [Aplicación web](https://app.eegscope.dev)**
 
-Se han implementado dos enfoques:
+Es un prototipo académico sin validación clínica. La versión publicada depende de que el equipo que aloja los servicios esté encendido y conectado.
 
-- Modelos clásicos de Machine Learning (SVM RBF, Random Forest, XGBoost) basados en características temporales y espectrales por ventana EEG.
-- Modelos de Deep Learning (CNN 1D, CNN-LSTM) entrenados directamente sobre ventanas crudas de señal EEG.
+## Funcionalidades
 
-El backend está desarrollado con FastAPI y el frontend con React. Toda la evaluación se hace con validación cruzada cross-subject (`StratifiedGroupKFold`) para evitar fuga de información por paciente.
+- Registro e inicio de sesión, con acceso a los recursos de cada usuario.
+- Carga, análisis y reutilización de datasets en CSV.
+- Configuración y entrenamiento de modelos ML y DL.
+- Historial de experimentos con parámetros, métricas y resultados.
+- Predicción sobre el registro de un paciente con modelos propios o de referencia.
+- Análisis y entrenamientos en segundo plano, sin bloquear la navegación.
 
-El sistema tiene carácter académico y no debe utilizarse como herramienta de diagnóstico clínico.
+El flujo habitual es **cargar datos → entrenar → consultar resultados → utilizar el modelo**. También se puede predecir con un modelo de referencia sin entrenar uno propio.
 
-## Flujo del sistema
+## Instalación local
 
-```text
-CSV EEG -> validación de columnas y pacientes -> preprocesado -> segmentación en epochs
-        -> extracción de características o ventanas crudas -> entrenamiento/evaluación
-        -> exportación del modelo -> predicción por epochs -> agregación por paciente
-```
+Necesitas **Git y Docker con Docker Compose**, con soporte para contenedores Linux. No hace falta instalar Python ni Node.js por separado para ejecutar la aplicación con Docker.
 
-En los modelos clásicos de Machine Learning se utilizan características temporales y espectrales extraídas por canal y ventana EEG. En los modelos de Deep Learning se emplean directamente las ventanas crudas de señal, con filtrado y normalización por sujeto.
-
-## Metodología de evaluación
-
-La evaluación se realiza a nivel de paciente mediante validación **cross-subject**. Esto significa que las ventanas de un mismo paciente no aparecen simultáneamente en entrenamiento y test, reduciendo el riesgo de fuga de información entre epochs del mismo sujeto.
-
-Para los modelos ML se usa validación cruzada con `StratifiedGroupKFold`. Para los modelos DL se emplean folds externos por sujeto y una validación interna también separada por sujeto para ajustar el umbral de clasificación.
-
-## Interfaz
-
-La aplicación se organiza en cuatro pestañas:
-
-- **Modelo**: información del mejor modelo exportado (ML o DL), métricas de CV y figuras de evaluación.
-- **Dataset entrenamiento**: carga un CSV con varios pacientes, muestra estadísticas (filas, columnas, clases, canales) y permite filtrar la lista de pacientes por clase.
-- **Entrenamiento**: usa el dataset cargado, configura parámetros EEG/modelo/entrenamiento y lanza un entrenamiento cross-subject con resultados detallados.
-- **Experimentos**: se guarda un historico de los entrenamientos realizados,diferentes parametros e informacion del dataset.
-- **Predicción**: sube el CSV de un paciente, se valida contra el modelo seleccionado y se obtiene la clasificación final junto con la distribución de epochs.
-
-## Tecnologías utilizadas
-
-- Python 3.13, FastAPI, Pydantic
-- uv para la gestión reproducible de dependencias
-- scikit-learn, XGBoost
-- TensorFlow / Keras
-- pandas, NumPy, SciPy, matplotlib
-- React 19 + Vite
-- Recharts
-- Docker, Docker Compose
-- PostgreSQL
-- Celery y Redis
-- Alembic (migraciones de esquema)
-
-## Estructura del proyecto
-
-```text
-backend/      API FastAPI, servicios y factories de modelos consumidos por la UI
-alembic/      Migraciones de la base de datos de experimentos y datasets
-frontend/    Interfaz React (Vite)
-scripts/      Pipeline de investigación: entrenamiento offline, export del mejor
-              modelo y scripts de análisis (comparación estadística, feature
-              importance)
-models/       Modelos entrenados exportados y sus metadatos
-results/      Resultados de validación cruzada y configuración de los mejores
-              modelos
-Figuras/      Figuras generadas durante los experimentos
-notebooks/    Notebooks de experimentación preliminar
-tests/        Tests básicos con pytest
-```
-
-## Cómo ejecutarlo
-
-El proyecto está pensado para ejecutarse **siempre con Docker Compose**, que es
-quien levanta PostgreSQL y aplica las migraciones de Alembic antes de arrancar
-la API. Ejecutar `uvicorn backend.main:app` a pelo no creará el esquema de la
-base de datos.
-
-Antes del primer arranque, copia `.env.example` a `.env` y define una
-contraseña para PostgreSQL:
+### 1. Descargar el proyecto
 
 ```bash
+git clone https://github.com/ajg1005/eeg-adhd-clasificacion.git
+cd eeg-adhd-clasificacion
+```
+
+### 2. Configurar el entorno
+
+Copia `.env.example` a `.env`:
+
+```powershell
+# PowerShell
+Copy-Item .env.example .env
+```
+
+```bash
+# Linux o macOS
 cp .env.example .env
-# edita .env y pon tu POSTGRES_PASSWORD
 ```
 
-Después, levanta el stack:
+Edita `.env` y configura:
+
+- `POSTGRES_PASSWORD`: sustituye `cambiame` por una contraseña propia.
+- `JWT_SECRET_KEY`: introduce una clave aleatoria de al menos 32 caracteres.
+
+No publiques `.env` ni sus claves. `CLOUDFLARE_TUNNEL_TOKEN` puede quedar vacío para la ejecución local.
+
+### 3. Iniciar la aplicación
+
+Con Docker en ejecución:
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
-Backend: http://localhost:8000 · Frontend: http://localhost:5173
+La primera construcción necesita conexión a Internet y puede tardar varios minutos. Docker inicia los servicios y aplica las migraciones de la base de datos.
 
-`docker compose` aplica `alembic upgrade head` antes de arrancar el backend, de
-modo que las tablas (`datasets`, `experiments`, `experiment_folds`) quedan
-creadas tras la primera ejecución.
+- **Aplicación:** http://localhost:5173
+- **Documentación de la API:** http://localhost:8000/docs
 
+Abre la aplicación y crea una cuenta para comenzar.
+
+Para consultar el estado y los mensajes de los servicios:
+
+```bash
+docker compose ps
+docker compose logs --tail=100 backend worker
+```
+
+Para detenerlos conservando los volúmenes de datos:
+
+```bash
+docker compose down
+```
+
+## Datos y modelos
+
+### Dataset
+
+Los experimentos utilizan la copia del [EEG Dataset for ADHD disponible en Kaggle](https://www.kaggle.com/datasets/danizo/eeg-dataset-for-adhd), cuyo conjunto original procede de [IEEE DataPort](https://ieee-dataport.org/open-access/eeg-data-adhd-control-children).
+
+El CSV preparado para los experimentos **no está incluido en el repositorio**. Los scripts esperan encontrarlo en `data/adhdata.csv`; desde la aplicación se carga mediante la interfaz.
+
+### Formato de entrada
+
+El CSV de entrenamiento debe estar separado por comas. Cada fila representa una muestra temporal y contiene valores numéricos para estos 19 canales:
+
+```text
+Fp1,Fp2,F3,F4,C3,C4,P3,P4,O1,O2,F7,F8,T7,T8,P7,P8,Fz,Cz,Pz
+```
+
+También debe incluir:
+
+| Columna | Contenido |
+|---|---|
+| `ID` | Identificador del sujeto. |
+| `Class` | `ADHD` o `Control`; también se aceptan `1` y `0`, respectivamente. |
+
+Las muestras deben conservar su orden temporal y cada sujeto debe tener una única clase. Se necesitan sujetos de ambas clases suficientes para las particiones configuradas.
+
+Para **predicción**, se carga el registro de un único paciente con los canales requeridos por el modelo. Los datos deben ser compatibles con su configuración; los modelos de referencia utilizan **128 Hz**.
+
+### Modelos
+
+El repositorio incluye modelos de referencia y sus metadatos en `models/ml/` y `models/dl/`.
+
+Los modelos entrenados desde la aplicación se guardan por separado en el volumen Docker `trained_models`. PostgreSQL conserva sus metadatos y su relación con el experimento.
+
+## Evaluación experimental
+
+La validación mantiene separados los sujetos de entrenamiento y prueba: las ventanas de una misma persona no aparecen en ambos grupos.
+
+- **ML:** validación cruzada mediante `StratifiedGroupKFold`.
+- **DL:** particiones externas por sujeto y validación interna por sujeto para la parada temprana y la elección del umbral.
+
+Las métricas experimentales se calculan **por ventana** y se resumen mediante la media y la desviación típica entre particiones. En inferencia, la aplicación combina las predicciones de las ventanas para clasificar el registro del paciente.
+
+ML y DL utilizan distintas configuraciones de ventanas y preprocesamiento. Las diferencias de rendimiento no pueden atribuirse únicamente al modelo, ni generalizarse sin una evaluación con datos externos.
 
 ## Scripts de investigación
 
-- `uv run --locked --no-build python -m scripts.train_ml`: entrena y evalúa los modelos ML con CV cross-subject.
-- `uv run --locked --no-build python -m scripts.train_dl`: entrena y evalúa los modelos DL con CV cross-subject.
-- `uv run --locked --no-build python -m scripts.export_model` y `uv run --locked --no-build python -m scripts.export_model_dl`: exportan el modelo final seleccionado.
-- `uv run --locked --no-build python -m scripts.feature_importance`: importancia de características con `permutation_importance` sobre test separado cross-subject.
+Para ejecutarlos fuera de Docker necesitas **Python 3.13, uv y el CSV preparado**. Ejecuta los comandos desde la raíz del repositorio.
 
-## Tests
-
-Los tests unitarios e integración comprueban validación de datos, segmentación, extracción de características, particiones cross-subject, servicios de entrenamiento y endpoints principales de la API.
+Instalar dependencias:
 
 ```bash
 uv sync --locked --no-build
-uv run --locked --no-build pytest
 ```
 
-## Limitaciones
+Entrenar y evaluar:
 
-- El sistema es un prototipo académico y no está validado para uso clínico.
-- Los resultados dependen del dataset utilizado y deberían contrastarse con validación externa.
-- Las predicciones se calculan por epochs y se agregan a nivel de paciente, por lo que ambas métricas deben interpretarse con cautela.
-- Los modelos DL pueden ser sensibles al tamaño del dataset, al preprocesado y a la variabilidad entre sujetos.
+```bash
+uv run --locked --no-build python -m scripts.train_ml
+uv run --locked --no-build python -m scripts.train_dl
+```
+
+Exportar los modelos finales a partir de las configuraciones seleccionadas:
+
+```bash
+uv run --locked --no-build python -m scripts.export_model
+uv run --locked --no-build python -m scripts.export_model_dl
+```
+
+La exportación puede sustituir los modelos de referencia existentes.
+
+Con el modelo ML y sus metadatos disponibles, calcular la importancia por permutación:
+
+```bash
+uv run --locked --no-build python -m scripts.feature_importance
+uv run --locked --no-build python -m scripts.feature_importance_xgboost
+```
+
+Los análisis utilizan datos de prueba separados por sujeto. Los resultados se guardan en `results/` y las gráficas en `Figuras/`.
+
+## Pruebas y calidad
+
+Las pruebas cubren procesamiento EEG, particiones por sujeto, autenticación, permisos, servicios y endpoints de la API.
+
+Comprobaciones de Python:
+
+```bash
+uv sync --locked --no-build
+uv run --locked --no-build ruff check backend scripts tests
+uv run --locked --no-build pytest -m "not slow" --cov --cov-report=term --cov-report=xml
+```
+
+Comprobaciones del frontend, con Node.js 22 y npm:
+
+```bash
+cd frontend
+npm ci --ignore-scripts
+npm run typecheck
+npm run lint
+npm run build
+```
+
+GitHub Actions ejecuta estas comprobaciones y SonarQube Cloud analiza el código. La cobertura publicada corresponde al código Python incluido en la medición, no al frontend.
+
+## Tecnologías y estructura
+
+**Backend:** Python, FastAPI, SQLAlchemy, Alembic y PostgreSQL.  
+**Frontend:** React, TypeScript y Vite.  
+**Procesamiento y modelos:** NumPy, pandas, SciPy, scikit-learn, XGBoost y TensorFlow/Keras.  
+**Ejecución:** Docker Compose, Celery, Redis, Caddy y Cloudflare.
+
+```text
+backend/      API, autenticación, recursos y tareas en segundo plano.
+frontend/     Interfaz web.
+landing/      Página de presentación.
+alembic/      Migraciones de la base de datos.
+scripts/      Procesamiento, entrenamiento y análisis experimental.
+models/       Modelos de referencia y metadatos.
+results/      Configuraciones y resultados experimentales.
+Figuras/      Gráficas de los experimentos.
+notebooks/    Pruebas exploratorias.
+tests/        Pruebas unitarias y de integración.
+docs/         Fuentes consultadas y documentación complementaria.
+```
+
+## Autor y licencia
+
+Desarrollado por **Adrián Jiménez García** como Trabajo de Fin de Grado en la Universidad de Burgos.
+El código propio se distribuye bajo la [licencia MIT](LICENSE). Los datasets y las dependencias mantienen sus respectivas licencias y condiciones de uso.
