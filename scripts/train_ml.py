@@ -17,6 +17,7 @@ from scripts.visual import (
     plot_confusion_matrix,
     plot_model_metric_bar,
     plot_roc_curve,
+    plot_roc_curves_comparison,
 )
 
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -252,9 +253,21 @@ def main():
         save_path=FIGURES_DIR / "cv_model_comparison_f1.png",
     )
 
+    plot_roc_curves_comparison(
+        oof_predictions,
+        model_names=["random_forest", "rbf_svc", "xgboost"],
+        labels={
+            "random_forest": "Random Forest",
+            "rbf_svc": "RBF SVM",
+            "xgboost": "XGBoost",
+        },
+        save_path=FIGURES_DIR / "roc_curves_ml_comparison.png",
+    )
+
     # Figuras del mejor modelo (matriz de confusión + ROC OOF)
     _save_best_model_figures(best_model_name, oof_predictions)
 
 
 if __name__ == "__main__":
     main()
+
