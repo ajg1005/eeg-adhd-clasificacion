@@ -20,11 +20,9 @@ Outputs:
 - Figuras/feature_importance_top20.png : top 20 caracteristicas mas importantes.
 - Figuras/feature_importance_by_channel.png : importancia agregada por canal.
 
-Ejemplos:
-- python -m scripts.feature_importance --dry-run
-- python -m scripts.feature_importance --test-sample-size 100 --n-repeats 3
+Ejecucion:
+- python -m scripts.feature_importance
 """
-import argparse
 import json
 
 import joblib
@@ -54,27 +52,13 @@ from scripts.paths import (
 from scripts.preprocessing import preprocess_dataset
 from scripts.split import make_group_shuffle_split
 
-DEFAULT_TEST_SAMPLE_SIZE = 0  # 0 = usar todo el test set
-DEFAULT_N_REPEATS = 10
-DEFAULT_TEST_SIZE = 0.2
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Calcula importancia de caracteristicas por permutacion.")
-    parser.add_argument("--test-size", type=float, default=DEFAULT_TEST_SIZE,
-                        help="Proporcion de pacientes en el test separado (default 0.2).")
-    parser.add_argument("--test-sample-size", type=int, default=DEFAULT_TEST_SAMPLE_SIZE,
-                        help="Limitar epochs del test set para acelerar (0 = todo).")
-    parser.add_argument("--n-repeats", type=int, default=DEFAULT_N_REPEATS,
-                        help="Permutaciones por feature (default 10).")
-    parser.add_argument("--n-jobs", type=int, default=-1)
-    parser.add_argument("--scoring", default="f1_weighted",
-                        help="Metrica usada por sklearn.permutation_importance.")
-    parser.add_argument("--top-n", type=int, default=20)
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Valida carga, caracteristicas y split sin calcular importancias.")
-    return parser.parse_args()
-
+TEST_SIZE = 0.2
+TEST_SAMPLE_SIZE = 0  # 0 = usar todo el test set
+N_REPEATS = 10
+N_JOBS = 1
+SCORING = "f1_weighted"
+TOP_N = 20
+DRY_RUN = False
 
 def load_json(path):
     if not path.exists():
@@ -111,7 +95,6 @@ def aggregate_by_channel(importance_df, channels):
 
 
 def main():
-    args = parse_args()
 
     if not MODEL_PATH.exists():
         raise FileNotFoundError(f"No existe {MODEL_PATH}. Ejecuta python -m scripts.export_model primero.")
@@ -145,14 +128,14 @@ def main():
         x_features,
         y_epochs,
         groups_epochs,
-        test_size=args.test_size,
+        test_size=TEST_SIZE,
         random_state=RANDOM_STATE,
     )
     overlap = len(set(groups_train) & set(groups_test))
     print(f"Split: {len(X_train)} train ({len(set(groups_train))} pacientes) | "
           f"{len(X_test)} test ({len(set(groups_test))} pacientes) | overlap pacientes={overlap}")
 
-    if args.dry_run:
+    if DRY_RUN:
         print("Dry-run OK: datos, caracteristicas y split cross-subject preparados correctamente.")
         return
 
@@ -163,18 +146,18 @@ def main():
     fresh_model.fit(X_train, y_train)
 
     # Opcional: submuestrear test si es muy grande
-    x_test_used, y_test_used = stratified_subsample(X_test, y_test, args.test_sample_size)
+    x_test_used, y_test_used = stratified_subsample(X_test, y_test, TEST_SAMPLE_SIZE)
 
-    print(f"Calculando permutation_importance en test ({args.n_repeats} repeticiones, "
-          f"{len(x_test_used)} epochs, scoring={args.scoring}, n_jobs={args.n_jobs})...")
+    print(f"Calculando permutation_importance en test ({N_REPEATS} repeticiones, "
+          f"{len(x_test_used)} epochs, scoring={SCORING}, n_jobs={N_JOBS})...")
     result = permutation_importance(
         fresh_model,
         x_test_used,
         y_test_used,
-        scoring=args.scoring,
-        n_repeats=args.n_repeats,
+        scoring=SCORING,
+        n_repeats=N_REPEATS,
         random_state=RANDOM_STATE,
-        n_jobs=args.n_jobs,
+        n_jobs=N_JOBS,
     )
 
     importance_df = pd.DataFrame({
@@ -195,12 +178,12 @@ def main():
     channel_df.to_csv(channel_csv, index=False)
 
     # Top N caracteristicas
-    top = importance_df.head(args.top_n).iloc[::-1]
+    top = importance_df.head(TOP_N).iloc[::-1]
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.barh(top["feature"], top["importance_mean"], xerr=top["importance_std"],
             color="#4C72B0", edgecolor="black")
-    ax.set_xlabel(f"Caida media de {args.scoring} al permutar la caracteristica (test separado)")
-    ax.set_title(f"Top {args.top_n} caracteristicas mas importantes ({metadata['model_name']})")
+    ax.set_xlabel(f"Caida media de {SCORING} al permutar la caracteristica (test separado)")
+    ax.set_title(f"Top {TOP_N} caracteristicas mas importantes ({metadata['model_name']})")
     ax.grid(axis="x", alpha=0.3)
     fig.tight_layout()
     top_fig = FIGURES_DIR / "feature_importance_top20.png"
@@ -223,8 +206,8 @@ def main():
     print(f"Tabla por canal   : {channel_csv}")
     print(f"Top caracteristicas: {top_fig}")
     print(f"Por canal         : {channel_fig}")
-    print(f"\nTop {args.top_n // 4 or 5} caracteristicas:")
-    print(importance_df.head(args.top_n // 4 or 5).to_string(index=False))
+    print(f"\nTop {TOP_N // 4 or 5} caracteristicas:")
+    print(importance_df.head(TOP_N // 4 or 5).to_string(index=False))
 
 
 if __name__ == "__main__":
