@@ -4,6 +4,8 @@ Estos tests defienden la metodologia central del TFG: que ningun paciente
 aparezca a la vez en train y test (cross-subject CV) y que se rechacen
 datasets que no se puedan estratificar.
 """
+import weakref
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -72,7 +74,7 @@ def test_make_group_shuffle_split_rejects_inconsistent_subject_labels():
 # comprueba que en cada fold del K-Fold no se solapan pacientes train/test
 def test_make_group_kfold_splits_no_subject_overlap_per_fold():
     X, y, groups = _toy_dataset()
-    splits = make_group_kfold_splits(X, y, groups, n_splits=5)
+    splits = list(make_group_kfold_splits(X, y, groups, n_splits=5))
 
     assert len(splits) == 5
 
@@ -110,3 +112,14 @@ def test_make_group_kfold_splits_reproducible_with_fixed_seed():
 
     for fa, fb in zip(splits_a, splits_b):
         assert list(fa["groups_test"]) == list(fb["groups_test"])
+
+
+def test_make_group_kfold_splits_releases_previous_fold():
+    """Los folds consumidos no deben quedarse retenidos por el iterador."""
+    X, y, groups = _toy_dataset()
+    splits = iter(make_group_kfold_splits(X, y, groups, n_splits=5))
+    first = next(splits)
+    previous_data = weakref.ref(first["X_train"])
+    del first
+    next(splits)
+    assert previous_data() is None

@@ -98,10 +98,9 @@ def make_group_kfold_splits(
     Usa StratifiedGroupKFold para que ningun paciente aparezca a la vez en
     train y test (evita el leakage tipico de EEG donde el modelo memoriza
     al sujeto) y al mismo tiempo mantiene proporcion de clases en cada fold.
-    Es el corazon de la evaluacion rigurosa del proyecto.
+    Produce una particion cada vez para no retener copias de todos los folds.
     """
     splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
-    splits = []
 
     for fold, (train_idx, test_idx) in enumerate(
         splitter.split(X, y, groups),
@@ -131,7 +130,7 @@ def make_group_kfold_splits(
             groups_train = groups[train_idx]
             groups_test = groups[test_idx]
 
-        splits.append({
+        yield {
             "fold": fold,
             "X_train": X_train,
             "X_test": X_test,
@@ -139,6 +138,4 @@ def make_group_kfold_splits(
             "y_test": y_test,
             "groups_train": groups_train,
             "groups_test": groups_test,
-        })
-
-    return splits
+        }
