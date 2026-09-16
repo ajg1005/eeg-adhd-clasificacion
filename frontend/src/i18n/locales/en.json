@@ -48,7 +48,8 @@
       "analysisStart": "Could not start the analysis",
       "analyze": "Could not analyse the dataset",
       "analysisEmpty": "The analysis finished without returning results",
-      "missingCsv": "Upload an EEG CSV first."
+      "missingCsv": "Upload an EEG CSV or a ZIP containing a single CSV first.",
+      "tooLarge": "The upload exceeds the server limit (HTTP 413). Compress the CSV into a ZIP or use a smaller file."
     },
     "experiments": {
       "bestModel": "Could not load the best available model",
@@ -121,10 +122,10 @@
   },
   "dataset": {
     "title": "Training dataset",
-    "description": "Upload a CSV with several patients and review the statistics before moving to the training tab.",
+    "description": "Upload a CSV with several patients or a ZIP containing a single CSV and review the statistics before training. The CSV inside the ZIP can be up to 512 MiB.",
     "analyzing": "Analyzing...",
     "retry": "Retry analysis",
-    "selectCsv": "Select EEG CSV",
+    "selectCsv": "Select EEG CSV or ZIP",
     "savedDatasets": "Saved datasets",
     "loadingSavedDatasets": "Loading saved datasets...",
     "newDataset": "Upload new dataset",

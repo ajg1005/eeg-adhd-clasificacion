@@ -1,5 +1,7 @@
 from io import BytesIO
+from pathlib import PurePosixPath
 from typing import Any
+from zipfile import BadZipFile, ZipFile
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,32 @@ from scripts.constants import (
     normalize_class_to_label,
 )
 from scripts.validators import validate_training_dataframe
+
+
+MAX_ZIP_CSV_BYTES = 512 * 1024 * 1024
+
+
+def unpack_training_upload(file_bytes: bytes, filename: str) -> tuple[bytes, str]:
+    """Lee un ZIP con un unico CSV, sin extraer rutas al disco."""
+    if not filename.lower().endswith(".zip"):
+        return file_bytes, filename
+    try:
+        with ZipFile(BytesIO(file_bytes)) as archive:
+            files = [entry for entry in archive.infolist() if not entry.is_dir()]
+            if len(files) != 1 or not files[0].filename.lower().endswith(".csv"):
+                raise ValueError("El ZIP debe contener un unico archivo CSV.")
+            entry = files[0]
+            if entry.flag_bits & 1:
+                raise ValueError("El ZIP no debe estar protegido con contrasena.")
+            if entry.file_size > MAX_ZIP_CSV_BYTES:
+                raise ValueError("El CSV descomprimido supera el limite de 512 MiB.")
+            with archive.open(entry) as source:
+                csv_bytes = source.read(MAX_ZIP_CSV_BYTES + 1)
+            if len(csv_bytes) > MAX_ZIP_CSV_BYTES:
+                raise ValueError("El CSV descomprimido supera el limite de 512 MiB.")
+            return csv_bytes, PurePosixPath(entry.filename.replace("\\", "/")).name
+    except (BadZipFile, RuntimeError, NotImplementedError, EOFError) as exc:
+        raise ValueError("No se pudo leer el ZIP. Comprueba que sea valido y no tenga contrasena.") from exc
 
 
 def read_csv(file_bytes: bytes) -> pd.DataFrame:
@@ -46,6 +74,7 @@ def save_training_dataset(
     filename: str,
     user_id: int,
 ) -> dict[str, Any]:
+    file_bytes, filename = unpack_training_upload(file_bytes, filename)
     df = read_csv(file_bytes)
     validate_training_dataframe(df)
     return repository.save_dataset(

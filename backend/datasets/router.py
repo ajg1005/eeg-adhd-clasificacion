@@ -41,7 +41,7 @@ async def upload_training_dataset(
     file: Annotated[UploadFile, File(...)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
-    """Guarda un CSV de entrenamiento para el usuario autenticado."""
+    """Guarda un CSV de entrenamiento, directo o dentro de un ZIP de un solo CSV."""
     try:
         return save_training_dataset(
             file_bytes=await file.read(),
