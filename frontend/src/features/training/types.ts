@@ -43,6 +43,12 @@ export interface TrainingPayload {
   trainingParams: TrainingParameters;
 }
 
+export interface TrainingTaskSummary {
+  modelLabel: string;
+  datasetName?: string;
+  patients?: number;
+}
+
 export interface PatientTrainingResult {
   patient_id: string;
   true_label: string;

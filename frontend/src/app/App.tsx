@@ -98,6 +98,7 @@ function App() {
               taskError={trainingTask.error}
               taskStatus={trainingTask.status}
               taskStatusAt={trainingTask.statusAt}
+              taskSummary={trainingTask.summary}
             />
           </>
         )}

@@ -11,6 +11,7 @@ import type {
   TrainingPayload,
   TrainingResult,
   TrainingTaskStatus,
+  TrainingTaskSummary,
 } from "./types";
 import { TrainingActionBar } from "./components/TrainingActionBar";
 import { TrainingEegParamsPanel } from "./components/TrainingEegParamsPanel";
@@ -24,6 +25,7 @@ interface TrainingViewProps {
   onStartTraining: (
     file: File | null | undefined,
     payload: TrainingPayload,
+    summary: TrainingTaskSummary,
   ) => Promise<void>;
   result: TrainingResult | null;
   selectedDataset: SavedTrainingDataset | null;
@@ -31,6 +33,7 @@ interface TrainingViewProps {
   taskError: string;
   taskStatus: TrainingTaskStatus;
   taskStatusAt: Date | null;
+  taskSummary: TrainingTaskSummary | null;
 }
 
 function normalizeValue(value: string): JsonPrimitive {
@@ -68,6 +71,7 @@ export function TrainingView({
   taskError,
   taskStatus,
   taskStatusAt,
+  taskSummary,
 }: TrainingViewProps) {
   const { t } = useTranslation();
   const [options, setOptions] = useState<TrainingOptions | null>(null);
@@ -117,6 +121,14 @@ export function TrainingView({
   const currentModels = options?.model_types[modelType].models ?? {};
   const currentModel = currentModels[modelName];
   const currentModelParameters = currentModel?.parameters ?? {};
+  // La barra describe la tarea enviada; los controles preparan la siguiente.
+  const actionSummary = taskStatus !== null || loadingTraining
+    ? taskSummary
+    : {
+        modelLabel: currentModel?.display_name ?? modelName,
+        datasetName: file?.name ?? selectedDataset?.filename,
+        patients: stats?.n_patients,
+      };
 
   const visibleTrainingParams = useMemo(() => {
     const allowed = options?.training_params_by_type[modelType] ?? [];
@@ -187,6 +199,10 @@ export function TrainingView({
       eegParams,
       modelParams,
       trainingParams,
+    }, {
+      modelLabel: currentModel?.display_name ?? modelName,
+      datasetName: file?.name ?? selectedDataset?.filename,
+      patients: stats?.n_patients,
     });
   }
 
@@ -235,12 +251,12 @@ export function TrainingView({
         options={options}
       />
       <TrainingActionBar
-        datasetName={file?.name ?? selectedDataset?.filename}
+        datasetName={actionSummary?.datasetName}
         durationSeconds={result?.training_time_seconds}
         loadingTraining={loadingTraining}
-        modelLabel={currentModel?.display_name ?? modelName}
+        modelLabel={actionSummary?.modelLabel ?? ""}
         onRunTraining={handleRunTraining}
-        patients={stats?.n_patients}
+        patients={actionSummary?.patients}
         ready={Boolean(file || selectedDataset)}
         trainingStatus={taskStatus}
         trainingStatusAt={taskStatusAt}
