@@ -194,7 +194,7 @@ export function DatasetView({
 
           <label className="file-drop">
             <input
-              accept=".csv"
+              accept=".csv,.zip"
               onChange={(event) => {
                 void handleFileChange(event);
               }}

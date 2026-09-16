@@ -199,6 +199,9 @@ export async function requestJson<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 413 && request.route === "trainingDatasets") {
+      throw new Error(translate("errors.datasets.tooLarge"));
+    }
     if (response.status === 401 && requiresAuthentication(request)) {
       expireSession();
     }

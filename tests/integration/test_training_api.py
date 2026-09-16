@@ -1,6 +1,30 @@
 import json
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import pandas as pd
+
+
+def test_zip_upload_reuses_csv_and_keeps_user_access_private(
+    auth_client, auth_client_factory, post_csv, valid_eeg_dataset_csv_path
+):
+    existing = post_csv(auth_client, valid_eeg_dataset_csv_path, "/training/datasets")
+    assert existing.status_code == 200
+    zipped = BytesIO()
+    with ZipFile(zipped, "w", ZIP_DEFLATED) as archive:
+        archive.writestr(valid_eeg_dataset_csv_path.name, valid_eeg_dataset_csv_path.read_bytes())
+    uploaded = auth_client.post(
+        "/training/datasets", files={"file": ("dataset.zip", zipped.getvalue(), "application/zip")}
+    )
+    assert uploaded.status_code == 200
+    assert uploaded.json()["id"] == existing.json()["id"]
+    assert uploaded.json()["filename"] == valid_eeg_dataset_csv_path.name
+    dataset_id = uploaded.json()["id"]
+    stats = auth_client.get(f"/training/datasets/{dataset_id}/stats")
+    assert stats.status_code == 200
+    assert stats.json()["n_patients"] == 4
+    other_client, _ = auth_client_factory()
+    assert other_client.get(f"/training/datasets/{dataset_id}/stats").status_code == 400
 
 
 # comprueba que /training/options expone tipos de modelo ML y DL

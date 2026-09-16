@@ -48,7 +48,8 @@
       "analysisStart": "No se pudo iniciar el análisis",
       "analyze": "No se pudo analizar el dataset",
       "analysisEmpty": "El análisis ha terminado sin devolver resultados",
-      "missingCsv": "Sube primero un CSV EEG."
+      "missingCsv": "Sube primero un CSV EEG o un ZIP con un único CSV.",
+      "tooLarge": "La subida supera el límite del servidor (HTTP 413). Comprime el CSV en un ZIP o utiliza un archivo más pequeño."
     },
     "experiments": {
       "bestModel": "No se pudo cargar el mejor modelo disponible",
@@ -121,10 +122,10 @@
   },
   "dataset": {
     "title": "Dataset de entrenamiento",
-    "description": "Carga un CSV con varios pacientes y revisa las estadísticas antes de pasar a la pestaña de entrenamiento.",
+    "description": "Carga un CSV con varios pacientes o un ZIP con un único CSV y revisa las estadísticas antes de entrenar. El CSV dentro del ZIP puede ocupar hasta 512 MiB.",
     "analyzing": "Analizando...",
     "retry": "Reintentar análisis",
-    "selectCsv": "Seleccionar CSV EEG",
+    "selectCsv": "Seleccionar CSV EEG o ZIP",
     "savedDatasets": "Datasets guardados",
     "loadingSavedDatasets": "Cargando datasets guardados...",
     "newDataset": "Subir nuevo dataset",
