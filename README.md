@@ -95,6 +95,8 @@ Los experimentos utilizan la copia del [EEG Dataset for ADHD disponible en Kaggl
 
 El CSV preparado para los experimentos **no está incluido en el repositorio**. Los scripts esperan encontrarlo en `data/adhdata.csv`; desde la aplicación se carga mediante la interfaz.
 
+La carga de datasets de entrenamiento admite también un **ZIP con un único CSV**, sin contraseña, de hasta 512 MiB descomprimido. El servidor guarda el CSV original y conserva su hash, de modo que subirlo comprimido no duplica el dataset. En el despliegue público, el archivo enviado también debe respetar el límite de subida del proxy; comprimir `adhdata.csv` reduce su tamaño de unos 267 MB a 46 MB. La predicción individual sigue utilizando CSV.
+
 ### Formato de entrada
 
 El CSV de entrenamiento debe estar separado por comas. Cada fila representa una muestra temporal y contiene valores numéricos para estos 19 canales:
